@@ -2,10 +2,11 @@ export async function importOnTeletal() {
   const origin = 'https://www.teletal.hu';
   const storageKey = 'meal-deck.last-cart-import';
   if (location.origin !== origin || !location.hash.startsWith('#meal-deck=')) {
-    alert('Open the Teletál week from the meal picker, then run this bookmark.');
+    alert('Nyisd meg a heti étlapot a Tálválogatóból, és ott használd ezt a könyvjelzőt.');
     return;
   }
 
+  class CartError extends Error {}
   try {
     const [id, year, week, lines] = JSON.parse(decodeURIComponent(location.hash.slice(11)));
     const form = document.getElementById('etlap_form');
@@ -17,11 +18,11 @@ export async function importOnTeletal() {
       || !Array.isArray(lines) || !lines.length || lines.length > 21 || !lines.every(validLine)
       || form?.getAttribute('ev') !== year || form?.getAttribute('het') !== week
       || new Set(lines.map(([day, code]) => day + ':' + code)).size !== lines.length) {
-      throw new Error('The selected week or meal list is invalid. Open the week from the meal picker again.');
+      throw new CartError('A kiválasztott hét vagy étellista érvénytelen. Nyisd meg újra az étlapot a Tálválogatóból.');
     }
 
     const address = document.getElementById('select-address')?.value || '-1';
-    if (!/^-?\d+$/.test(address)) throw new Error('Select your delivery address in Teletál first.');
+    if (!/^-?\d+$/.test(address)) throw new CartError('Előbb válassz szállítási címet a Teletálon.');
     const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
     const previous = saved?.id === id ? saved : null;
     const goToCart = () => {
@@ -30,15 +31,16 @@ export async function importOnTeletal() {
     };
     if (previous?.done) return goToCart();
     if (previous && previous.address !== address) {
-      throw new Error('The delivery address changed after an earlier attempt. Check your Teletál cart before adding any remaining picks.');
+      throw new CartError('Az előző próbálkozás óta megváltozott a szállítási cím. A további ételek hozzáadása előtt ellenőrizd a Teletál-kosaradat.');
     }
 
-    const items = lines.map(([day, code, quantity]) => `${['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'][day]} ${code} × ${quantity}`);
-    if (!confirm(`Add these portions to your Teletál cart?\n\n${items.join('\n')}\n\nYou can review them before ordering.`)) return;
+    const days = ['', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek'];
+    const items = lines.map(([day, code, quantity]) => `${days[day]} ${code} × ${quantity}`);
+    if (!confirm(`Hozzáadod ezeket az adagokat a Teletál-kosaradhoz?\n\n${items.join('\n')}\n\nRendelés előtt még ellenőrizheted a kosár tartalmát.`)) return;
 
     const getCart = async () => {
       const response = await fetch('/kosar', { cache: 'no-store', signal: AbortSignal.timeout?.(12_000) });
-      if (!response.ok) throw new Error('Teletál’s cart could not be read.');
+      if (!response.ok) throw new CartError('Nem sikerült betölteni a Teletál-kosarat.');
       const cart = new DOMParser().parseFromString(await response.text(), 'text/html');
       const quantities = {};
       for (const input of cart.querySelectorAll('#kosar_form input.kosar-input[data]')) {
@@ -64,7 +66,7 @@ export async function importOnTeletal() {
       const actual = current[key] || 0;
       if (actual === target) continue;
       if (actual !== target - quantity) {
-        throw new Error('The cart changed since the last attempt. Check your Teletál cart before adding any remaining picks.');
+        throw new CartError('A kosár tartalma megváltozott az előző próbálkozás óta. A további ételek hozzáadása előtt ellenőrizd a Teletál-kosaradat.');
       }
       (changes[code] ??= {})[day] = String(target);
     }
@@ -78,19 +80,19 @@ export async function importOnTeletal() {
         body: JSON.stringify({ adagok: { [address]: { [year]: { [week]: changes } } } }),
         signal: AbortSignal.timeout?.(12_000),
       });
-      if (!response.ok) throw new Error('Teletál could not update the cart. You can run the shortcut again.');
+      if (!response.ok) throw new CartError('A Teletál nem tudta frissíteni a kosarat. Próbáld újra a könyvjelzővel.');
     }
 
     const updated = await getCart();
     const missing = Object.keys(targets).filter(key => updated[key] !== targets[key]);
     if (missing.length) {
-      alert(`Teletál did not confirm these items: ${missing.join(', ')}. Check your cart.`);
+      alert(`A Teletál nem igazolta vissza ezeket a tételeket (${missing.join(', ')}). Ellenőrizd a kosaradat.`);
     } else {
       localStorage.setItem(storageKey, JSON.stringify({ id, address, targets, done: true }));
     }
     goToCart();
   } catch (error) {
-    alert(error.message || 'Could not add the picks. You can check your Teletál cart and try again.');
+    alert(error instanceof CartError ? error.message : 'Nem sikerült hozzáadni a kiválasztott ételeket. Ellenőrizd a Teletál-kosaradat, majd próbáld újra.');
   }
 }
 

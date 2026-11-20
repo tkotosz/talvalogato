@@ -15,14 +15,15 @@ const storageKey = 'meal-deck.plan.v1';
 const appName = 'Tálválogató';
 const cartUrl = 'https://www.teletal.hu/kosar';
 const actions = [
-  { direction: 'left', label: 'Pass', Icon: X },
-  { direction: 'up', label: 'Maybe', Icon: Bookmark },
-  { direction: 'right', label: 'Pick', Icon: Check },
+  { direction: 'left', label: 'Passz', Icon: X },
+  { direction: 'up', label: 'Talán', Icon: Bookmark },
+  { direction: 'right', label: 'Kiválasztom', Icon: Check },
 ];
+const shortDays = ['H', 'K', 'Sze', 'Cs', 'P', 'Szo', 'V'];
 const mealBadges = Object.fromEntries(optionTypes.map(type => [type.id, type.badge]));
-const number = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 });
-const money = value => `${number.format(value)} Ft`;
-const calories = value => `${number.format(value)} kcal`;
+const number = new Intl.NumberFormat('hu-HU', { maximumFractionDigits: 1 });
+const money = value => `${number.format(value)}\u00a0Ft`;
+const calories = value => `${number.format(value)}\u00a0kcal`;
 
 function savedPlan() {
   try {
@@ -42,7 +43,7 @@ function Modal({ name, onClose, children }) {
   return <dialog ref={ref} aria-labelledby="dialog-title" onCancel={onClose}
     onClick={event => { if (event.target === ref.current) onClose(); }}>
     <div className="modal-content">
-      <button type="button" className="icon-button close-modal" onClick={onClose} aria-label="Close"><X size={20} /></button>
+      <button type="button" className="icon-button close-modal" onClick={onClose} aria-label="Bezárás"><X size={20} /></button>
       <h2 id="dialog-title">{name}</h2>
       {children}
     </div>
@@ -63,11 +64,11 @@ function InstallButton({ onHelp }) {
     };
   }, []);
   if (installed) return null;
-  return <button type="button" className="quiet-button" aria-label="Install app" onClick={async () => {
+  return <button type="button" className="quiet-button" aria-label="Telepítés" onClick={async () => {
     if (!prompt) return onHelp();
     setPrompt(null);
     await prompt.prompt();
-  }}><Download size={17} /> <span>Install app</span></button>;
+  }}><Download size={17} /> <span>Telepítés</span></button>;
 }
 
 function Setup({ settings, setSettings, weeks, weekError, onRetry, onStart, onResume, hasPlan, canContinue }) {
@@ -82,9 +83,9 @@ function Setup({ settings, setSettings, weeks, weekError, onRetry, onStart, onRe
   return <div className="setup-grid">
     <section className="welcome">
       <div className="welcome-copy">
-        <span className="eyebrow dark-eyebrow"><Utensils size={16} /> Weekly meal planner</span>
-        <h1>Pick your meals<br className="desktop-break" /> for the week.</h1>
-        <p>Swipe through Teletál set menus, meal combos, and single dishes that fit your calorie budget.</p>
+        <span className="eyebrow dark-eyebrow"><Utensils size={16} /> Heti ételtervező</span>
+        <h1>Válogasd össze<br className="desktop-break" /> a heti ételeidet!</h1>
+        <p>Válogass a kalóriakeretedbe illő Teletál-menük, saját összeállítások és önálló ételek közül.</p>
       </div>
       <div className="deck-art" aria-hidden="true">
         <div className="art-card art-card-left"><Soup size={40} strokeWidth={1.4} /></div>
@@ -103,31 +104,31 @@ function Setup({ settings, setSettings, weeks, weekError, onRetry, onStart, onRe
     }}>
       <div className="settings-heading">
         <span className="section-icon"><SlidersHorizontal size={21} /></span>
-        <div><h2>Your week</h2><p>Choose the week and calorie budget.</p></div>
+        <div><h2>Heti beállítások</h2><p>Válassz hetet, és állítsd be a napi kalóriacélodat.</p></div>
       </div>
 
-      <label htmlFor="week">Delivery week</label>
+      <label htmlFor="week">Kiszállítás hete</label>
       <div className="select-wrap">
         <CalendarDays size={18} aria-hidden="true" />
         <select id="week" value={selected ? settings.week : ''} onChange={event => change('week', event.target.value)}>
-          {!selected && <option value="">{weekError ? 'Weeks unavailable' : 'Loading weeks…'}</option>}
+          {!selected && <option value="">{weekError ? 'A hetek nem érhetők el' : 'Hetek betöltése…'}</option>}
           {weeks.map(week => <option key={week.key} value={week.key}>
-            {weekLabel(week.key)}{week.key === next ? ' (default)' : ''}
+            {weekLabel(week.key)}{week.key === next ? ' (alapértelmezett)' : ''}
           </option>)}
         </select>
         <ChevronDown size={18} aria-hidden="true" />
       </div>
-      {weekError && <div className="form-error" role="alert">{weekError} <button type="button" className="text-button" onClick={onRetry}>Retry</button></div>}
+      {weekError && <div className="form-error" role="alert">{weekError} <button type="button" className="text-button" onClick={onRetry}>Újra</button></div>}
 
       <div className="number-fields">
-        <label htmlFor="target">Calorie target
+        <label htmlFor="target">Napi kalóriacél
           <span className="field-wrap">
             <input id="target" type="number" inputMode="numeric" min="1" max="10000" step="1" required
               value={settings.calories} onChange={event => change('calories', event.target.value === '' ? '' : event.target.valueAsNumber)} />
             <span>kcal</span>
           </span>
         </label>
-        <label htmlFor="tolerance">Tolerance
+        <label htmlFor="tolerance">Ráhagyás
           <span className="field-wrap">
             <input id="tolerance" type="number" inputMode="decimal" min="0" max="100" step="0.5" required
               value={settings.tolerance} onChange={event => change('tolerance', event.target.value === '' ? '' : event.target.valueAsNumber)} />
@@ -137,38 +138,38 @@ function Setup({ settings, setSettings, weeks, weekError, onRetry, onStart, onRe
       </div>
       <div className="budget-note">
         <Flame size={19} aria-hidden="true" />
-        <div><strong>{validBudget ? `Up to ${calories(calorieLimit(settings))} per day` : 'Daily calorie limit'}</strong>
-          <p>The tolerance allows picks above your target.</p></div>
+        <div><strong>{validBudget ? `Naponta legfeljebb ${calories(calorieLimit(settings))}` : 'Napi kalóriakeret'}</strong>
+          <p>A ráhagyás ennyivel emeli a napi kalóriakeretedet.</p></div>
       </div>
       <fieldset className="option-types">
-        <legend>Show in the deck</legend>
-        <p>Enabled options appear in this order.</p>
+        <legend>Mutatott ételtípusok</legend>
+        <p>A bejelölt típusok ebben a sorrendben jelennek meg.</p>
         {optionTypes.map(({ id, label }) => <label key={id}>
           <input type="checkbox" checked={types.includes(id)} onChange={event => {
             change('types', event.target.checked ? [...types, id] : types.filter(type => type !== id));
           }} />
           {label}
         </label>)}
-        {!types.length && <p className="form-error" role="status">Enable at least one option type to continue.</p>}
+        {!types.length && <p className="form-error" role="status">A folytatáshoz jelölj be legalább egy típust.</p>}
       </fieldset>
       <button className="button primary wide" disabled={!valid} type="submit">
-        {canContinue ? 'Continue picking' : 'Start picking'}
+        {canContinue ? 'Válogatás folytatása' : 'Válogatás indítása'}
       </button>
-      {hasPlan && <button type="button" className="text-button resume" onClick={onResume}>Return to saved plan</button>}
+      {hasPlan && <button type="button" className="text-button resume" onClick={onResume}>Vissza a mentett tervhez</button>}
     </form>
   </div>;
 }
 
 function WeekProgress({ plan }) {
-  return <ol aria-label="Week progress" className="week-progress">
+  return <ol aria-label="A heti válogatás állása" className="week-progress">
     {days.map((day, index) => {
       const active = plan.day === index + 1;
       const done = Object.hasOwn(plan.slots, index + 1);
       const picked = Boolean(plan.slots[index + 1]);
       return <li key={day} aria-current={active ? 'step' : undefined}
-        aria-label={`${day}${done ? picked ? ', picked' : ', skipped' : ''}`}
+        aria-label={`${day}${done ? picked ? ', étel kiválasztva' : ', kihagyva' : ''}`}
         className={active ? 'current' : done ? picked ? 'picked' : 'skipped' : ''}>
-        {picked && <Check size={13} aria-hidden="true" />}<span>{day.slice(0, 3)}</span>
+        {picked && <Check size={13} aria-hidden="true" />}<span>{shortDays[index]}</span>
       </li>;
     })}
   </ol>;
@@ -191,7 +192,7 @@ function MealCard({ option, target }) {
     </div>
     <div className="meal-content">
       <h2 lang="hu">{title}</h2>
-      {kind !== 'single' && components?.length > 0 && <ul className="course-list" aria-label="Included dishes">
+      {kind !== 'single' && components?.length > 0 && <ul className="course-list" aria-label="A menü fogásai">
         {components.map((part, index) => <li key={index}>
           <span lang="hu">{part.name}</span><span>{calories(part.kcal)}</span>
         </li>)}
@@ -231,7 +232,7 @@ function Picker({ plan, updatePlan }) {
             if (!signal.aborted) setState({ phase: 'loading', progress: [current, total], key });
           });
         if (signal.aborted) return;
-        if (!dishes.length && failures) throw new Error('Teletál’s calorie details could not be loaded.');
+        if (!dishes.length && failures) throw new Error('Nem sikerült betölteni a Teletál tápértékadatait.');
         setState({ phase: 'ready', dishes, unavailable, failures, key });
       } catch (error) {
         if (!signal.aborted) setState({ phase: 'error', message: error.message, key });
@@ -266,26 +267,26 @@ function Picker({ plan, updatePlan }) {
   return <main className="picker">
     <WeekProgress plan={plan} />
     <div className="picker-heading">
-      <div><h1>{days[plan.day - 1]}</h1><p>{dayLabel(week, plan.day).replace(/^\w+,?\s*/, '')}
-        {plan.day > 5 && ' · Pick from Friday’s menu'}</p></div>
-      <span className="day-budget"><Flame size={18} /> {calories(calorieLimit(plan.settings))} max</span>
+      <div><h1>{days[plan.day - 1]}</h1><p>{dayLabel(week, plan.day)}
+        {plan.day > 5 && ' · A pénteki étlapról'}</p></div>
+      <span className="day-budget"><Flame size={18} /> Max. {calories(calorieLimit(plan.settings))}</span>
     </div>
     <div className="deck">
       {loading ? <div className="placeholder-card" role="status">
         <span className="spinner" aria-hidden="true" />
-        <h2>Loading {plan.day > 5 ? 'Friday’s' : `${days[plan.day - 1]}’s`} menu</h2>
-        {state.progress?.[1] > 0 && <p>Checked {state.progress[0]} of {state.progress[1]} nutrition listings</p>}
+        <h2>Étlap betöltése…</h2>
+        {state.progress?.[1] > 0 && <p>{state.progress[1]} ételből {state.progress[0]} tápértékadata ellenőrizve</p>}
       </div> : state.phase === 'error' ? <div className="placeholder-card" role="status">
         <span className="section-icon"><Soup size={25} /></span>
-        <h2>Menu unavailable</h2><p>{state.message}</p>
-        <button type="button" className="button secondary" onClick={retry}>Retry menu</button>
+        <h2>Az étlap nem érhető el</h2><p>{state.message}</p>
+        <button type="button" className="button secondary" onClick={retry}>Étlap újratöltése</button>
       </div> : !top ? <div className="placeholder-card" role="status">
         <span className="section-icon"><Utensils size={25} /></span>
-        <h2>{options.length ? 'You’ve seen every option' : 'No meals match your settings'}</h2>
-        <p>{options.length ? 'Restart the day to see the passed options again, or skip it.'
-          : 'You can skip this day or change your calorie budget or option types in Settings.'}</p>
+        <h2>{options.length ? 'Elfogytak a lehetőségek' : 'Nincs a beállításaidnak megfelelő étel'}</h2>
+        <p>{options.length ? 'Kezdd újra a napot, ha újra megnéznéd az ételeket, vagy hagyd ki ezt a napot.'
+          : 'Kihagyhatod ezt a napot, vagy módosíthatod a kalóriakeretet és az ételtípusokat a beállításokban.'}</p>
         {options.length > 0 && <button type="button" className="button secondary" onClick={() => act('restart')}>
-          <RotateCcw size={17} /> Restart day
+          <RotateCcw size={17} /> Nap újrakezdése
         </button>}
       </div> : <>
         {queue.length > 1 && <div className="card-backing" aria-hidden="true" />}
@@ -294,19 +295,19 @@ function Picker({ plan, updatePlan }) {
         </SwipeCard>
       </>}
     </div>
-    {top && <div className="deck-actions" aria-label="Meal actions">
+    {top && <div className="deck-actions" aria-label="Étel kiválasztása vagy kihagyása">
       {actions.map(({ direction, label, Icon }) => <button type="button" key={direction} className={`decision decision-${direction}`}
         onClick={() => card.current?.swipe(direction)}>
         <span className="decision-icon"><Icon size={23} strokeWidth={2.2} /></span><span>{label}</span>
       </button>)}
     </div>}
     <div className="day-links">
-      {top && <span aria-live="polite">{queue.length} {queue.length === 1 ? 'option' : 'options'} left</span>}
-      <button type="button" className="text-button" onClick={() => act('skip')}>Skip day</button>
+      {top && <span aria-live="polite">{number.format(queue.length)} lehetőség maradt</span>}
+      <button type="button" className="text-button" onClick={() => act('skip')}>Nap kihagyása</button>
     </div>
     {!loading && state.unavailable > 0 && <p className="nutrition-note">
-      {state.unavailable} {state.unavailable === 1 ? 'dish has' : 'dishes have'} no calorie data available.
-      {state.failures > 0 && <button type="button" className="text-button" onClick={retry}>Retry details</button>}
+      {number.format(state.unavailable)} ételhez nem érhető el kalóriaadat.
+      {state.failures > 0 && <button type="button" className="text-button" onClick={retry}>Adatok újratöltése</button>}
     </p>}
   </main>;
 }
@@ -325,23 +326,23 @@ function CartInstructions({ plan, lines }) {
   const shortcut = shortcutUrl();
   const [copyStatus, setCopyStatus] = useState('');
   return <>
-    <p>Use a browser bookmark to add your picks on Teletál. Save the shortcut once, then reuse it each week.</p>
+    <p>A kiválasztott ételeket egy könyvjelző segítségével teheted a Teletál-kosárba. Elég egyszer elmentened, utána minden héten használhatod.</p>
     <ol className="instructions">
       <li>
-        <strong>Save the cart shortcut</strong>
-        <p>Create a bookmark called <b>Teletál cart shortcut</b> and replace its URL with the copied shortcut. On desktop you can also drag this shortcut into your bookmarks bar.</p>
-        {lines.length > 14 && <p>If you saved the original shortcut, replace it once to support carts with more than 14 items.</p>}
+        <strong>Mentsd el a kosárkönyvjelzőt</strong>
+        <p>Hozz létre egy <b>Teletál-kosár</b> nevű könyvjelzőt, és cseréld le a címét a kimásolt parancsikonra. Számítógépen a hivatkozást a könyvjelzősávra is húzhatod.</p>
+        {lines.length > 14 && <p>Ha az első változatot mentetted el, egyszer frissítsd a könyvjelzőt a 14-nél több különböző tételt tartalmazó kosarakhoz.</p>}
         <a ref={link => link?.setAttribute('href', shortcut)} className="drag-bookmark" onClick={event => {
           event.preventDefault();
-          copyText(shortcut).then(ok => setCopyStatus(ok ? 'Shortcut copied' : 'Drag the shortcut into your bookmarks bar.'));
-        }}><Bookmark size={16} /> Copy or drag cart shortcut</a>
+          copyText(shortcut).then(ok => setCopyStatus(ok ? 'Parancsikon másolva' : 'Húzd a hivatkozást a könyvjelzősávra.'));
+        }}><Bookmark size={16} /> Kosárparancsikon másolása vagy húzása</a>
         {copyStatus && <p role="status">{copyStatus}</p>}
       </li>
-      <li><strong>Open the week on Teletál</strong><p>While on that page, run your saved cart bookmark and confirm the quantities. On mobile, use your browser’s bookmarks menu or search for the saved bookmark in the address bar.</p></li>
-      <li><strong>Review your cart and sign in</strong><p>The shortcut opens your Teletál cart. Sign in there if needed and finish checkout when you’re ready.</p></li>
+      <li><strong>Nyisd meg a heti étlapot a Teletálon</strong><p>Az étlapon nyisd meg a mentett könyvjelzőt, majd hagyd jóvá a mennyiségeket. Mobilon keresd a böngésző könyvjelzői között vagy a címsorban.</p></li>
+      <li><strong>Ellenőrizd a kosarat</strong><p>A parancsikon megnyitja a Teletál-kosarat. Ha szükséges, jelentkezz be, majd add le a rendelést, amikor elkészültél.</p></li>
     </ol>
-    <a className="button primary wide" href={url} target="_blank" rel="noreferrer"><ShoppingBasket size={19} /> Open week on Teletál</a>
-    <a className="text-button existing-cart" target="_blank" rel="noreferrer" href={cartUrl}>Open existing Teletál cart</a>
+    <a className="button primary wide" href={url} target="_blank" rel="noreferrer"><ShoppingBasket size={19} /> Heti étlap megnyitása a Teletálon</a>
+    <a className="text-button existing-cart" target="_blank" rel="noreferrer" href={cartUrl}>Teletál-kosár megnyitása</a>
   </>;
 }
 
@@ -353,40 +354,40 @@ function Review({ plan, onCart, onNotice, onNew }) {
   async function copyChecklist() {
     const checklist = [`${appName} · ${weekLabel(plan.settings.week)}`, ...days.map((day, index) => {
       const option = plan.slots[index + 1];
-      if (!option) return `${day} — skipped`;
-      return `${day}${index >= 5 ? ' (order for Friday)' : ''} — ${option.dishes.map(dish => `${dish.code} ${dish.name}`).join(' + ')} · ${calories(option.kcal)}`;
+      if (!option) return `${day} – kihagyva`;
+      return `${day}${index >= 5 ? ' (pénteki kiszállítás)' : ''} – ${option.dishes.map(dish => `${dish.code} ${dish.name}`).join(' + ')} · ${calories(option.kcal)}`;
     })].join('\n');
-    onNotice(await copyText(checklist) ? 'Meal list copied' : 'Clipboard unavailable. You can select the meal list on this page.');
+    onNotice(await copyText(checklist) ? 'Étellista a vágólapra másolva' : 'A vágólap nem érhető el. Jelöld ki az étellistát ezen az oldalon.');
   }
 
   return <main className="review">
     <div className="review-heading">
       <span className="section-icon"><ClipboardList size={23} /></span>
-      <div><h1>Your weekly picks</h1><p>{weekLabel(plan.settings.week)} · {picks.length} of 7 days picked</p></div>
+      <div><h1>Heti választásaid</h1><p>{weekLabel(plan.settings.week)} · {picks.length}/7 napra választottál ételt</p></div>
     </div>
     <ol className="review-list">
       {days.map((day, index) => {
         const option = plan.slots[index + 1];
         return <li key={day}>
-          <div className="review-day"><strong>{day}</strong>{index > 4 && <span>Friday delivery</span>}</div>
+          <div className="review-day"><strong>{day}</strong>{index > 4 && <span>Pénteki kiszállítás</span>}</div>
           {option ? <>
             <div className="review-meals">
               {option.dishes.map(dish => <div key={dish.id}><span className="meal-code">{dish.code}</span><span lang="hu">{dish.name}</span></div>)}
             </div>
             <div className="review-numbers"><strong>{calories(option.kcal)}</strong><span>{money(option.price)}</span></div>
-          </> : <span className="skipped-label">Skipped</span>}
+          </> : <span className="skipped-label">Kihagyva</span>}
         </li>;
       })}
     </ol>
     <div className="cart-footer">
-      <div><span>Estimated total</span><strong>{money(total)}</strong></div>
+      <div><span>Becsült összeg</span><strong>{money(total)}</strong></div>
       <button type="button" className="button primary" onClick={() => onCart(lines)} disabled={!lines.length}>
-        <ShoppingBasket size={20} /> Add to Teletál cart
+        <ShoppingBasket size={20} /> Teletál-kosárba
       </button>
     </div>
     <div className="review-links">
-      <button type="button" className="text-button" onClick={copyChecklist} disabled={!lines.length}>Copy meal list</button>
-      <button type="button" className="text-button" onClick={onNew}>Plan another week</button>
+      <button type="button" className="text-button" onClick={copyChecklist} disabled={!lines.length}>Étellista másolása</button>
+      <button type="button" className="text-button" onClick={onNew}>Új heti terv</button>
     </div>
   </main>;
 }
@@ -407,7 +408,7 @@ function App() {
     const aborter = new AbortController();
     setWeekError('');
     loadJson('/api/weeks', aborter.signal).then(published => {
-      if (!published.length) throw new Error('No delivery weeks are listed yet.');
+      if (!published.length) throw new Error('Még nincs közzétett heti étlap.');
       setWeeks(published);
       setSettings(value => published.some(week => week.key === value.week)
         ? value : { ...value, week: defaultWeek(published) });
@@ -422,7 +423,7 @@ function App() {
     try {
       localStorage.setItem(storageKey, JSON.stringify(plan));
     } catch {
-      setNotice('Your browser could not save this plan locally.');
+      setNotice('A böngésző nem tudta menteni az ételtervet.');
     }
   }, [plan]);
 
@@ -437,7 +438,7 @@ function App() {
       setPlan(current => ({ ...current, settings }));
       return setSetup(false);
     }
-    if (plan && !window.confirm('Start a new plan and replace the saved picks?')) return;
+    if (plan && !window.confirm('Új ételtervet kezdesz? Ez felülírja a mentett választásaidat.')) return;
     setPlan(startPlan({ ...settings }));
     setSetup(false);
   }
@@ -447,10 +448,10 @@ function App() {
       <div className="header-inner">
         <div className="brand"><span className="brand-icon"><Utensils size={20} /></span><span>{appName}</span></div>
         <div className="header-actions">
-          {!setup && <button type="button" className="quiet-button" aria-label="Settings" onClick={() => {
+          {!setup && <button type="button" className="quiet-button" aria-label="Beállítások" onClick={() => {
             setSettings(plan.settings);
             setSetup(true);
-          }}><SlidersHorizontal size={17} /><span>Settings</span></button>}
+          }}><SlidersHorizontal size={17} /><span>Beállítások</span></button>}
           <InstallButton onHelp={() => setModal({ type: 'install' })} />
         </div>
       </div>
@@ -462,11 +463,11 @@ function App() {
     </main> : plan?.day <= 7 ? <Picker plan={plan} updatePlan={setPlan} />
       : <Review plan={plan} onCart={lines => setModal({ type: 'cart', lines })} onNotice={setNotice}
         onNew={() => { setSettings({ ...plan.settings, week: defaultWeek(weeks) ?? plan.settings.week }); setSetup(true); }} />}
-    {modal?.type === 'install' && <Modal name={`Install ${appName}`} onClose={() => setModal(null)}>
-      <p><Smartphone size={19} className="inline-icon" /> On iPhone, open {appName} in Safari, tap Share, then choose <b>Add to Home Screen</b>.</p>
-      <p>On Android, open the browser menu and choose <b>Install app</b> or <b>Add to Home screen</b>. On desktop, use your browser’s install option if available.</p>
+    {modal?.type === 'install' && <Modal name={`A ${appName} telepítése`} onClose={() => setModal(null)}>
+      <p><Smartphone size={19} className="inline-icon" /> iPhone-on nyisd meg az oldalt a Safariban, és a Megosztás menüben válaszd a <b>Hozzáadás a Főképernyőhöz</b> lehetőséget. Ha megjelenik, kapcsold be a <b>Megnyitás webappként</b> beállítást.</p>
+      <p>Androidon a böngésző menüjében válaszd az <b>Alkalmazás telepítése</b> vagy a <b>Hozzáadás a kezdőképernyőhöz</b> lehetőséget. Számítógépen keresd a telepítési lehetőséget a böngésző menüjében.</p>
     </Modal>}
-    {modal?.type === 'cart' && <Modal name="Send picks to Teletál" onClose={() => setModal(null)}>
+    {modal?.type === 'cart' && <Modal name="Ételek küldése a Teletál-kosárba" onClose={() => setModal(null)}>
       <CartInstructions plan={plan} lines={modal.lines} />
     </Modal>}
     {notice && <div className="toast" role="status">{notice}</div>}

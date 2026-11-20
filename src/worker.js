@@ -43,7 +43,7 @@ async function serveApi(request, url, ctx) {
     if (url.pathname === '/api/weeks') return await cachedJson(request, ctx, seconds.weeks, publishedWeeks);
 
     const week = url.searchParams.get('week') ?? '';
-    if (!mondayOfWeek(week)) return Response.json({ error: 'Choose a published week.' }, { status: 400 });
+    if (!mondayOfWeek(week)) return Response.json({ error: 'Válassz a közzétett hetek közül.' }, { status: 400 });
 
     if (url.pathname === '/api/menu') {
       return await cachedJson(request, ctx, seconds.menu, () => getCatalog(week));
@@ -51,14 +51,14 @@ async function serveApi(request, url, ctx) {
     if (url.pathname === '/api/nutrition') {
       const ids = [...new Set((url.searchParams.get('items') ?? '').split(','))];
       if (ids.length > 10 || ids.some(id => !detailsPattern.test(id))) {
-        return Response.json({ error: 'This nutrition request is invalid.' }, { status: 400 });
+        return Response.json({ error: 'A tápértékadatok lekérése érvénytelen.' }, { status: 400 });
       }
       return await cachedJson(request, ctx, seconds.nutrition, () => nutritionFor(week, ids));
     }
-    return new Response('Not found', { status: 404 });
+    return new Response('Az oldal nem található.', { status: 404 });
   } catch (error) {
     console.warn(`Teletál data unavailable for ${url.pathname}`, error.message);
-    return Response.json({ error: 'Teletál’s menu is temporarily unavailable. Try again in a moment.' }, {
+    return Response.json({ error: 'A Teletál étlapja átmenetileg nem érhető el. Próbáld újra egy kis idő múlva.' }, {
       status: 502, headers: { 'Cache-Control': 'no-store' },
     });
   }
@@ -68,11 +68,11 @@ export default {
   async fetch(request, _env, ctx) {
     const url = new URL(request.url);
     if (request.method !== 'GET' && request.method !== 'HEAD') {
-      return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
+      return new Response('Ez a művelet nem engedélyezett.', { status: 405, headers: { Allow: 'GET, HEAD' } });
     }
     if (url.pathname.startsWith('/api/')) return serveApi(request, url, ctx);
     const asset = Object.hasOwn(assets, url.pathname) && assets[url.pathname];
-    if (!asset) return new Response('Not found', { status: 404 });
+    if (!asset) return new Response('Az oldal nem található.', { status: 404 });
     const [contentType, value] = asset;
     const headers = {
       'Content-Type': contentType,

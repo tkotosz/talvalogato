@@ -4,12 +4,19 @@ export const courseDataQuery = 'courses=1';
 const versions = new Map();
 
 export async function loadJson(path, signal) {
-  const response = await fetch(path, { signal, headers: { Accept: 'application/json' } });
+  const loadingError = 'Nem sikerült betölteni az étlapot. Próbáld újra.';
+  const response = await fetch(path, { signal, headers: { Accept: 'application/json' } }).catch(error => {
+    if (signal?.aborted) throw error;
+    throw new Error(loadingError, { cause: error });
+  });
   if (!response.ok) {
     const problem = await response.json().catch(() => null);
-    throw new Error(problem?.error ?? 'The menu could not be loaded.');
+    throw new Error(problem?.error ?? loadingError);
   }
-  return response.json();
+  return response.json().catch(error => {
+    if (signal?.aborted) throw error;
+    throw new Error(loadingError, { cause: error });
+  });
 }
 
 export async function loadDayDishes(week, day, dishes, signal, onProgress) {

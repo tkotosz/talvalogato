@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { calorieLimit, cartLines, choose, dayQueue, mealOptions, sourceDay, startPlan } from '../src/planning.js';
-import { defaultWeek, mondayOfWeek } from '../src/weeks.js';
+import { dayLabel, defaultWeek, mondayOfWeek, weekLabel } from '../src/weeks.js';
 
 const settings = { week: '2026-W48', calories: 1000, tolerance: 5 };
 const soup = { id: '5:1:A1', day: 5, code: 'A1', kind: 'soup', name: 'Soup', kcal: 247, price: 700 };
@@ -64,4 +64,10 @@ test('the next Budapest delivery week handles an ISO-year boundary', () => {
   assert.equal(defaultWeek(weeks, new Date('2026-12-30T16:00:00Z')), '2027-W01');
   assert.equal(mondayOfWeek('2027-W01').toISOString(), '2027-01-04T00:00:00.000Z');
   assert.equal(mondayOfWeek('2027-W53'), null);
+});
+
+test('day and week labels use Hungarian dates, including weeks across two months', () => {
+  assert.equal(dayLabel('2026-W48', 1), 'november 23.');
+  assert.equal(weekLabel('2026-W48'), 'nov. 23–29.');
+  assert.equal(weekLabel('2026-W49').replace(/\s+/g, ' '), 'nov. 30. – dec. 6.');
 });

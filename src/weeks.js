@@ -38,17 +38,15 @@ export function defaultWeek(weeks, now = new Date()) {
   return weeks.find(week => week.key >= next)?.key ?? weeks.at(-1)?.key;
 }
 
-const monthDay = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
-const weekdayDate = new Intl.DateTimeFormat('en-GB', {
-  weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC',
-});
+const shortDate = new Intl.DateTimeFormat('hu-HU', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+const longDate = new Intl.DateTimeFormat('hu-HU', { day: 'numeric', month: 'long', timeZone: 'UTC' });
 
 export function weekLabel(key) {
   const monday = mondayOfWeek(key);
   if (!monday) return '';
-  return `${monthDay.format(monday)}–${monthDay.format(addDays(monday, 6))}`;
+  return shortDate.formatRange(monday, addDays(monday, 6));
 }
 
 export function dayLabel(week, day) {
-  return weekdayDate.format(dateForSlot(week, day));
+  return longDate.format(dateForSlot(week, day));
 }

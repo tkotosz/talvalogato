@@ -1,10 +1,10 @@
-export const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+export const days = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
 export const optionTypes = [
-  { id: 'menuWithDessert', label: 'Teletál soup + main + dessert', badge: 'Teletál menu + dessert' },
-  { id: 'menu', label: 'Teletál soup + main', badge: 'Teletál menu' },
-  { id: 'triple', label: 'Custom soup + main + dessert', badge: 'Soup + main + dessert' },
-  { id: 'pair', label: 'Custom soup + main', badge: 'Soup + main' },
-  { id: 'single', label: 'Single dishes', badge: 'Single dish' },
+  { id: 'menuWithDessert', label: 'Teletál-menü (leves + főétel + desszert)', badge: 'Teletál-menü desszerttel' },
+  { id: 'menu', label: 'Teletál-menü (leves + főétel)', badge: 'Teletál-menü' },
+  { id: 'triple', label: 'Saját menü (leves + főétel + desszert)', badge: 'Leves + főétel + desszert' },
+  { id: 'pair', label: 'Saját menü (leves + főétel)', badge: 'Leves + főétel' },
+  { id: 'single', label: 'Önálló ételek', badge: 'Önálló étel' },
 ];
 const defaultTypes = optionTypes.map(type => type.id);
 const priority = new Map(defaultTypes.map((id, index) => [id, index]));

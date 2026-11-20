@@ -9,7 +9,7 @@ createServer(async (incoming, outgoing) => {
     outgoing.writeHead(response.status, Object.fromEntries(response.headers));
     outgoing.end(Buffer.from(await response.arrayBuffer()));
   } catch (error) {
-    outgoing.writeHead(500).end('Server error');
+    outgoing.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Szerverhiba.');
     console.error(error);
   }
 }).listen(port, '127.0.0.1', () => console.log(`Local preview http://127.0.0.1:${port}`));
