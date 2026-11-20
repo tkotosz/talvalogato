@@ -12,6 +12,7 @@ import { dayLabel, defaultWeek, weekLabel } from './weeks.js';
 import './styles.css';
 
 const storageKey = 'meal-deck.plan.v1';
+const appName = 'Teletál Meal Picker';
 const cartUrl = 'https://www.teletal.hu/kosar';
 const actions = [
   { direction: 'left', label: 'Pass', Icon: X },
@@ -62,7 +63,7 @@ function InstallButton({ onHelp }) {
     };
   }, []);
   if (installed) return null;
-  return <button type="button" className="quiet-button" onClick={async () => {
+  return <button type="button" className="quiet-button" aria-label="Install app" onClick={async () => {
     if (!prompt) return onHelp();
     setPrompt(null);
     await prompt.prompt();
@@ -328,7 +329,7 @@ function CartInstructions({ plan, lines }) {
     <ol className="instructions">
       <li>
         <strong>Save the cart shortcut</strong>
-        <p>Create a bookmark called <b>Meal Deck cart</b> and replace its URL with the copied shortcut. On desktop you can also drag this shortcut into your bookmarks bar.</p>
+        <p>Create a bookmark called <b>Teletál cart shortcut</b> and replace its URL with the copied shortcut. On desktop you can also drag this shortcut into your bookmarks bar.</p>
         {lines.length > 14 && <p>If you saved the original shortcut, replace it once to support carts with more than 14 items.</p>}
         <a ref={link => link?.setAttribute('href', shortcut)} className="drag-bookmark" onClick={event => {
           event.preventDefault();
@@ -336,7 +337,7 @@ function CartInstructions({ plan, lines }) {
         }}><Bookmark size={16} /> Copy or drag cart shortcut</a>
         {copyStatus && <p role="status">{copyStatus}</p>}
       </li>
-      <li><strong>Open the week on Teletál</strong><p>While on that page, run the <b>Meal Deck cart</b> bookmark and confirm the quantities. On mobile, use your browser’s bookmarks menu or search for the saved bookmark in the address bar.</p></li>
+      <li><strong>Open the week on Teletál</strong><p>While on that page, run your saved cart bookmark and confirm the quantities. On mobile, use your browser’s bookmarks menu or search for the saved bookmark in the address bar.</p></li>
       <li><strong>Review your cart and sign in</strong><p>The shortcut opens your Teletál cart. Sign in there if needed and finish checkout when you’re ready.</p></li>
     </ol>
     <a className="button primary wide" href={url} target="_blank" rel="noreferrer"><ShoppingBasket size={19} /> Open week on Teletál</a>
@@ -350,7 +351,7 @@ function Review({ plan, onCart, onNotice, onNew }) {
   const total = picks.reduce((sum, option) => sum + option.price, 0);
 
   async function copyChecklist() {
-    const checklist = [`Meal Deck · ${weekLabel(plan.settings.week)}`, ...days.map((day, index) => {
+    const checklist = [`${appName} · ${weekLabel(plan.settings.week)}`, ...days.map((day, index) => {
       const option = plan.slots[index + 1];
       if (!option) return `${day} — skipped`;
       return `${day}${index >= 5 ? ' (order for Friday)' : ''} — ${option.dishes.map(dish => `${dish.code} ${dish.name}`).join(' + ')} · ${calories(option.kcal)}`;
@@ -444,9 +445,9 @@ function App() {
   return <>
     <header className="app-header">
       <div className="header-inner">
-        <div className="brand"><span className="brand-icon"><Utensils size={20} /></span><span>Meal Deck</span></div>
+        <div className="brand"><span className="brand-icon"><Utensils size={20} /></span><span>{appName}</span></div>
         <div className="header-actions">
-          {!setup && <button type="button" className="quiet-button" onClick={() => {
+          {!setup && <button type="button" className="quiet-button" aria-label="Settings" onClick={() => {
             setSettings(plan.settings);
             setSetup(true);
           }}><SlidersHorizontal size={17} /><span>Settings</span></button>}
@@ -461,8 +462,8 @@ function App() {
     </main> : plan?.day <= 7 ? <Picker plan={plan} updatePlan={setPlan} />
       : <Review plan={plan} onCart={lines => setModal({ type: 'cart', lines })} onNotice={setNotice}
         onNew={() => { setSettings({ ...plan.settings, week: defaultWeek(weeks) ?? plan.settings.week }); setSetup(true); }} />}
-    {modal?.type === 'install' && <Modal name="Install Meal Deck" onClose={() => setModal(null)}>
-      <p><Smartphone size={19} className="inline-icon" /> On iPhone, open Meal Deck in Safari, tap Share, then choose <b>Add to Home Screen</b>.</p>
+    {modal?.type === 'install' && <Modal name={`Install ${appName}`} onClose={() => setModal(null)}>
+      <p><Smartphone size={19} className="inline-icon" /> On iPhone, open {appName} in Safari, tap Share, then choose <b>Add to Home Screen</b>.</p>
       <p>On Android, open the browser menu and choose <b>Install app</b> or <b>Add to Home screen</b>. On desktop, use your browser’s install option if available.</p>
     </Modal>}
     {modal?.type === 'cart' && <Modal name="Send picks to Teletál" onClose={() => setModal(null)}>

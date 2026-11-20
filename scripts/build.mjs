@@ -66,4 +66,4 @@ await build({
 });
 const bytes = (await readFile('dist/server/index.js')).length;
 await writeFile(new URL('package.json', dist), '{"type":"module"}\n');
-console.log(`Built Meal Deck Worker (${Math.round(bytes / 1024)} KiB)`);
+console.log(`Built Teletál Meal Picker (${Math.round(bytes / 1024)} KiB)`);

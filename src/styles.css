@@ -255,7 +255,7 @@ dialog::backdrop { background: #12292088; }
   .header-actions { gap: 5px; }
   .quiet-button { padding-inline: 7px; min-height: 39px; gap: 4px; font-size: .81rem; }
   .quiet-button svg { width: 15px; }
-  .brand { font-size: 1.1rem; gap: 5px; }
+  .brand { font-size: 1.1rem; gap: 5px; white-space: normal; line-height: 1.12; }
   .brand-icon { width: 32px; height: 32px; border-radius: 9px; }
   main { padding-inline: max(13px, env(safe-area-inset-left)); }
   .setup { padding: 14px 13px 24px; max-width: 450px; }
@@ -290,8 +290,8 @@ dialog::backdrop { background: #12292088; }
 @media (max-width: 350px) {
   .week-progress svg { display: none; }
   .header-inner { padding-inline: 9px; }
-  .quiet-button { font-size: .76rem; }
-  .quiet-button svg { display: none; }
+  .header-actions .quiet-button { min-width: 38px; }
+  .header-actions .quiet-button span { display: none; }
   .cart-footer .button { padding-inline: 9px; font-size: .86rem; }
 }
 @media (prefers-reduced-motion: reduce) {

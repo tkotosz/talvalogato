@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Meal Deck",
-  "short_name": "Meal Deck",
+  "name": "Teletál Meal Picker",
+  "short_name": "Meal Picker",
   "description": "A weekly meal picker for Teletál.",
   "lang": "en",
   "start_url": "/",

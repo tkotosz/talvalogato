@@ -2,7 +2,7 @@ export async function importOnTeletal() {
   const origin = 'https://www.teletal.hu';
   const storageKey = 'meal-deck.last-cart-import';
   if (location.origin !== origin || !location.hash.startsWith('#meal-deck=')) {
-    alert('Open a week using Meal Deck’s cart link, then run this bookmark on Teletál.');
+    alert('Open the Teletál week from the meal picker, then run this bookmark.');
     return;
   }
 
@@ -17,7 +17,7 @@ export async function importOnTeletal() {
       || !Array.isArray(lines) || !lines.length || lines.length > 21 || !lines.every(validLine)
       || form?.getAttribute('ev') !== year || form?.getAttribute('het') !== week
       || new Set(lines.map(([day, code]) => day + ':' + code)).size !== lines.length) {
-      throw new Error('The selected week or meal list is invalid. Open the week from Meal Deck again.');
+      throw new Error('The selected week or meal list is invalid. Open the week from the meal picker again.');
     }
 
     const address = document.getElementById('select-address')?.value || '-1';
