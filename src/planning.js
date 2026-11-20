@@ -1,5 +1,14 @@
 export const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-export const newSettings = { week: '', calories: 1000, tolerance: 5 };
+export const optionTypes = [
+  { id: 'menuWithDessert', label: 'Teletál soup + main + dessert', badge: 'Teletál menu + dessert' },
+  { id: 'menu', label: 'Teletál soup + main', badge: 'Teletál menu' },
+  { id: 'triple', label: 'Custom soup + main + dessert', badge: 'Soup + main + dessert' },
+  { id: 'pair', label: 'Custom soup + main', badge: 'Soup + main' },
+  { id: 'single', label: 'Single dishes', badge: 'Single dish' },
+];
+const defaultTypes = optionTypes.map(type => type.id);
+const priority = new Map(defaultTypes.map((id, index) => [id, index]));
+export const newSettings = { week: '', calories: 1000, tolerance: 5, types: defaultTypes };
 export const dishCodePattern = /^[A-Z0-9][A-Z0-9-]{0,15}$/i;
 
 export function calorieLimit({ calories, tolerance }) {
@@ -16,32 +25,58 @@ export function sourceDay(day) {
 
 const sumCalories = dishes => Math.round(dishes.reduce((sum, dish) => sum + dish.kcal, 0) * 10) / 10;
 
+function customCombo(dishes, kcal) {
+  const [soup, main] = dishes;
+  return {
+    id: dishes.map(dish => dish.id).join('+'), kind: dishes.length === 3 ? 'triple' : 'pair', dishes,
+    kcal, price: dishes.reduce((sum, dish) => sum + dish.price, 0),
+    title: main.name, photo: main.photo ?? soup.photo,
+    components: dishes.map(dish => ({ name: dish.name, kcal: dish.kcal })),
+  };
+}
+
 export function mealOptions(dishes, settings) {
   const limit = calorieLimit(settings);
+  const enabled = new Set(settings.types ?? defaultTypes);
   const eligible = dishes.filter(dish => Number.isFinite(dish.kcal) && dish.kcal > 0 && dish.kcal <= limit);
-  const options = eligible.map(dish => ({
-    id: dish.id, kind: dish.kind === 'menu' ? 'menu' : 'single', dishes: [dish],
-    kcal: dish.kcal, price: dish.price, title: dish.name, photo: dish.photo,
-    components: dish.components,
-  }));
-
+  const desserts = eligible.filter(dish => dish.kind === 'dessert');
   const soups = eligible.filter(dish => dish.kind === 'soup');
   const mains = eligible.filter(dish => dish.kind === 'main');
-  for (const soup of soups) {
-    for (const main of mains) {
-      const parts = [soup, main];
-      const kcal = sumCalories(parts);
-      if (kcal <= limit) {
-        options.push({
-          id: `${soup.id}+${main.id}`, kind: 'pair', dishes: parts, kcal,
-          price: soup.price + main.price, title: main.name, photo: main.photo ?? soup.photo,
-          components: parts.map(dish => ({ name: dish.name, kcal: dish.kcal })),
-        });
+  const options = eligible.flatMap(dish => {
+    let kind = 'single';
+    if (dish.kind === 'dessert') return [];
+    if (dish.kind === 'menu') {
+      const courses = new Set(dish.components?.map(course => course.kind));
+      if (!courses.has('soup') || !courses.has('main')) return [];
+      kind = courses.has('dessert') ? 'menuWithDessert' : 'menu';
+    }
+    if (!enabled.has(kind)) return [];
+    return [{
+      id: dish.id, kind, dishes: [dish], kcal: dish.kcal, price: dish.price,
+      title: dish.name, photo: dish.photo, components: dish.components,
+    }];
+  });
+
+  if (enabled.has('pair') || enabled.has('triple')) {
+    for (const soup of soups) {
+      for (const main of mains) {
+        const pair = [soup, main];
+        const pairCalories = sumCalories(pair);
+        if (pairCalories > limit) continue;
+        if (enabled.has('pair')) options.push(customCombo(pair, pairCalories));
+        if (enabled.has('triple')) {
+          for (const dessert of desserts) {
+            const triple = [...pair, dessert];
+            const kcal = sumCalories(triple);
+            if (kcal <= limit) options.push(customCombo(triple, kcal));
+          }
+        }
       }
     }
   }
 
-  return options.sort((a, b) => Math.abs(a.kcal - settings.calories) - Math.abs(b.kcal - settings.calories)
+  return options.sort((a, b) => priority.get(a.kind) - priority.get(b.kind)
+    || Math.abs(a.kcal - settings.calories) - Math.abs(b.kcal - settings.calories)
     || a.price - b.price || a.title.localeCompare(b.title, 'hu'));
 }
 

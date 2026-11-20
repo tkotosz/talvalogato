@@ -118,6 +118,13 @@ main { margin-inline: auto; padding-inline: max(24px, env(safe-area-inset-left))
 .budget-note svg { flex: none; margin-top: 2px; color: #436a3d; }
 .budget-note strong { font-size: .93rem; }
 .budget-note p { font-size: .87rem; color: var(--muted); margin-top: 2px; }
+.option-types { border: 0; margin: 0 0 17px; padding: 0; min-inline-size: 0; }
+.option-types legend { font-size: .96rem; font-weight: 740; padding: 0; }
+.option-types > p { color: var(--muted); font-size: .88rem; margin: 2px 0 5px; }
+.option-types label { display: flex; align-items: center; gap: 10px; min-height: 38px; cursor: pointer; }
+.option-types label + label { border-top: 1px solid var(--line); }
+.option-types input { width: 17px; height: 17px; margin: 0; flex: none; accent-color: var(--green); }
+.option-types .form-error { color: #a73937; }
 .form-error { color: #a73937; font-size: .9rem; }
 .resume { margin: 3px auto -5px; display: flex; }
 
@@ -151,6 +158,8 @@ main { margin-inline: auto; padding-inline: max(24px, env(safe-area-inset-left))
 .meal-cover img { width: 100%; height: 100%; object-fit: cover; object-position: center 54%; pointer-events: none; user-select: none; }
 .split-cover img { width: 47%; }
 .split-cover img + img { width: 53%; border-left: 2px solid #fff; }
+.triple-cover img { width: calc(100% / 3); }
+.triple-cover img + img { border-left: 2px solid #fff; }
 .cover-fallback { width: 100%; display: grid; place-items: center; color: var(--green); background: radial-gradient(circle at 51% 48%, #d8f27a 0%, #d8f27a 20%, #e5efcf 20.3%, #edf2e4 46%, #e7eee2 68%); }
 .meal-tag {
   display: inline-flex; align-items: center; gap: 6px; position: absolute; top: 12px; left: 12px;

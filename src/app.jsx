@@ -6,8 +6,8 @@ import {
 } from 'lucide-react';
 import { SwipeCard } from './SwipeCard.jsx';
 import { shortcutUrl, teletalWeekUrl } from './cart-shortcut.js';
-import { loadDayDishes, loadJson } from './menu-client.js';
-import { calorieLimit, cartLines, choose, dayQueue, days, mealOptions, newSettings, sourceDay, startPlan } from './planning.js';
+import { courseDataQuery, loadDayDishes, loadJson } from './menu-client.js';
+import { calorieLimit, cartLines, choose, dayQueue, days, mealOptions, newSettings, optionTypes, sourceDay, startPlan } from './planning.js';
 import { dayLabel, defaultWeek, weekLabel } from './weeks.js';
 import './styles.css';
 
@@ -18,7 +18,7 @@ const actions = [
   { direction: 'up', label: 'Maybe', Icon: Bookmark },
   { direction: 'right', label: 'Pick', Icon: Check },
 ];
-const labels = { single: 'Single dish', pair: 'Soup + main', menu: 'Teletál menu' };
+const mealBadges = Object.fromEntries(optionTypes.map(type => [type.id, type.badge]));
 const number = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 });
 const money = value => `${number.format(value)} Ft`;
 const calories = value => `${number.format(value)} kcal`;
@@ -69,11 +69,13 @@ function InstallButton({ onHelp }) {
   }}><Download size={17} /> <span>Install app</span></button>;
 }
 
-function Setup({ settings, setSettings, weeks, weekError, onRetry, onStart, onResume, hasPlan }) {
+function Setup({ settings, setSettings, weeks, weekError, onRetry, onStart, onResume, hasPlan, canContinue }) {
   const change = (key, value) => setSettings(current => ({ ...current, [key]: value }));
   const selected = weeks.some(week => week.key === settings.week);
-  const valid = selected && settings.calories >= 1 && settings.calories <= 10_000
+  const types = settings.types ?? newSettings.types;
+  const validBudget = settings.calories >= 1 && settings.calories <= 10_000
     && settings.tolerance !== '' && settings.tolerance >= 0 && settings.tolerance <= 100;
+  const valid = selected && validBudget && types.length > 0;
   const next = defaultWeek(weeks);
 
   return <div className="setup-grid">
@@ -81,7 +83,7 @@ function Setup({ settings, setSettings, weeks, weekError, onRetry, onStart, onRe
       <div className="welcome-copy">
         <span className="eyebrow dark-eyebrow"><Utensils size={16} /> Weekly meal planner</span>
         <h1>Pick your meals<br className="desktop-break" /> for the week.</h1>
-        <p>Swipe through Teletál dishes, soup and main pairings, and set menus that fit your calorie budget.</p>
+        <p>Swipe through Teletál set menus, meal combos, and single dishes that fit your calorie budget.</p>
       </div>
       <div className="deck-art" aria-hidden="true">
         <div className="art-card art-card-left"><Soup size={40} strokeWidth={1.4} /></div>
@@ -134,10 +136,23 @@ function Setup({ settings, setSettings, weeks, weekError, onRetry, onStart, onRe
       </div>
       <div className="budget-note">
         <Flame size={19} aria-hidden="true" />
-        <div><strong>{valid ? `Up to ${calories(calorieLimit(settings))} per day` : 'Daily calorie limit'}</strong>
+        <div><strong>{validBudget ? `Up to ${calories(calorieLimit(settings))} per day` : 'Daily calorie limit'}</strong>
           <p>The tolerance allows picks above your target.</p></div>
       </div>
-      <button className="button primary wide" disabled={!valid} type="submit">Start picking</button>
+      <fieldset className="option-types">
+        <legend>Show in the deck</legend>
+        <p>Enabled options appear in this order.</p>
+        {optionTypes.map(({ id, label }) => <label key={id}>
+          <input type="checkbox" checked={types.includes(id)} onChange={event => {
+            change('types', event.target.checked ? [...types, id] : types.filter(type => type !== id));
+          }} />
+          {label}
+        </label>)}
+        {!types.length && <p className="form-error" role="status">Enable at least one option type to continue.</p>}
+      </fieldset>
+      <button className="button primary wide" disabled={!valid} type="submit">
+        {canContinue ? 'Continue picking' : 'Start picking'}
+      </button>
       {hasPlan && <button type="button" className="text-button resume" onClick={onResume}>Return to saved plan</button>}
     </form>
   </div>;
@@ -160,15 +175,18 @@ function WeekProgress({ plan }) {
 
 function MealCard({ option, target }) {
   const { kind, title, components, dishes, kcal, price } = option;
-  const photos = kind === 'pair' ? dishes.map(dish => dish.photo).filter(Boolean) : [option.photo].filter(Boolean);
+  const customCombo = dishes.length > 1;
+  const photos = (customCombo ? dishes.map(dish => dish.photo) : [option.photo]).filter(Boolean);
   const [visible, setVisible] = useState(photos);
   return <article className="meal-card">
-    <div className={`meal-cover ${visible.length > 1 ? 'split-cover' : ''}`}>
+    <div className={`meal-cover ${visible.length === 3 ? 'triple-cover' : visible.length === 2 ? 'split-cover' : ''}`}>
       {visible.length > 0 ? visible.map((url, index) =>
         <img key={url + index} src={url} alt="" draggable="false"
           onError={() => setVisible(current => current.filter(photo => photo !== url))} />)
         : <div className="cover-fallback"><Utensils size={53} strokeWidth={1.3} /></div>}
-      <span className={`meal-tag tag-${kind}`}>{kind === 'pair' ? <Soup size={16} /> : <Utensils size={15} />} {labels[kind]}</span>
+      <span className={`meal-tag ${customCombo ? 'tag-pair' : kind.startsWith('menu') ? 'tag-menu' : ''}`}>
+        {customCombo ? <Soup size={16} /> : <Utensils size={15} />} {mealBadges[kind]}
+      </span>
     </div>
     <div className="meal-content">
       <h2 lang="hu">{title}</h2>
@@ -204,7 +222,7 @@ function Picker({ plan, updatePlan }) {
       try {
         let catalog = catalogByWeek.current.get(week);
         if (!catalog) {
-          catalog = await loadJson(`/api/menu?week=${week}`, signal);
+          catalog = await loadJson(`/api/menu?week=${week}&${courseDataQuery}`, signal);
           catalogByWeek.current.set(week, catalog);
         }
         const { dishes, unavailable, failures } = await loadDayDishes(week, providerDay,
@@ -262,9 +280,9 @@ function Picker({ plan, updatePlan }) {
         <button type="button" className="button secondary" onClick={retry}>Retry menu</button>
       </div> : !top ? <div className="placeholder-card" role="status">
         <span className="section-icon"><Utensils size={25} /></span>
-        <h2>{options.length ? 'You’ve seen every option' : 'No meals fit this budget'}</h2>
+        <h2>{options.length ? 'You’ve seen every option' : 'No meals match your settings'}</h2>
         <p>{options.length ? 'Restart the day to see the passed options again, or skip it.'
-          : 'You can skip this day or adjust your calorie target or tolerance in settings.'}</p>
+          : 'You can skip this day or change your calorie budget or option types in Settings.'}</p>
         {options.length > 0 && <button type="button" className="button secondary" onClick={() => act('restart')}>
           <RotateCcw size={17} /> Restart day
         </button>}
@@ -311,6 +329,7 @@ function CartInstructions({ plan, lines }) {
       <li>
         <strong>Save the cart shortcut</strong>
         <p>Create a bookmark called <b>Meal Deck cart</b> and replace its URL with the copied shortcut. On desktop you can also drag this shortcut into your bookmarks bar.</p>
+        {lines.length > 14 && <p>If you saved the original shortcut, replace it once to support carts with more than 14 items.</p>}
         <a ref={link => link?.setAttribute('href', shortcut)} className="drag-bookmark" onClick={event => {
           event.preventDefault();
           copyText(shortcut).then(ok => setCopyStatus(ok ? 'Shortcut copied' : 'Drag the shortcut into your bookmarks bar.'));
@@ -380,6 +399,7 @@ function App() {
   const [weekAttempt, setWeekAttempt] = useState(0);
   const [modal, setModal] = useState(null);
   const [notice, setNotice] = useState('');
+  const canContinue = plan?.day <= 7 && ['week', 'calories', 'tolerance'].every(key => settings[key] === plan.settings[key]);
 
   useEffect(() => {
     if (!setup || weeks.length) return;
@@ -412,8 +432,10 @@ function App() {
   }, [notice]);
 
   function start() {
-    const same = plan && Object.keys(settings).every(key => settings[key] === plan.settings[key]);
-    if (same && plan.day <= 7) return setSetup(false);
+    if (canContinue) {
+      setPlan(current => ({ ...current, settings }));
+      return setSetup(false);
+    }
     if (plan && !window.confirm('Start a new plan and replace the saved picks?')) return;
     setPlan(startPlan({ ...settings }));
     setSetup(false);
@@ -434,7 +456,8 @@ function App() {
     </header>
     {setup ? <main className="setup">
       <Setup settings={settings} setSettings={setSettings} weeks={weeks} weekError={weekError}
-        onRetry={() => setWeekAttempt(value => value + 1)} onStart={start} onResume={() => setSetup(false)} hasPlan={Boolean(plan)} />
+        onRetry={() => setWeekAttempt(value => value + 1)} onStart={start} onResume={() => setSetup(false)}
+        hasPlan={Boolean(plan)} canContinue={canContinue} />
     </main> : plan?.day <= 7 ? <Picker plan={plan} updatePlan={setPlan} />
       : <Review plan={plan} onCart={lines => setModal({ type: 'cart', lines })} onNotice={setNotice}
         onNew={() => { setSettings({ ...plan.settings, week: defaultWeek(weeks) ?? plan.settings.week }); setSetup(true); }} />}

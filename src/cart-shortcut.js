@@ -14,7 +14,7 @@ export async function importOnTeletal() {
       && /^[A-Z0-9][A-Z0-9-]{0,15}$/.test(line[1])
       && Number.isInteger(line[2]) && line[2] >= 1 && line[2] <= 3;
     if (!/^[a-f0-9-]{36}$/i.test(id) || !/^20\d{2}$/.test(year) || !/^\d{1,2}$/.test(week)
-      || !Array.isArray(lines) || !lines.length || lines.length > 14 || !lines.every(validLine)
+      || !Array.isArray(lines) || !lines.length || lines.length > 21 || !lines.every(validLine)
       || form?.getAttribute('ev') !== year || form?.getAttribute('het') !== week
       || new Set(lines.map(([day, code]) => day + ':' + code)).size !== lines.length) {
       throw new Error('The selected week or meal list is invalid. Open the week from Meal Deck again.');

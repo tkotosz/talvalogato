@@ -1,4 +1,6 @@
 const batchSize = 8;
+// Distinguish menu and nutrition responses cached before course types were available.
+export const courseDataQuery = 'courses=1';
 const versions = new Map();
 
 export async function loadJson(path, signal) {
@@ -28,7 +30,7 @@ export async function loadDayDishes(week, day, dishes, signal, onProgress) {
       signal.throwIfAborted();
       try {
         const query = new URLSearchParams({ week, items: batch.join(',') });
-        const details = await loadJson(`/api/nutrition?${query}`, signal);
+        const details = await loadJson(`/api/nutrition?${query}&${courseDataQuery}`, signal);
         for (const detail of details) {
           if (detail.retryable) failures.add(detail.id);
           else received.set(detail.id, detail);

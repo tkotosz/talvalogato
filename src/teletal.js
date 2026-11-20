@@ -5,7 +5,11 @@ import { isoWeek, mondayOfWeek, todayInBudapest } from './weeks.js';
 export const teletal = 'https://www.teletal.hu';
 const detailSelector = 'a[kod][nap].menu-info-button, a[kod][nap].minib, a[kod][nap].mib';
 const sectionSizes = new Intl.Collator('hu', { sensitivity: 'base' });
-const skippedSections = /^(reggeli|zzabkasa|desszert|savanyusag|diacipo|dianasi|xixo|hell|ital|vitamin|frissit)/;
+const skippedSections = /^(reggeli|zzabkasa|savanyusag|diacipo|dianasi|xixo|hell|ital|vitamin|frissit)/;
+const courseKinds = new Map([
+  ['leves', 'soup'], ['foetel', 'main'], ['desszert', 'dessert'], ['sutemeny', 'dessert'], ['joghurt', 'dessert'],
+  ['savanyusag', 'side'], ['koret', 'side'],
+]);
 const cleanText = value => value?.replace(/\s+/g, ' ').trim() ?? '';
 const plain = value => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 
@@ -41,8 +45,8 @@ function classify(section, title, code) {
   const name = plain(title);
   if (/^(menu|vakacio|z10|z11|z12|irn?$)/.test(key)
     || /^ZR7$|^SU\d$|^Z1[012]$/.test(code)) return 'menu';
+  if (key.startsWith('desszert') || code === 'ZR8' || code === 'Z9') return 'dessert';
   if (key === 'leves' || key === 'v1' || name.includes('leves')) return 'soup';
-  if (key === 'zero' && code === 'ZR8') return null;
   return 'main';
 }
 
@@ -62,9 +66,8 @@ function itemsFrom($, section, headings) {
     const titleNodes = card.find('.menu-cell-text-row.uk-text-break, .menu-cell-text-row.uk-text-small, .menu-item-title').first().clone();
     titleNodes.find('br').replaceWith(' / ');
     const category = headings.get(section) ?? section;
-    const name = cleanText(titleNodes.text()).replace(/,\s*\/\s*/g, ' / ') || category;
+    const name = cleanText(titleNodes.text()).replace(/,\s*\/\s*/g, ' / ').replace(/\s*\/\s*$/, '') || category;
     const kind = classify(section, name, code);
-    if (!kind) return [];
     const weekend = card.find('img[title]').toArray().some(img => plain($(img).attr('title')).includes('szombat'));
     return [{ id: `${day}:${type}:${code}`, day, type, code, kind, name, price, category, weekend }];
   });
@@ -140,10 +143,15 @@ function readComponents($) {
     .map(element => cleanText($(element).text()))
     .filter(value => /kcal/i.test(value));
   if (!servings.length || headings.length !== servings.length) return [];
-  return servings.map((value, index) => ({
-    name: cleanText($(headings[index]).text()),
-    kcal: Number(value.replace(/kcal\s*$/i, '').trim().replaceAll(',', '')),
-  })).filter(component => Number.isFinite(component.kcal) && component.kcal > 0);
+  return servings.map((value, index) => {
+    const heading = $(headings[index]);
+    const label = plain(cleanText(heading.prevAll('h2').first().text())).match(/\(\d+\)\s+(.+)$/)?.[1];
+    return {
+      name: cleanText(heading.text()),
+      kcal: Number(value.replace(/kcal\s*$/i, '').trim().replaceAll(',', '')),
+      kind: courseKinds.get(label),
+    };
+  }).filter(component => Number.isFinite(component.kcal) && component.kcal > 0);
 }
 
 export async function nutritionFor(key, ids) {
