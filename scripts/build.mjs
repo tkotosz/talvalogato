@@ -2,7 +2,9 @@ import { createHash } from 'node:crypto';
 import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { build } from 'esbuild';
 
-const dist = new URL('../dist/', import.meta.url);
+const pages = process.argv[2] === '--pages';
+const output = new URL(pages ? '../pages-dist/' : '../dist/', import.meta.url);
+const workerFile = pages ? 'pages-dist/_worker.js' : 'dist/server/index.js';
 const assets = {};
 const contentTypes = {
   html: 'text/html; charset=utf-8',
@@ -46,24 +48,32 @@ const serviceWorker = (await readFile('public/sw.js', 'utf8'))
   .replace("['SHELL']", JSON.stringify(shell));
 addAsset('/sw.js', serviceWorker);
 
-await rm(dist, { recursive: true, force: true });
-await mkdir(new URL('.openai/', dist), { recursive: true });
-await cp('.openai/hosting.json', new URL('.openai/hosting.json', dist));
+await rm(output, { recursive: true, force: true });
+if (pages) {
+  await mkdir(new URL('assets/', output), { recursive: true });
+  for (const [path, [, content]] of Object.entries(assets)) {
+    if (path !== '/') await writeFile(new URL(path.slice(1), output), Buffer.from(content, 'base64'));
+  }
+  await cp('cloudflare/pages', output, { recursive: true });
+} else {
+  await mkdir(new URL('.openai/', output), { recursive: true });
+  await cp('.openai/hosting.json', new URL('.openai/hosting.json', output));
+  await writeFile(new URL('package.json', output), '{"type":"module"}\n');
+}
 await build({
   entryPoints: ['src/worker.js'],
   bundle: true, platform: 'browser', format: 'esm', target: 'es2022',
-  outfile: 'dist/server/index.js', minify: true, charset: 'utf8',
+  outfile: workerFile, minify: true, charset: 'utf8',
   plugins: [{
     name: 'embedded-assets',
     setup(context) {
       context.onResolve({ filter: /^meal-deck-assets$/ }, () => ({ path: 'assets', namespace: 'embedded' }));
       context.onLoad({ filter: /.*/, namespace: 'embedded' }, () => ({
-        contents: `export default ${JSON.stringify(assets)}`,
+        contents: `export default ${JSON.stringify(pages ? {} : assets)}`,
         loader: 'js',
       }));
     },
   }],
 });
-const bytes = (await readFile('dist/server/index.js')).length;
-await writeFile(new URL('package.json', dist), '{"type":"module"}\n');
-console.log(`Built Tálválogató (${Math.round(bytes / 1024)} KiB)`);
+const bytes = (await readFile(workerFile)).length;
+console.log(`Built Tálválogató in ${pages ? 'pages-dist' : 'dist'} (Worker ${Math.round(bytes / 1024)} KiB)`);

@@ -65,14 +65,14 @@ async function serveApi(request, url, ctx) {
 }
 
 export default {
-  async fetch(request, _env, ctx) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return new Response('Ez a művelet nem engedélyezett.', { status: 405, headers: { Allow: 'GET, HEAD' } });
     }
     if (url.pathname.startsWith('/api/')) return serveApi(request, url, ctx);
     const asset = Object.hasOwn(assets, url.pathname) && assets[url.pathname];
-    if (!asset) return new Response('Az oldal nem található.', { status: 404 });
+    if (!asset) return env?.ASSETS?.fetch(request) ?? new Response('Az oldal nem található.', { status: 404 });
     const [contentType, value] = asset;
     const headers = {
       'Content-Type': contentType,

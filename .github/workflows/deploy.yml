@@ -1,0 +1,82 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Publish to Cloudflare Pages
+    needs: check
+    if: >-
+      !cancelled() && (needs.check.result == 'success' || (
+        github.event_name == 'workflow_run' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_branch == 'main' &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      ))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: pages-${{ github.event_name == 'release' && 'production' || 'preview' }}
+      cancel-in-progress: false
+    environment:
+      name: ${{ github.event_name == 'release' && 'production' || 'preview' }}
+      url: ${{ steps.pages.outputs.pages-deployment-alias-url || steps.pages.outputs.deployment-url }}
+    env:
+      PAGES_PROJECT: talvalogato
+      PAGES_BRANCH: ${{ github.event_name == 'release' && 'main' || 'preview' }}
+      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - name: Verify Cloudflare Pages project
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [[ -z "$CLOUDFLARE_ACCOUNT_ID" || -z "$CLOUDFLARE_API_TOKEN" ]]; then
+            echo '::error::Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN under GitHub Actions secrets.'
+            exit 1
+          fi
+          if ! production_branch=$(curl --silent --show-error --fail --max-time 15 \
+            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$PAGES_PROJECT" |
+            jq -er '.result.production_branch'); then
+            echo '::error::Could not read the talvalogato Pages project. Check the account ID and Pages token permissions.'
+            exit 1
+          fi
+          if [[ "$production_branch" != main ]]; then
+            echo '::error::Set the Pages production branch to main before deploying.'
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.DEPLOY_SHA }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build:pages
+      - uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
+        id: pages
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4.156.2'
+          command: >-
+            pages deploy pages-dist --project-name=${{ env.PAGES_PROJECT }}
+            --branch=${{ env.PAGES_BRANCH }} --commit-hash=${{ env.DEPLOY_SHA }}
