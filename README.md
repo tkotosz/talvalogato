@@ -1,6 +1,6 @@
-# Teletál Meal Picker
+# Tálválogató
 
-Teletál Meal Picker is an installable planner for Teletál. It uses the published weekly menu and sums per-portion nutrition for each card. Settings control which option types appear, with Teletál set menus first, followed by custom combinations and single dishes. Each custom course is an order line, and each Teletál set menu uses one order line.
+Tálválogató is an installable planner for Teletál. It uses the published weekly menu and sums per-portion nutrition for each card. Settings control which option types appear, with Teletál set menus first, followed by custom combinations and single dishes. Each custom course is an order line, and each Teletál set menu uses one order line.
 
 ## Run locally
 

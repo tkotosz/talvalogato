@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Teletál Meal Picker",
-  "short_name": "Meal Picker",
+  "name": "Tálválogató",
+  "short_name": "Tálválogató",
   "description": "A weekly meal picker for Teletál.",
   "lang": "en",
   "start_url": "/",

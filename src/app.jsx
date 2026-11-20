@@ -12,7 +12,7 @@ import { dayLabel, defaultWeek, weekLabel } from './weeks.js';
 import './styles.css';
 
 const storageKey = 'meal-deck.plan.v1';
-const appName = 'Teletál Meal Picker';
+const appName = 'Tálválogató';
 const cartUrl = 'https://www.teletal.hu/kosar';
 const actions = [
   { direction: 'left', label: 'Pass', Icon: X },
