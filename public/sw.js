@@ -8,7 +8,8 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     for (const key of await caches.keys()) {
-      if (key.startsWith('meal-deck-') && key !== cacheName) await caches.delete(key);
+      const appCache = key.startsWith('talvalogato-') || key.startsWith('meal-deck-');
+      if (appCache && key !== cacheName) await caches.delete(key);
     }
     await self.clients.claim();
   })());

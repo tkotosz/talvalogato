@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
-  Bookmark, CalendarDays, Check, ChevronDown, ClipboardList, Download, Flame,
+  Bookmark, CalendarDays, Check, ChevronDown, ClipboardList, Download, Flame, Pencil,
   RotateCcw, ShoppingBasket, SlidersHorizontal, Smartphone, Soup, Utensils, X,
 } from 'lucide-react';
 import { SwipeCard } from './SwipeCard.jsx';
 import { shortcutUrl, teletalWeekUrl } from './cart-shortcut.js';
 import { courseDataQuery, loadDayDishes, loadJson } from './menu-client.js';
-import { calorieLimit, cartLines, choose, dayQueue, days, mealOptions, newSettings, optionTypes, sourceDay, startPlan } from './planning.js';
+import { calorieLimit, cartLines, choose, dayQueue, days, mealOptions, newSettings, optionTypes, restorePlan, sourceDay, startPlan } from './planning.js';
 import { dayLabel, defaultWeek, weekLabel } from './weeks.js';
 import './styles.css';
 
-const storageKey = 'meal-deck.plan.v1';
+const storageKey = 'talvalogato.plan.v1';
+const previousStorageKey = 'meal-deck.plan.v1';
 const appName = 'Tálválogató';
 const cartUrl = 'https://www.teletal.hu/kosar';
 const actions = [
@@ -21,14 +22,19 @@ const actions = [
 ];
 const shortDays = ['H', 'K', 'Sze', 'Cs', 'P', 'Szo', 'V'];
 const mealBadges = Object.fromEntries(optionTypes.map(type => [type.id, type.badge]));
+const coursePlaceholders = {
+  soup: '/meal-placeholder-soup.webp',
+  main: '/meal-placeholder-main.webp',
+  third: '/meal-placeholder-third.webp',
+};
 const number = new Intl.NumberFormat('hu-HU', { maximumFractionDigits: 1 });
 const money = value => `${number.format(value)}\u00a0Ft`;
 const calories = value => `${number.format(value)}\u00a0kcal`;
 
 function savedPlan() {
   try {
-    const value = JSON.parse(localStorage.getItem(storageKey));
-    if (value?.id && value.settings?.week && Number.isInteger(value.day)) return value;
+    const value = JSON.parse(localStorage.getItem(storageKey) ?? localStorage.getItem(previousStorageKey));
+    if (value?.id && value.settings?.week && Number.isInteger(value.day)) return restorePlan(value);
   } catch {
     return null;
   }
@@ -38,7 +44,9 @@ function savedPlan() {
 function Modal({ name, onClose, children }) {
   const ref = useRef(null);
   useEffect(() => {
+    const opener = document.activeElement;
     ref.current.showModal();
+    return () => opener?.focus({ preventScroll: true });
   }, []);
   return <dialog ref={ref} aria-labelledby="dialog-title" onCancel={onClose}
     onClick={event => { if (event.target === ref.current) onClose(); }}>
@@ -75,8 +83,10 @@ function Setup({ settings, setSettings, weeks, weekError, onRetry, onStart, onRe
   const change = (key, value) => setSettings(current => ({ ...current, [key]: value }));
   const selected = weeks.some(week => week.key === settings.week);
   const types = settings.types ?? newSettings.types;
-  const validBudget = settings.calories >= 1 && settings.calories <= 10_000
-    && settings.tolerance !== '' && settings.tolerance >= 0 && settings.tolerance <= 100;
+  const limit = calorieLimit(settings);
+  const validBudget = Number.isInteger(settings.calories) && settings.calories >= 1
+    && Number.isFinite(settings.tolerance) && settings.tolerance >= 0 && settings.tolerance <= 100
+    && Number.isFinite(limit);
   const valid = selected && validBudget && types.length > 0;
   const next = defaultWeek(weeks);
 
@@ -123,7 +133,7 @@ function Setup({ settings, setSettings, weeks, weekError, onRetry, onStart, onRe
       <div className="number-fields">
         <label htmlFor="target">Napi kalóriacél
           <span className="field-wrap">
-            <input id="target" type="number" inputMode="numeric" min="1" max="10000" step="1" required
+            <input id="target" type="number" inputMode="numeric" min="1" step="1" required
               value={settings.calories} onChange={event => change('calories', event.target.value === '' ? '' : event.target.valueAsNumber)} />
             <span>kcal</span>
           </span>
@@ -138,8 +148,9 @@ function Setup({ settings, setSettings, weeks, weekError, onRetry, onStart, onRe
       </div>
       <div className="budget-note">
         <Flame size={19} aria-hidden="true" />
-        <div><strong>{validBudget ? `Naponta legfeljebb ${calories(calorieLimit(settings))}` : 'Napi kalóriakeret'}</strong>
-          <p>A ráhagyás ennyivel emeli a napi kalóriakeretedet.</p></div>
+        <div><strong>{validBudget ? `Naponta legfeljebb ${calories(limit)}` : 'Napi kalóriakeret'}</strong>
+          <p>{validBudget ? 'A ráhagyás ennyivel emeli a napi kalóriakeretedet.' : Number.isFinite(limit)
+            ? 'Adj meg egy pozitív egész kalóriacélt és 0–100% ráhagyást.' : 'A kiszámított kalóriakeret túl nagy.'}</p></div>
       </div>
       <fieldset className="option-types">
         <legend>Mutatott ételtípusok</legend>
@@ -160,39 +171,67 @@ function Setup({ settings, setSettings, weeks, weekError, onRetry, onStart, onRe
   </div>;
 }
 
-function WeekProgress({ plan }) {
+function WeekProgress({ plan, onSelect }) {
   return <ol aria-label="A heti válogatás állása" className="week-progress">
     {days.map((day, index) => {
-      const active = plan.day === index + 1;
-      const done = Object.hasOwn(plan.slots, index + 1);
-      const picked = Boolean(plan.slots[index + 1]);
-      return <li key={day} aria-current={active ? 'step' : undefined}
+      const dayNumber = index + 1;
+      const active = plan.day === dayNumber;
+      const done = Object.hasOwn(plan.slots, dayNumber);
+      const picked = Boolean(plan.slots[dayNumber]);
+      return <li key={day}><button type="button" aria-current={active ? 'step' : undefined}
         aria-label={`${day}${done ? picked ? ', étel kiválasztva' : ', kihagyva' : ''}`}
-        className={active ? 'current' : done ? picked ? 'picked' : 'skipped' : ''}>
+        className={done ? picked ? 'picked' : 'skipped' : undefined}
+        onClick={() => onSelect(dayNumber)}>
         {picked && <Check size={13} aria-hidden="true" />}<span>{shortDays[index]}</span>
-      </li>;
+      </button></li>;
     })}
   </ol>;
 }
 
-function MealCard({ option, target }) {
+function MealCard({ option, target, week }) {
   const { kind, title, components, dishes, kcal, price } = option;
   const customCombo = dishes.length > 1;
-  const photos = (customCombo ? dishes.map(dish => dish.photo) : [option.photo]).filter(Boolean);
-  const [visible, setVisible] = useState(photos);
+  const hasCourses = kind !== 'single' && components?.length > 0;
+  const codes = kind === 'single' ? [] : dishes.map(dish => dish.code);
+  const hasCodes = codes.length > 0 && codes.every(Boolean);
+  const heading = hasCodes ? `Menü ${codes.join(' + ')}` : hasCourses ? 'Menü' : title;
+  const [refreshedCourses, setRefreshedCourses] = useState(null);
+  const [dish] = dishes;
+  const refreshPhotos = kind.startsWith('menu') && !components?.some(course => Object.hasOwn(course, 'photo'));
+
+  useEffect(() => {
+    if (!refreshPhotos) return;
+    const aborter = new AbortController();
+    const { signal } = aborter;
+    // Saved menus from earlier versions have only the first photo.
+    loadDayDishes(week, dish.day, [dish], signal, () => {}).then(({ dishes: [refreshed] }) => {
+      if (!signal.aborted && refreshed) setRefreshedCourses(refreshed.components);
+    }).catch(() => {});
+    return () => aborter.abort();
+  }, [week, dish, refreshPhotos]);
+
+  const courses = refreshedCourses ?? components;
+  // A legacy cover photo has no course association until the refreshed data arrives.
+  const hasLegacyCover = refreshPhotos && !refreshedCourses && option.photo;
+  const coverCourses = customCombo || kind === 'single' || hasLegacyCover || !courses?.length ? dishes : courses;
+  const [failed, setFailed] = useState([]);
   return <article className="meal-card">
-    <div className={`meal-cover ${visible.length === 3 ? 'triple-cover' : visible.length === 2 ? 'split-cover' : ''}`}>
-      {visible.length > 0 ? visible.map((url, index) =>
-        <img key={url + index} src={url} alt="" draggable="false"
-          onError={() => setVisible(current => current.filter(photo => photo !== url))} />)
-        : <div className="cover-fallback"><Utensils size={53} strokeWidth={1.3} /></div>}
+    <div className={`meal-cover${coverCourses.length === 2 ? ' split-cover' : ''}`}>
+      {coverCourses.map((course, index) => {
+        const photo = course.photo ?? (coverCourses.length === 1 ? option.photo : null);
+        const showPhoto = photo && !failed.includes(photo);
+        const placeholder = coursePlaceholders[course.kind] ?? coursePlaceholders.third;
+        return <img key={index} className={showPhoto ? undefined : 'course-placeholder'}
+          src={showPhoto ? photo : placeholder} alt={showPhoto ? '' : 'Illusztráció, a fogás fotója nem érhető el'}
+          draggable="false" onError={showPhoto ? () => setFailed(current => [...current, photo]) : undefined} />;
+      })}
       <span className={`meal-tag ${customCombo ? 'tag-pair' : kind.startsWith('menu') ? 'tag-menu' : ''}`}>
         {customCombo ? <Soup size={16} /> : <Utensils size={15} />} {mealBadges[kind]}
       </span>
     </div>
     <div className="meal-content">
-      <h2 lang="hu">{title}</h2>
-      {kind !== 'single' && components?.length > 0 && <ul className="course-list" aria-label="A menü fogásai">
+      <h2 lang="hu">{heading}</h2>
+      {hasCourses && <ul className="course-list" aria-label="A menü fogásai">
         {components.map((part, index) => <li key={index}>
           <span lang="hu">{part.name}</span><span>{calories(part.kcal)}</span>
         </li>)}
@@ -213,9 +252,12 @@ function Picker({ plan, updatePlan }) {
   const [state, setState] = useState({ phase: 'loading', progress: [0, 0] });
   const week = plan.settings.week;
   const providerDay = sourceDay(plan.day);
+  const done = Object.hasOwn(plan.slots, plan.day);
+  const picked = plan.slots[plan.day];
   const loading = state.phase === 'loading' || state.key !== `${week}:${providerDay}`;
 
   useEffect(() => {
+    if (done) return;
     const aborter = new AbortController();
     const { signal } = aborter;
     const key = `${week}:${providerDay}`;
@@ -240,16 +282,16 @@ function Picker({ plan, updatePlan }) {
     }
     load();
     return () => aborter.abort();
-  }, [week, providerDay, attempt]);
+  }, [week, providerDay, attempt, done]);
 
-  const options = useMemo(() => loading || !state.dishes ? [] : mealOptions(state.dishes, plan.settings),
-    [loading, state.dishes, plan.settings]);
+  const options = useMemo(() => done || loading || !state.dishes ? [] : mealOptions(state.dishes, plan.settings),
+    [done, loading, state.dishes, plan.settings]);
   const queue = useMemo(() => dayQueue(options, plan), [options, plan]);
   const top = queue[0];
   const retry = () => setAttempt(value => value + 1);
   const act = direction => {
     setAnimation(value => value + 1);
-    updatePlan(current => current.day === plan.day ? choose(current, direction, top) : current);
+    updatePlan(current => current === plan ? choose(current, direction, top) : current);
   };
 
   useEffect(() => {
@@ -265,14 +307,16 @@ function Picker({ plan, updatePlan }) {
   }, [top]);
 
   return <main className="picker">
-    <WeekProgress plan={plan} />
+    <WeekProgress plan={plan} onSelect={day => updatePlan(current => current.day === day ? current : { ...current, day })} />
     <div className="picker-heading">
       <div><h1>{days[plan.day - 1]}</h1><p>{dayLabel(week, plan.day)}
         {plan.day > 5 && ' · A pénteki étlapról'}</p></div>
       <span className="day-budget"><Flame size={18} /> Max. {calories(calorieLimit(plan.settings))}</span>
     </div>
     <div className="deck">
-      {loading ? <div className="placeholder-card" role="status">
+      {done ? picked ? <MealCard key={`${plan.day}:${picked.id}`} option={picked} target={plan.settings.calories} week={week} />
+        : <div className="placeholder-card"><h2>Kihagytad ezt a napot</h2></div>
+      : loading ? <div className="placeholder-card" role="status">
         <span className="spinner" aria-hidden="true" />
         <h2>Étlap betöltése…</h2>
         {state.progress?.[1] > 0 && <p>{state.progress[1]} ételből {state.progress[0]} tápértékadata ellenőrizve</p>}
@@ -291,7 +335,7 @@ function Picker({ plan, updatePlan }) {
       </div> : <>
         {queue.length > 1 && <div className="card-backing" aria-hidden="true" />}
         <SwipeCard key={`${plan.day}:${top.id}:${animation}`} ref={card} actions={actions} onAction={act}>
-          <MealCard option={top} target={plan.settings.calories} />
+          <MealCard option={top} target={plan.settings.calories} week={week} />
         </SwipeCard>
       </>}
     </div>
@@ -301,11 +345,15 @@ function Picker({ plan, updatePlan }) {
         <span className="decision-icon"><Icon size={23} strokeWidth={2.2} /></span><span>{label}</span>
       </button>)}
     </div>}
-    <div className="day-links">
+    {done ? <div className="day-links completed-day-actions">
+      <button type="button" className="button secondary" onClick={() => act('restart')}>
+        <RotateCcw size={17} /> Meggondoltam magam
+      </button>
+    </div> : <div className="day-links">
       {top && <span aria-live="polite">{number.format(queue.length)} lehetőség maradt</span>}
       <button type="button" className="text-button" onClick={() => act('skip')}>Nap kihagyása</button>
-    </div>
-    {!loading && state.unavailable > 0 && <p className="nutrition-note">
+    </div>}
+    {!done && !loading && state.unavailable > 0 && <p className="nutrition-note">
       {number.format(state.unavailable)} ételhez nem érhető el kalóriaadat.
       {state.failures > 0 && <button type="button" className="text-button" onClick={retry}>Adatok újratöltése</button>}
     </p>}
@@ -346,7 +394,7 @@ function CartInstructions({ plan, lines }) {
   </>;
 }
 
-function Review({ plan, onCart, onNotice, onNew }) {
+function Review({ plan, onCart, onNotice, onEditDay, onRestart, onNew }) {
   const lines = useMemo(() => cartLines(plan), [plan]);
   const picks = Object.values(plan.slots).filter(Boolean);
   const total = picks.reduce((sum, option) => sum + option.price, 0);
@@ -369,13 +417,16 @@ function Review({ plan, onCart, onNotice, onNew }) {
       {days.map((day, index) => {
         const option = plan.slots[index + 1];
         return <li key={day}>
-          <div className="review-day"><strong>{day}</strong>{index > 4 && <span>Pénteki kiszállítás</span>}</div>
-          {option ? <>
-            <div className="review-meals">
-              {option.dishes.map(dish => <div key={dish.id}><span className="meal-code">{dish.code}</span><span lang="hu">{dish.name}</span></div>)}
-            </div>
-            <div className="review-numbers"><strong>{calories(option.kcal)}</strong><span>{money(option.price)}</span></div>
-          </> : <span className="skipped-label">Kihagyva</span>}
+          <button type="button" className="review-row" onClick={() => onEditDay(index + 1)}>
+            <span className="review-day"><strong>{day}</strong>{index > 4 && <span>Pénteki kiszállítás</span>}</span>
+            {option ? <>
+              <span className="review-meals">
+                {option.dishes.map(dish => <span key={dish.id}><span className="meal-code">{dish.code}</span><span lang="hu">{dish.name}</span></span>)}
+              </span>
+              <span className="review-numbers"><strong>{calories(option.kcal)}</strong><span>{money(option.price)}</span></span>
+            </> : <span className="skipped-label">Kihagyva</span>}
+            <Pencil className="review-edit" size={16} role="img" aria-label="Szerkesztés" />
+          </button>
         </li>;
       })}
     </ol>
@@ -387,6 +438,7 @@ function Review({ plan, onCart, onNotice, onNew }) {
     </div>
     <div className="review-links">
       <button type="button" className="text-button" onClick={copyChecklist} disabled={!lines.length}>Étellista másolása</button>
+      <button type="button" className="text-button" onClick={onRestart}><RotateCcw size={16} /> Hét újrakezdése</button>
       <button type="button" className="text-button" onClick={onNew}>Új heti terv</button>
     </div>
   </main>;
@@ -394,14 +446,15 @@ function Review({ plan, onCart, onNotice, onNew }) {
 
 function App() {
   const [plan, setPlan] = useState(savedPlan);
-  const [setup, setSetup] = useState(() => !savedPlan());
+  const [setup, setSetup] = useState(!plan);
   const [settings, setSettings] = useState(() => plan?.settings ?? newSettings);
   const [weeks, setWeeks] = useState([]);
   const [weekError, setWeekError] = useState('');
   const [weekAttempt, setWeekAttempt] = useState(0);
   const [modal, setModal] = useState(null);
   const [notice, setNotice] = useState('');
-  const canContinue = plan?.day <= 7 && ['week', 'calories', 'tolerance'].every(key => settings[key] === plan.settings[key]);
+  const picking = plan?.day <= days.length;
+  const canContinue = picking && ['week', 'calories', 'tolerance'].every(key => settings[key] === plan.settings[key]);
 
   useEffect(() => {
     if (!setup || weeks.length) return;
@@ -422,6 +475,7 @@ function App() {
     if (!plan) return;
     try {
       localStorage.setItem(storageKey, JSON.stringify(plan));
+      localStorage.removeItem(previousStorageKey);
     } catch {
       setNotice('A böngésző nem tudta menteni az ételtervet.');
     }
@@ -433,14 +487,25 @@ function App() {
     return () => clearTimeout(id);
   }, [notice]);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [setup, plan?.id, plan?.day]);
+
+  function begin(settings) {
+    setPlan(startPlan(settings));
+    setSetup(false);
+    setModal(null);
+  }
+
   function start() {
     if (canContinue) {
       setPlan(current => ({ ...current, settings }));
-      return setSetup(false);
+      setSetup(false);
+    } else if (plan) {
+      setModal({ type: 'replacePlan', settings });
+    } else {
+      begin(settings);
     }
-    if (plan && !window.confirm('Új ételtervet kezdesz? Ez felülírja a mentett választásaidat.')) return;
-    setPlan(startPlan({ ...settings }));
-    setSetup(false);
   }
 
   return <>
@@ -460,9 +525,20 @@ function App() {
       <Setup settings={settings} setSettings={setSettings} weeks={weeks} weekError={weekError}
         onRetry={() => setWeekAttempt(value => value + 1)} onStart={start} onResume={() => setSetup(false)}
         hasPlan={Boolean(plan)} canContinue={canContinue} />
-    </main> : plan?.day <= 7 ? <Picker plan={plan} updatePlan={setPlan} />
+    </main> : picking ? <Picker plan={plan} updatePlan={setPlan} />
       : <Review plan={plan} onCart={lines => setModal({ type: 'cart', lines })} onNotice={setNotice}
+        onEditDay={day => setPlan(current => choose({ ...current, day }, 'restart'))}
+        onRestart={() => setModal({ type: 'replacePlan', settings: plan.settings })}
         onNew={() => { setSettings({ ...plan.settings, week: defaultWeek(weeks) ?? plan.settings.week }); setSetup(true); }} />}
+    {modal?.type === 'replacePlan' && <Modal name={setup ? 'Új heti tervet indítasz?' : 'Újrakezded a hetet?'} onClose={() => setModal(null)}>
+      <p>{setup ? 'Az új terv felülírja a mentett választásaidat.' : 'A hét minden választása törlődik, és ugyanazokkal a beállításokkal kezdheted újra.'}</p>
+      <div className="modal-actions">
+        <button type="button" className="button secondary" onClick={() => setModal(null)}>Mégse</button>
+        <button type="button" className="button primary" onClick={() => begin(modal.settings)}>
+          {setup ? 'Új terv indítása' : 'Újrakezdem'}
+        </button>
+      </div>
+    </Modal>}
     {modal?.type === 'install' && <Modal name={`A ${appName} telepítése`} onClose={() => setModal(null)}>
       <p><Smartphone size={19} className="inline-icon" /> iPhone-on nyisd meg az oldalt a Safariban, és a Megosztás menüben válaszd a <b>Hozzáadás a Főképernyőhöz</b> lehetőséget. Ha megjelenik, kapcsold be a <b>Megnyitás webappként</b> beállítást.</p>
       <p>Androidon a böngésző menüjében válaszd az <b>Alkalmazás telepítése</b> vagy a <b>Hozzáadás a kezdőképernyőhöz</b> lehetőséget. Számítógépen keresd a telepítési lehetőséget a böngésző menüjében.</p>

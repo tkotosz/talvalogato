@@ -41,7 +41,7 @@ export const SwipeCard = forwardRef(function SwipeCard({
       animate(y, vertical * extent, { duration, ease: 'easeIn' }),
       animate(opacity, 0, { duration, ease: 'easeIn' }),
     ]);
-    onAction(direction);
+    if (card.current) onAction(direction);
     return true;
   }
 

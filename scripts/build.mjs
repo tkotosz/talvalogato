@@ -12,6 +12,7 @@ const contentTypes = {
   css: 'text/css; charset=utf-8',
   webmanifest: 'application/manifest+json; charset=utf-8',
   png: 'image/png',
+  webp: 'image/webp',
 };
 
 function addAsset(path, data) {
@@ -42,9 +43,10 @@ const index = (await readFile('public/index.html', 'utf8')).replace('%SCRIPT%', 
 addAsset('/', index);
 addAsset('/index.html', index);
 const version = createHash('sha256').update(index).update(JSON.stringify(assets)).digest('hex').slice(0, 12);
-const shell = ['/', scriptPath, stylePath, '/manifest.webmanifest', '/icon-192.png'];
+const placeholders = Object.keys(assets).filter(path => path.startsWith('/meal-placeholder-'));
+const shell = ['/', scriptPath, stylePath, '/manifest.webmanifest', '/icon-192.png', ...placeholders];
 const serviceWorker = (await readFile('public/sw.js', 'utf8'))
-  .replace("'VERSION'", JSON.stringify(`meal-deck-${version}`))
+  .replace("'VERSION'", JSON.stringify(`talvalogato-${version}`))
   .replace("['SHELL']", JSON.stringify(shell));
 addAsset('/sw.js', serviceWorker);
 
@@ -67,7 +69,7 @@ await build({
   plugins: [{
     name: 'embedded-assets',
     setup(context) {
-      context.onResolve({ filter: /^meal-deck-assets$/ }, () => ({ path: 'assets', namespace: 'embedded' }));
+      context.onResolve({ filter: /^talvalogato-assets$/ }, () => ({ path: 'assets', namespace: 'embedded' }));
       context.onLoad({ filter: /.*/, namespace: 'embedded' }, () => ({
         contents: `export default ${JSON.stringify(pages ? {} : assets)}`,
         loader: 'js',

@@ -1,14 +1,16 @@
+// Existing Teletál bookmarks use the original fragment and cart progress key.
 export async function importOnTeletal() {
   const origin = 'https://www.teletal.hu';
   const storageKey = 'meal-deck.last-cart-import';
-  if (location.origin !== origin || !location.hash.startsWith('#meal-deck=')) {
+  const fragment = '#meal-deck=';
+  if (location.origin !== origin || !location.hash.startsWith(fragment)) {
     alert('Nyisd meg a heti étlapot a Tálválogatóból, és ott használd ezt a könyvjelzőt.');
     return;
   }
 
   class CartError extends Error {}
   try {
-    const [id, year, week, lines] = JSON.parse(decodeURIComponent(location.hash.slice(11)));
+    const [id, year, week, lines] = JSON.parse(decodeURIComponent(location.hash.slice(fragment.length)));
     const form = document.getElementById('etlap_form');
     const validLine = line => Array.isArray(line) && line.length === 3
       && Number.isInteger(line[0]) && line[0] >= 1 && line[0] <= 5

@@ -1,14 +1,16 @@
 export const days = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
 export const optionTypes = [
-  { id: 'menuWithDessert', label: 'Teletál-menü (leves + főétel + desszert)', badge: 'Teletál-menü desszerttel' },
-  { id: 'menu', label: 'Teletál-menü (leves + főétel)', badge: 'Teletál-menü' },
+  // Keep the original ID for saved settings and choices.
+  { id: 'menuWithDessert', label: '3 fogásos Teletál-menü', badge: '3 fogásos Teletál-menü' },
+  { id: 'menu', label: '2 fogásos Teletál-menü', badge: '2 fogásos Teletál-menü' },
   { id: 'triple', label: 'Saját menü (leves + főétel + desszert)', badge: 'Leves + főétel + desszert' },
   { id: 'pair', label: 'Saját menü (leves + főétel)', badge: 'Leves + főétel' },
   { id: 'single', label: 'Önálló ételek', badge: 'Önálló étel' },
 ];
 const defaultTypes = optionTypes.map(type => type.id);
 const priority = new Map(defaultTypes.map((id, index) => [id, index]));
-export const newSettings = { week: '', calories: 1000, tolerance: 5, types: defaultTypes };
+const emptyDraft = { excluded: [], deferred: [] };
+export const newSettings = { week: '', calories: 2000, tolerance: 10, types: defaultTypes };
 export const dishCodePattern = /^[A-Z0-9][A-Z0-9-]{0,15}$/i;
 
 export function calorieLimit({ calories, tolerance }) {
@@ -16,7 +18,16 @@ export function calorieLimit({ calories, tolerance }) {
 }
 
 export function startPlan(settings) {
-  return { id: crypto.randomUUID(), settings, day: 1, slots: {}, excluded: [], deferred: [] };
+  return { id: crypto.randomUUID(), settings, day: 1, slots: {}, drafts: {} };
+}
+
+export function restorePlan({ excluded, deferred, ...plan }) {
+  return {
+    ...plan,
+    drafts: plan.drafts ?? (plan.day <= days.length ? {
+      [plan.day]: { excluded: excluded ?? [], deferred: deferred ?? [] },
+    } : {}),
+  };
 }
 
 export function sourceDay(day) {
@@ -46,9 +57,10 @@ export function mealOptions(dishes, settings) {
     let kind = 'single';
     if (dish.kind === 'dessert') return [];
     if (dish.kind === 'menu') {
-      const courses = new Set(dish.components?.map(course => course.kind));
-      if (!courses.has('soup') || !courses.has('main')) return [];
-      kind = courses.has('dessert') ? 'menuWithDessert' : 'menu';
+      const components = dish.components ?? [];
+      const courseKinds = new Set(components.map(course => course.kind));
+      if (!courseKinds.has('soup') || !courseKinds.has('main')) return [];
+      kind = components.length > 2 ? 'menuWithDessert' : 'menu';
     }
     if (!enabled.has(kind)) return [];
     return [{
@@ -81,28 +93,39 @@ export function mealOptions(dishes, settings) {
 }
 
 export function dayQueue(options, plan) {
-  const excluded = new Set(plan.excluded);
-  const deferred = new Set(plan.deferred);
+  const draft = plan.drafts[plan.day] ?? emptyDraft;
+  const excluded = new Set(draft.excluded);
+  const deferred = new Set(draft.deferred);
   const available = options.filter(option => !excluded.has(option.id));
   const availableById = new Map(available.map(option => [option.id, option]));
   return [
     ...available.filter(option => !deferred.has(option.id)),
-    ...plan.deferred.map(id => availableById.get(id)).filter(Boolean),
+    ...draft.deferred.map(id => availableById.get(id)).filter(Boolean),
   ];
 }
 
 export function choose(plan, action, option) {
-  if (action === 'restart') return { ...plan, excluded: [], deferred: [] };
-  if (action === 'skip' || action === 'right') {
-    return {
-      ...plan, day: plan.day + 1, excluded: [], deferred: [],
-      slots: { ...plan.slots, [plan.day]: action === 'skip' ? null : option },
-    };
+  const { day } = plan;
+  const drafts = { ...plan.drafts };
+  if (action === 'restart') {
+    const slots = { ...plan.slots };
+    delete slots[day];
+    delete drafts[day];
+    return { ...plan, slots, drafts };
   }
-  const deferred = plan.deferred.filter(id => id !== option.id);
-  return action === 'up'
-    ? { ...plan, deferred: [...deferred, option.id] }
-    : { ...plan, deferred, excluded: [...plan.excluded, option.id] };
+  if (action === 'skip' || action === 'right') {
+    const slots = { ...plan.slots, [day]: action === 'skip' ? null : option };
+    delete drafts[day];
+    const pending = days.map((_, index) => index + 1).filter(candidate => !Object.hasOwn(slots, candidate));
+    const next = pending.find(candidate => candidate > day) ?? pending[0] ?? days.length + 1;
+    return { ...plan, slots, drafts, day: next };
+  }
+  const draft = drafts[day] ?? emptyDraft;
+  const deferred = draft.deferred.filter(id => id !== option.id);
+  drafts[day] = action === 'up'
+    ? { ...draft, deferred: [...deferred, option.id] }
+    : { deferred, excluded: [...draft.excluded, option.id] };
+  return { ...plan, drafts };
 }
 
 export function cartLines(plan) {

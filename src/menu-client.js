@@ -1,6 +1,6 @@
 const batchSize = 8;
-// Distinguish menu and nutrition responses cached before course types were available.
-export const courseDataQuery = 'courses=1';
+// Distinguish responses cached before individual courses included photos.
+export const courseDataQuery = 'courses=2';
 const versions = new Map();
 
 export async function loadJson(path, signal) {

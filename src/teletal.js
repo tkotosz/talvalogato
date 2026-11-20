@@ -133,8 +133,12 @@ function photoUrl(image) {
   const entries = image.attr('srcset')?.split(',').map(value => value.trim().split(/\s+/)) ?? [];
   const source = entries.find(([, width]) => width === '640w')?.[0] ?? entries[0]?.[0] ?? image.attr('src');
   if (!source) return null;
-  const url = new URL(source, teletal);
-  return url.origin === teletal && url.pathname.startsWith('/etel_kepek/') ? url.href : null;
+  try {
+    const url = new URL(source, teletal);
+    return url.origin === teletal && url.pathname.startsWith('/etel_kepek/') ? url.href : null;
+  } catch {
+    return null;
+  }
 }
 
 function readComponents($) {
@@ -146,10 +150,14 @@ function readComponents($) {
   return servings.map((value, index) => {
     const heading = $(headings[index]);
     const label = plain(cleanText(heading.prevAll('h2').first().text())).match(/\(\d+\)\s+(.+)$/)?.[1];
+    const course = heading.nextUntil('h1, h2');
+    const images = course.filter('img').add(course.find('img'));
+    const photo = images.toArray().map(image => photoUrl($(image))).find(Boolean) ?? null;
     return {
       name: cleanText(heading.text()),
       kcal: Number(value.replace(/kcal\s*$/i, '').trim().replaceAll(',', '')),
       kind: courseKinds.get(label),
+      photo,
     };
   }).filter(component => Number.isFinite(component.kcal) && component.kcal > 0);
 }
@@ -168,7 +176,7 @@ export async function nutritionFor(key, ids) {
       const total = Math.round(components.reduce((sum, course) => sum + course.kcal, 0) * 10) / 10;
       return {
         id, kcal: total,
-        components, photo: photoUrl($('img[srcset], img[src^="/etel_kepek/"]').first()),
+        components, photo: components.find(course => course.photo)?.photo ?? null,
       };
     } catch {
       return { id, kcal: null, retryable: true };

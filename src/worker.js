@@ -1,4 +1,4 @@
-import assets from 'meal-deck-assets';
+import assets from 'talvalogato-assets';
 import { menuCatalog, nutritionFor, publishedWeeks } from './teletal.js';
 import { mondayOfWeek } from './weeks.js';
 
