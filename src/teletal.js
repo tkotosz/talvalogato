@@ -50,7 +50,21 @@ function classify(section, title, code) {
   return 'main';
 }
 
+function readMenuName(card) {
+  const heading = card.closest('tr').children('.menu-cell-code-sub2').find('h2').first().clone();
+  const schoolMenu = heading.find('img[src]').first().attr('src')?.match(/(?:^|\/)sulido(\d+)(?=[_.-]|$)/i)?.[1];
+  if (schoolMenu) return `Sulidő ${schoolMenu}`;
+
+  heading.find('br').replaceWith('|');
+  const label = cleanText(heading.text().split('|')[0]);
+  if (!label || /^\d[\d.,\s]*\s*Ft\b/i.test(label)) return null;
+  return label === label.toLocaleUpperCase('hu')
+    ? label.toLocaleLowerCase('hu').replace(/(^|\s)\p{L}/gu, letter => letter.toLocaleUpperCase('hu'))
+    : label;
+}
+
 function itemsFrom($, section, headings) {
+  const { category, cuisine } = headings.get(section);
   return $(detailSelector).toArray().flatMap(entry => {
     const anchor = $(entry);
     const day = Number(anchor.attr('nap'));
@@ -65,11 +79,12 @@ function itemsFrom($, section, headings) {
 
     const titleNodes = card.find('.menu-cell-text-row.uk-text-break, .menu-cell-text-row.uk-text-small, .menu-item-title').first().clone();
     titleNodes.find('br').replaceWith(' / ');
-    const category = headings.get(section) ?? section;
     const name = cleanText(titleNodes.text()).replace(/,\s*\/\s*/g, ' / ').replace(/\s*\/\s*$/, '') || category;
     const kind = classify(section, name, code);
+    const menuName = kind === 'menu' ? readMenuName(card) : null;
     const weekend = card.find('img[title]').toArray().some(img => plain($(img).attr('title')).includes('szombat'));
-    return [{ id: `${day}:${type}:${code}`, day, type, code, kind, name, price, category, weekend }];
+    return [{ id: `${day}:${type}:${code}`, day, type, code, kind, name, price,
+      category: menuName?.startsWith('Sulidő ') ? 'Sulidő' : category, cuisine, menuName, weekend }];
   });
 }
 
@@ -107,8 +122,14 @@ export async function menuCatalog(key) {
   if (!sections.length) throw new Error('The Teletál menu sections were missing');
   const headings = new Map(sections.map(node => {
     const section = $(node);
-    const title = cleanText(section.find('h2').first().text()).split('|')[0].trim();
-    return [section.attr('section'), title || section.attr('section')];
+    const name = section.attr('section');
+    const heading = section.find('h2').first();
+    const text = cleanText(name === 'Zero' ? heading.find('strong').first().text() : heading.text());
+    const [title, ...subtitles] = text.split('|').map(part => part.trim());
+    return [name, {
+      category: name === 'Vakáció' ? 'Vakáció menü' : title || name,
+      cuisine: subtitles.find(subtitle => /\bkonyha$/iu.test(subtitle)) ?? null,
+    }];
   }));
   const groups = await pendingPool(sections, 4, async node => {
     const section = $(node);

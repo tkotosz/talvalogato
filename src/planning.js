@@ -10,7 +10,7 @@ export const optionTypes = [
 const defaultTypes = optionTypes.map(type => type.id);
 const priority = new Map(defaultTypes.map((id, index) => [id, index]));
 const emptyDraft = { excluded: [], deferred: [] };
-export const newSettings = { week: '', calories: 2000, tolerance: 10, types: defaultTypes };
+export const newSettings = { week: '', calories: 2000, tolerance: 10, types: defaultTypes, excludedCodes: [] };
 export const dishCodePattern = /^[A-Z0-9][A-Z0-9-]{0,15}$/i;
 
 export function calorieLimit({ calories, tolerance }) {
@@ -49,7 +49,9 @@ function customCombo(dishes, kcal) {
 export function mealOptions(dishes, settings) {
   const limit = calorieLimit(settings);
   const enabled = new Set(settings.types ?? defaultTypes);
-  const eligible = dishes.filter(dish => Number.isFinite(dish.kcal) && dish.kcal > 0 && dish.kcal <= limit);
+  const excludedCodes = new Set(settings.excludedCodes);
+  const eligible = dishes.filter(dish => !excludedCodes.has(dish.code)
+    && Number.isFinite(dish.kcal) && dish.kcal > 0 && dish.kcal <= limit);
   const desserts = eligible.filter(dish => dish.kind === 'dessert');
   const soups = eligible.filter(dish => dish.kind === 'soup');
   const mains = eligible.filter(dish => dish.kind === 'main');

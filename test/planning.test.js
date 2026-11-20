@@ -44,6 +44,14 @@ test('the first menu filter includes a separately listed side or fruit as a thir
   assert.deepEqual(mealOptions(menus, { ...settings, types: ['menu'] }).map(option => option.dishes[0].code), ['P']);
 });
 
+test('code exclusions remove matching orders and custom combinations that use them', () => {
+  const options = mealOptions(dishes, { ...settings, excludedCodes: ['A1', 'Q'] });
+  assert.deepEqual(options.map(option => option.dishes.map(dish => dish.code)), [['P'], ['M']]);
+
+  const withoutDessertCode = mealOptions(dishes, { ...settings, excludedCodes: ['T'] });
+  assert.deepEqual(withoutDessertCode.map(option => option.kind), ['menuWithDessert', 'menu', 'pair', 'single', 'single']);
+});
+
 test('maybe cycles to the back, pass removes, and restart clears a day’s decisions', () => {
   const options = mealOptions(dishes, settings);
   const plan = startPlan(settings);

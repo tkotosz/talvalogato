@@ -4,9 +4,10 @@ import {
   Bookmark, CalendarDays, Check, ChevronDown, ClipboardList, Download, Flame, Pencil,
   RotateCcw, ShoppingBasket, SlidersHorizontal, Smartphone, Soup, Utensils, X,
 } from 'lucide-react';
+import { CodeFilter } from './CodeFilter.jsx';
 import { SwipeCard } from './SwipeCard.jsx';
 import { shortcutUrl, teletalWeekUrl } from './cart-shortcut.js';
-import { courseDataQuery, loadDayDishes, loadJson } from './menu-client.js';
+import { loadDayDishes, loadJson, loadMenuCatalog } from './menu-client.js';
 import { calorieLimit, cartLines, choose, dayQueue, days, mealOptions, newSettings, optionTypes, restorePlan, sourceDay, startPlan } from './planning.js';
 import { dayLabel, defaultWeek, weekLabel } from './weeks.js';
 import './styles.css';
@@ -41,14 +42,14 @@ function savedPlan() {
   return null;
 }
 
-function Modal({ name, onClose, children }) {
+function Modal({ name, onClose, children, className }) {
   const ref = useRef(null);
   useEffect(() => {
     const opener = document.activeElement;
     ref.current.showModal();
     return () => opener?.focus({ preventScroll: true });
   }, []);
-  return <dialog ref={ref} aria-labelledby="dialog-title" onCancel={onClose}
+  return <dialog ref={ref} className={className} aria-labelledby="dialog-title" onCancel={onClose}
     onClick={event => { if (event.target === ref.current) onClose(); }}>
     <div className="modal-content">
       <button type="button" className="icon-button close-modal" onClick={onClose} aria-label="Bezárás"><X size={20} /></button>
@@ -79,10 +80,11 @@ function InstallButton({ onHelp }) {
   }}><Download size={17} /> <span>Telepítés</span></button>;
 }
 
-function Setup({ settings, setSettings, weeks, weekError, onRetry, onStart, onResume, hasPlan, canContinue }) {
+function Setup({ settings, setSettings, weeks, weekError, onRetry, onStart, onResume, onFilterCodes, hasPlan, canContinue }) {
   const change = (key, value) => setSettings(current => ({ ...current, [key]: value }));
   const selected = weeks.some(week => week.key === settings.week);
   const types = settings.types ?? newSettings.types;
+  const excludedCount = settings.excludedCodes?.length ?? 0;
   const limit = calorieLimit(settings);
   const validBudget = Number.isInteger(settings.calories) && settings.calories >= 1
     && Number.isFinite(settings.tolerance) && settings.tolerance >= 0 && settings.tolerance <= 100
@@ -163,6 +165,10 @@ function Setup({ settings, setSettings, weeks, weekError, onRetry, onStart, onRe
         </label>)}
         {!types.length && <p className="form-error" role="status">A folytatáshoz jelölj be legalább egy típust.</p>}
       </fieldset>
+      <button type="button" className="code-filter-trigger" aria-haspopup="dialog" disabled={!selected} onClick={onFilterCodes}>
+        <span>Teletál-kódok szűrése</span>
+        <span>{excludedCount ? `${number.format(excludedCount)} kód kizárva` : 'Minden kód'}</span>
+      </button>
       <button className="button primary wide" disabled={!valid} type="submit">
         {canContinue ? 'Válogatás folytatása' : 'Válogatás indítása'}
       </button>
@@ -191,13 +197,15 @@ function WeekProgress({ plan, onSelect }) {
 function MealCard({ option, target, week }) {
   const { kind, title, components, dishes, kcal, price } = option;
   const customCombo = dishes.length > 1;
+  const merchantMenu = kind.startsWith('menu');
   const hasCourses = kind !== 'single' && components?.length > 0;
   const codes = kind === 'single' ? [] : dishes.map(dish => dish.code);
   const hasCodes = codes.length > 0 && codes.every(Boolean);
-  const heading = hasCodes ? `Menü ${codes.join(' + ')}` : hasCourses ? 'Menü' : title;
   const [refreshedCourses, setRefreshedCourses] = useState(null);
+  const [labeledDishes, setLabeledDishes] = useState(null);
   const [dish] = dishes;
-  const refreshPhotos = kind.startsWith('menu') && !components?.some(course => Object.hasOwn(course, 'photo'));
+  const refreshPhotos = merchantMenu && !components?.some(course => Object.hasOwn(course, 'photo'));
+  const refreshLabels = dishes.some(item => !Object.hasOwn(item, 'menuName') || !Object.hasOwn(item, 'cuisine'));
 
   useEffect(() => {
     if (!refreshPhotos) return;
@@ -210,6 +218,22 @@ function MealCard({ option, target, week }) {
     return () => aborter.abort();
   }, [week, dish, refreshPhotos]);
 
+  useEffect(() => {
+    if (!refreshLabels) return;
+    const aborter = new AbortController();
+    const { signal } = aborter;
+    // Use the current catalog labels for choices saved before they were available.
+    loadMenuCatalog(week, signal).then(catalog => {
+      if (!signal.aborted) setLabeledDishes(dishes.map(item => catalog.find(entry => entry.id === item.id) ?? item));
+    }).catch(() => {});
+    return () => aborter.abort();
+  }, [week, dishes, refreshLabels]);
+
+  const menuDishes = labeledDishes ?? dishes;
+  const { menuName, cuisine } = menuDishes[0];
+  const showCuisine = cuisine && menuDishes.every(item => item.cuisine === cuisine);
+  const fallbackHeading = hasCodes ? `Menü ${codes.join(' + ')}` : hasCourses ? 'Menü' : title;
+  const heading = merchantMenu && menuName && dish.code ? `${menuName} (${dish.code})` : fallbackHeading;
   const courses = refreshedCourses ?? components;
   // A legacy cover photo has no course association until the refreshed data arrives.
   const hasLegacyCover = refreshPhotos && !refreshedCourses && option.photo;
@@ -225,9 +249,12 @@ function MealCard({ option, target, week }) {
           src={showPhoto ? photo : placeholder} alt={showPhoto ? '' : 'Illusztráció, a fogás fotója nem érhető el'}
           draggable="false" onError={showPhoto ? () => setFailed(current => [...current, photo]) : undefined} />;
       })}
-      <span className={`meal-tag ${customCombo ? 'tag-pair' : kind.startsWith('menu') ? 'tag-menu' : ''}`}>
-        {customCombo ? <Soup size={16} /> : <Utensils size={15} />} {mealBadges[kind]}
-      </span>
+      <div className="meal-tags">
+        <span className={`meal-tag ${customCombo ? 'tag-pair' : merchantMenu ? 'tag-menu' : ''}`}>
+          {customCombo ? <Soup size={16} /> : <Utensils size={15} />} {mealBadges[kind]}
+        </span>
+        {showCuisine && <span className="meal-tag tag-cuisine">{cuisine}</span>}
+      </div>
     </div>
     <div className="meal-content">
       <h2 lang="hu">{heading}</h2>
@@ -245,7 +272,6 @@ function MealCard({ option, target, week }) {
 }
 
 function Picker({ plan, updatePlan }) {
-  const catalogByWeek = useRef(new Map());
   const card = useRef(null);
   const [attempt, setAttempt] = useState(0);
   const [animation, setAnimation] = useState(0);
@@ -264,11 +290,7 @@ function Picker({ plan, updatePlan }) {
     setState({ phase: 'loading', progress: [0, 0], key });
     async function load() {
       try {
-        let catalog = catalogByWeek.current.get(week);
-        if (!catalog) {
-          catalog = await loadJson(`/api/menu?week=${week}&${courseDataQuery}`, signal);
-          catalogByWeek.current.set(week, catalog);
-        }
+        const catalog = await loadMenuCatalog(week, signal);
         const { dishes, unavailable, failures } = await loadDayDishes(week, providerDay,
           catalog.filter(dish => dish.day === providerDay), signal, (current, total) => {
             if (!signal.aborted) setState({ phase: 'loading', progress: [current, total], key });
@@ -286,6 +308,9 @@ function Picker({ plan, updatePlan }) {
 
   const options = useMemo(() => done || loading || !state.dishes ? [] : mealOptions(state.dishes, plan.settings),
     [done, loading, state.dishes, plan.settings]);
+  const emptyFromCodes = useMemo(() => !done && !loading && state.dishes && !options.length && plan.settings.excludedCodes?.length
+    && mealOptions(state.dishes, { ...plan.settings, excludedCodes: [] }).length > 0,
+    [done, loading, options.length, state.dishes, plan.settings]);
   const queue = useMemo(() => dayQueue(options, plan), [options, plan]);
   const top = queue[0];
   const retry = () => setAttempt(value => value + 1);
@@ -326,9 +351,11 @@ function Picker({ plan, updatePlan }) {
         <button type="button" className="button secondary" onClick={retry}>Étlap újratöltése</button>
       </div> : !top ? <div className="placeholder-card" role="status">
         <span className="section-icon"><Utensils size={25} /></span>
-        <h2>{options.length ? 'Elfogytak a lehetőségek' : 'Nincs a beállításaidnak megfelelő étel'}</h2>
+        <h2>{options.length ? 'Elfogytak a lehetőségek'
+          : emptyFromCodes ? 'A kódszűrő minden lehetőséget kizárt' : 'Nincs a beállításaidnak megfelelő étel'}</h2>
         <p>{options.length ? 'Kezdd újra a napot, ha újra megnéznéd az ételeket, vagy hagyd ki ezt a napot.'
-          : 'Kihagyhatod ezt a napot, vagy módosíthatod a kalóriakeretet és az ételtípusokat a beállításokban.'}</p>
+          : emptyFromCodes ? 'A beállításokban újra engedélyezhetsz kódokat, vagy kihagyhatod ezt a napot.'
+            : 'Kihagyhatod ezt a napot, vagy módosíthatod a kalóriakeretet és az ételtípusokat a beállításokban.'}</p>
         {options.length > 0 && <button type="button" className="button secondary" onClick={() => act('restart')}>
           <RotateCcw size={17} /> Nap újrakezdése
         </button>}
@@ -455,6 +482,7 @@ function App() {
   const [notice, setNotice] = useState('');
   const picking = plan?.day <= days.length;
   const canContinue = picking && ['week', 'calories', 'tolerance'].every(key => settings[key] === plan.settings[key]);
+  const closeModal = () => setModal(null);
 
   useEffect(() => {
     if (!setup || weeks.length) return;
@@ -491,6 +519,11 @@ function App() {
     window.scrollTo(0, 0);
   }, [setup, plan?.id, plan?.day]);
 
+  function openSettings() {
+    setSettings(plan.settings);
+    setSetup(true);
+  }
+
   function begin(settings) {
     setPlan(startPlan(settings));
     setSetup(false);
@@ -513,10 +546,9 @@ function App() {
       <div className="header-inner">
         <div className="brand"><span className="brand-icon"><Utensils size={20} /></span><span>{appName}</span></div>
         <div className="header-actions">
-          {!setup && <button type="button" className="quiet-button" aria-label="Beállítások" onClick={() => {
-            setSettings(plan.settings);
-            setSetup(true);
-          }}><SlidersHorizontal size={17} /><span>Beállítások</span></button>}
+          {!setup && <button type="button" className="quiet-button" aria-label="Beállítások" onClick={openSettings}>
+            <SlidersHorizontal size={17} /><span>Beállítások</span>
+          </button>}
           <InstallButton onHelp={() => setModal({ type: 'install' })} />
         </div>
       </div>
@@ -524,26 +556,29 @@ function App() {
     {setup ? <main className="setup">
       <Setup settings={settings} setSettings={setSettings} weeks={weeks} weekError={weekError}
         onRetry={() => setWeekAttempt(value => value + 1)} onStart={start} onResume={() => setSetup(false)}
+        onFilterCodes={() => setModal({ type: 'codes' })}
         hasPlan={Boolean(plan)} canContinue={canContinue} />
     </main> : picking ? <Picker plan={plan} updatePlan={setPlan} />
       : <Review plan={plan} onCart={lines => setModal({ type: 'cart', lines })} onNotice={setNotice}
         onEditDay={day => setPlan(current => choose({ ...current, day }, 'restart'))}
-        onRestart={() => setModal({ type: 'replacePlan', settings: plan.settings })}
+        onRestart={openSettings}
         onNew={() => { setSettings({ ...plan.settings, week: defaultWeek(weeks) ?? plan.settings.week }); setSetup(true); }} />}
-    {modal?.type === 'replacePlan' && <Modal name={setup ? 'Új heti tervet indítasz?' : 'Újrakezded a hetet?'} onClose={() => setModal(null)}>
-      <p>{setup ? 'Az új terv felülírja a mentett választásaidat.' : 'A hét minden választása törlődik, és ugyanazokkal a beállításokkal kezdheted újra.'}</p>
+    {modal?.type === 'codes' && <Modal name="Teletál-kódok szűrése" onClose={closeModal} className="code-filter-dialog">
+      <CodeFilter week={settings.week} excludedCodes={settings.excludedCodes ?? []} onClose={closeModal}
+        onChange={excludedCodes => setSettings(current => ({ ...current, excludedCodes }))} />
+    </Modal>}
+    {modal?.type === 'replacePlan' && <Modal name="Új heti tervet indítasz?" onClose={closeModal}>
+      <p>Az új terv felülírja a mentett választásaidat.</p>
       <div className="modal-actions">
-        <button type="button" className="button secondary" onClick={() => setModal(null)}>Mégse</button>
-        <button type="button" className="button primary" onClick={() => begin(modal.settings)}>
-          {setup ? 'Új terv indítása' : 'Újrakezdem'}
-        </button>
+        <button type="button" className="button secondary" onClick={closeModal}>Mégse</button>
+        <button type="button" className="button primary" onClick={() => begin(modal.settings)}>Új terv indítása</button>
       </div>
     </Modal>}
-    {modal?.type === 'install' && <Modal name={`A ${appName} telepítése`} onClose={() => setModal(null)}>
+    {modal?.type === 'install' && <Modal name={`A ${appName} telepítése`} onClose={closeModal}>
       <p><Smartphone size={19} className="inline-icon" /> iPhone-on nyisd meg az oldalt a Safariban, és a Megosztás menüben válaszd a <b>Hozzáadás a Főképernyőhöz</b> lehetőséget. Ha megjelenik, kapcsold be a <b>Megnyitás webappként</b> beállítást.</p>
       <p>Androidon a böngésző menüjében válaszd az <b>Alkalmazás telepítése</b> vagy a <b>Hozzáadás a kezdőképernyőhöz</b> lehetőséget. Számítógépen keresd a telepítési lehetőséget a böngésző menüjében.</p>
     </Modal>}
-    {modal?.type === 'cart' && <Modal name="Ételek küldése a Teletál-kosárba" onClose={() => setModal(null)}>
+    {modal?.type === 'cart' && <Modal name="Ételek küldése a Teletál-kosárba" onClose={closeModal}>
       <CartInstructions plan={plan} lines={modal.lines} />
     </Modal>}
     {notice && <div className="toast" role="status">{notice}</div>}

@@ -1,6 +1,7 @@
 const batchSize = 8;
 // Distinguish responses cached before individual courses included photos.
-export const courseDataQuery = 'courses=2';
+const courseDataQuery = 'courses=2';
+const catalogs = new Map();
 const versions = new Map();
 
 export async function loadJson(path, signal) {
@@ -17,6 +18,14 @@ export async function loadJson(path, signal) {
     if (signal?.aborted) throw error;
     throw new Error(loadingError, { cause: error });
   });
+}
+
+export async function loadMenuCatalog(week, signal) {
+  if (!catalogs.has(week)) {
+    const catalog = await loadJson(`/api/menu?week=${week}&catalog=2`, signal);
+    catalogs.set(week, catalog);
+  }
+  return catalogs.get(week);
 }
 
 export async function loadDayDishes(week, day, dishes, signal, onProgress) {
