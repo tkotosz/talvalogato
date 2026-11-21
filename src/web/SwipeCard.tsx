@@ -1,15 +1,35 @@
-import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState, type ReactNode } from 'react';
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
 
-const vectors = {
+export type SwipeDirection = 'left' | 'right' | 'up' | 'down';
+
+export interface SwipeAction {
+  direction: SwipeDirection;
+  label: string;
+}
+
+export interface SwipeCardHandle {
+  /** Animates the card off in a direction and reports the action; resolves to false when nothing happened. */
+  swipe(direction: SwipeDirection | null): Promise<boolean>;
+}
+
+interface SwipeCardProps {
+  actions: SwipeAction[];
+  onAction(direction: SwipeDirection): void;
+  distance?: number;
+  velocity?: number;
+  children: ReactNode;
+}
+
+const vectors: Record<SwipeDirection, [number, number]> = {
   left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1],
 };
 
-function directionOf({ x, y }) {
+function directionOf({ x, y }: { x: number; y: number }): SwipeDirection {
   return Math.abs(x) > Math.abs(y) ? (x < 0 ? 'left' : 'right') : (y < 0 ? 'up' : 'down');
 }
 
-export const SwipeCard = forwardRef(function SwipeCard({
+export const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(function SwipeCard({
   actions, onAction, distance = 82, velocity = 600, children,
 }, ref) {
   const x = useMotionValue(0);
@@ -17,14 +37,14 @@ export const SwipeCard = forwardRef(function SwipeCard({
   const rotate = useTransform(x, [-450, 0, 450], [-14, 0, 14]);
   const opacity = useMotionValue(1);
   const lock = useRef(false);
-  const card = useRef(null);
-  const [intent, setIntent] = useState(null);
+  const card = useRef<HTMLDivElement>(null);
+  const [intent, setIntent] = useState<SwipeDirection | null>(null);
   const reducedMotion = useReducedMotion();
 
-  async function settle(direction) {
+  async function settle(direction: SwipeDirection | null) {
     const action = actions.find(item => item.direction === direction);
     if (lock.current) return false;
-    if (!action) {
+    if (!direction || !action) {
       setIntent(null);
       animate(x, 0, { duration: 0.18 });
       animate(y, 0, { duration: 0.18 });

@@ -1,17 +1,29 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
-import { loadMenuCatalog } from './menu-client.js';
+import type { CatalogDish, WeekKey } from '../core/types.ts';
+import { loadMenuCatalog } from './menu-client.ts';
+
+interface CodeGroupData {
+  id: string;
+  label: string;
+  codes: Set<string>;
+  /** Codes matching the search, with their menu names. */
+  matches: Map<string, string>;
+}
+
+type CatalogState = { phase: 'loading'; catalog?: undefined } | { phase: 'ready'; catalog: CatalogDish[] }
+  | { phase: 'error'; message: string; catalog?: undefined };
 
 const collator = new Intl.Collator('hu', { numeric: true, sensitivity: 'base' });
-const searchText = value => value.normalize('NFD').replace(/[()\p{Diacritic}]/gu, '').toLocaleLowerCase('hu').trim();
+const searchText = (value: string) => value.normalize('NFD').replace(/[()\p{Diacritic}]/gu, '').toLocaleLowerCase('hu').trim();
 
-function groupedCodes(catalog, query) {
+function groupedCodes(catalog: CatalogDish[], query: string): CodeGroupData[] {
   const codeQuery = query.replace(/^menu\s+/, '');
   const exactCode = catalog.some(dish => dish.code.toLowerCase() === codeQuery);
-  const groups = new Map();
+  const groups = new Map<string, CodeGroupData>();
   for (const { section, groupId = section, category, code, menuName } of catalog) {
-    if (!groups.has(groupId)) groups.set(groupId, { id: groupId, label: category, codes: new Set(), matches: new Map() });
-    const group = groups.get(groupId);
+    const group = groups.get(groupId) ?? { id: groupId, label: category, codes: new Set(), matches: new Map() };
+    groups.set(groupId, group);
     group.codes.add(code);
     const match = exactCode ? code.toLowerCase() === codeQuery
       : searchText(`${code} ${menuName} ${category}`).includes(query);
@@ -20,7 +32,12 @@ function groupedCodes(catalog, query) {
   return [...groups.values()].filter(group => group.matches.size);
 }
 
-function CodeGroup({ group, excluded, setIncluded, searching }) {
+function CodeGroup({ group, excluded, setIncluded, searching }: {
+  group: CodeGroupData;
+  excluded: Set<string>;
+  setIncluded(codes: Iterable<string>, included: boolean): void;
+  searching: boolean;
+}) {
   const id = useId();
   const [expanded, setExpanded] = useState(false);
   const open = expanded || searching;
@@ -55,10 +72,14 @@ function CodeGroup({ group, excluded, setIncluded, searching }) {
   </li>;
 }
 
-export function CodeFilter({ week, excludedCodes, onChange }) {
+export function CodeFilter({ week, excludedCodes, onChange }: {
+  week: WeekKey;
+  excludedCodes: string[];
+  onChange(codes: string[]): void;
+}) {
   const [query, setQuery] = useState('');
   const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState({ phase: 'loading' });
+  const [state, setState] = useState<CatalogState>({ phase: 'loading' });
   const excluded = new Set(excludedCodes);
   const search = searchText(query);
   const groups = useMemo(() => groupedCodes(state.catalog ?? [], search), [state.catalog, search]);
@@ -74,7 +95,7 @@ export function CodeFilter({ week, excludedCodes, onChange }) {
     return () => aborter.abort();
   }, [week, attempt]);
 
-  function setIncluded(codes, included) {
+  function setIncluded(codes: Iterable<string>, included: boolean) {
     const next = new Set(excluded);
     for (const code of codes) {
       if (included) next.delete(code);

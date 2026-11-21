@@ -1,17 +1,19 @@
+import type { CatalogDish, Day, Dish, DishDetails, WeekKey } from '../core/types.ts';
+
 const batchSize = 8;
 // Distinguish responses cached before individual courses included photos.
 const courseDataQuery = 'courses=3';
-const catalogs = new Map();
-const versions = new Map();
+const catalogs = new Map<WeekKey, { items: CatalogDish[]; expires: number }>();
+const versions = new Map<string, Map<string, DishDetails>>();
 
-export async function loadJson(path, signal) {
+export async function loadJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   const loadingError = 'Nem sikerült betölteni az étlapot. Próbáld újra.';
   const response = await fetch(path, { signal, headers: { Accept: 'application/json' } }).catch(error => {
     if (signal?.aborted) throw error;
     throw new Error(loadingError, { cause: error });
   });
   if (!response.ok) {
-    const problem = await response.json().catch(() => null);
+    const problem = await response.json().catch(() => null) as { error?: string } | null;
     throw new Error(problem?.error ?? loadingError);
   }
   return response.json().catch(error => {
@@ -20,25 +22,35 @@ export async function loadJson(path, signal) {
   });
 }
 
-export async function loadMenuCatalog(week, signal, refresh = false) {
+export async function loadMenuCatalog(week: WeekKey, signal?: AbortSignal, refresh = false): Promise<CatalogDish[]> {
   const cached = catalogs.get(week);
-  if (!refresh && cached?.expires > Date.now()) return cached.items;
-  const items = await loadJson(`/api/menu?week=${week}&catalog=10${refresh ? '&recheck=1' : ''}`, signal);
+  if (!refresh && cached && cached.expires > Date.now()) return cached.items;
+  const items = await loadJson<CatalogDish[]>(`/api/menu?week=${week}&catalog=10${refresh ? '&recheck=1' : ''}`, signal);
   if (!signal?.aborted) catalogs.set(week, { items, expires: Date.now() + 300_000 });
   return items;
 }
 
-export async function loadDayDishes(week, day, dishes, signal, onProgress) {
+export interface DayDishes {
+  dishes: Dish[];
+  /** Dishes without calorie data. */
+  unavailable: number;
+  /** Dishes whose details could not be loaded and may be requested again. */
+  failures: number;
+}
+
+/** Adds nutrition and course details to the dishes of one day, loading only what this session has not received yet. */
+export async function loadDayDishes(week: WeekKey, day: Day, dishes: (CatalogDish & Partial<Dish>)[], signal: AbortSignal,
+  onProgress: (completed: number, total: number) => void): Promise<DayDishes> {
   const key = `${week}:${day}`;
-  const received = versions.get(key) ?? new Map();
+  const received = versions.get(key) ?? new Map<string, DishDetails>();
   versions.set(key, received);
   const pending = dishes.filter(dish => !received.has(dish.id));
-  const batches = [];
+  const batches: string[][] = [];
   for (let start = 0; start < pending.length; start += batchSize) {
     batches.push(pending.slice(start, start + batchSize).map(dish => dish.id));
   }
 
-  const failures = new Set();
+  const failures = new Set<string>();
   let completed = dishes.length - pending.length;
   onProgress(completed, dishes.length);
   async function loadBatches() {
@@ -46,7 +58,7 @@ export async function loadDayDishes(week, day, dishes, signal, onProgress) {
       signal.throwIfAborted();
       try {
         const query = new URLSearchParams({ week, items: batch.join(',') });
-        const details = await loadJson(`/api/nutrition?${query}&${courseDataQuery}`, signal);
+        const details = await loadJson<DishDetails[]>(`/api/nutrition?${query}&${courseDataQuery}`, signal);
         for (const detail of details) {
           if (detail.retryable) failures.add(detail.id);
           else received.set(detail.id, detail);
@@ -61,11 +73,12 @@ export async function loadDayDishes(week, day, dishes, signal, onProgress) {
   }
   await Promise.all([loadBatches(), loadBatches()]);
 
-  const enriched = dishes.map(dish => {
+  const enriched = dishes.map((dish): Dish => {
     const details = received.get(dish.id);
-    if (!Number.isFinite(details?.kcal)) return { ...dish, kcal: null };
-    return { ...dish, ...details, kind: details.components.length > 1 ? 'menu' : dish.kind,
-      name: details.components.length === 1 ? details.components[0].name : dish.name };
+    if (!details || !Number.isFinite(details.kcal)) return { ...dish, kcal: null };
+    const components = details.components ?? [];
+    return { ...dish, ...details, kind: components.length > 1 ? 'menu' : dish.kind,
+      name: components.length === 1 ? components[0]!.name : dish.name };
   });
   return { dishes: enriched, unavailable: enriched.filter(dish => dish.kcal === null).length, failures: failures.size };
 }

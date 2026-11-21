@@ -4,15 +4,15 @@ import {
   Bookmark, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList, Copy, Download, Flame,
   RotateCcw, ShoppingBasket, SlidersHorizontal, Smartphone, Soup, Sun, Utensils, X,
 } from 'lucide-react';
-import { CodeFilter } from './CodeFilter.jsx';
-import { SwipeCard } from './SwipeCard.jsx';
-import { shortcutUrl, teletalWeekUrl } from './cart-shortcut.js';
-import { loadDayDishes, loadJson, loadMenuCatalog } from './menu-client.js';
+import { CodeFilter } from './CodeFilter.tsx';
+import { SwipeCard } from './SwipeCard.tsx';
+import { shortcutUrl, teletalWeekUrl } from './cart-shortcut.ts';
+import { loadDayDishes, loadJson, loadMenuCatalog } from './menu-client.ts';
 import {
   allDays, calorieLimit, choose, dayCandidates, dayQueue, days, mealOptions, menuDeck, menuDecks, orderSummary,
   normalizeGroupTitle, restorePlan, restorePreferences, selectionIssue, startPlan, validCalorieBudget,
-} from './planning.js';
-import { defaultWeek, eligibleDays, mondayOfWeek, upcomingWeeks, weekLabel } from './weeks.js';
+} from '../core/planning.ts';
+import { defaultWeek, eligibleDays, mondayOfWeek, upcomingWeeks, weekLabel } from '../core/weeks.ts';
 import './styles.css';
 
 const storageKey = 'talvalogato.plan.v2';

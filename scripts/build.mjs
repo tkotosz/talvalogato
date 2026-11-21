@@ -20,7 +20,7 @@ async function buildAssets() {
   }
 
   const client = await build({
-    entryPoints: ['src/app.jsx'],
+    entryPoints: ['src/web/app.jsx'],
     bundle: true, write: false, outdir: 'client', entryNames: '[name]-[hash]',
     minify: true, charset: 'utf8', jsx: 'automatic', target: ['safari16.4', 'chrome110'],
     define: { 'process.env.NODE_ENV': JSON.stringify('production') },
@@ -53,7 +53,7 @@ async function buildAssets() {
 
 function buildWorker(assets, options) {
   return build({
-    entryPoints: ['src/worker.js'],
+    entryPoints: ['src/worker/index.ts'],
     bundle: true, platform: 'browser', format: 'esm', target: 'es2022',
     minify: true, charset: 'utf8', ...options,
     plugins: [{
