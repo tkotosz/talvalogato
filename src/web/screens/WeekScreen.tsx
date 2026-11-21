@@ -1,9 +1,10 @@
 import { CalendarDays, Check, ChevronDown, Soup, Utensils } from 'lucide-react';
 import type { PlannerAction, PlannerView } from '../../core/planner.ts';
 import type { CatalogDish, PublishedWeek, WeekKey } from '../../core/types.ts';
-import { longWeekLabel } from '../../core/weeks.ts';
+import { weekOptionLabel } from '../../core/weeks.ts';
 import { DayChoices } from '../components/DayChoices.tsx';
 import type { Loadable } from '../useLoad.ts';
+import { useMediaQuery } from '../useMediaQuery.ts';
 
 /** Step 1: choose the delivery week and its days. The step bar's Tovább button submits this form. */
 export function WeekScreen({
@@ -24,6 +25,8 @@ export function WeekScreen({
   onRetryCatalog(): void;
 }) {
   const { week, availableDays, selectedDays, eligible } = view;
+  // Measured: full month names fit the selector from about 420px; phones get short ones.
+  const wide = useMediaQuery('(min-width: 480px)');
   const selectWeek = (key: WeekKey) => dispatch({ type: 'chooseWeek', week: key });
   return (
     <main className="setup">
@@ -75,7 +78,7 @@ export function WeekScreen({
               {!week && <option value="">{weekError ? 'A hetek nem érhetők el' : 'Hetek betöltése…'}</option>}
               {weeks.map(({ key }) => (
                 <option key={key} value={key}>
-                  {longWeekLabel(key)}
+                  {weekOptionLabel(key, wide ? 'long' : 'short')}
                 </option>
               ))}
             </select>
