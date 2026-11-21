@@ -42,8 +42,8 @@ function CartInstructions({ plan, lines }: { plan: Plan; lines: CartLine[] }) {
         <li>
           <strong>Telefonon</strong>
           <p>
-            Koppints a „Teletál-kosár” gombra, ezzel kimásolod a könyvjelző kódját. Ments el egy könyvjelzőt bármelyik oldalról,
-            majd szerkeszd: a neve legyen „Teletál-kosár”, a címe (URL) helyére pedig illeszd be a kimásolt kódot.
+            A telefonos Chrome-ban nem lehet ilyen könyvjelzőt létrehozni. Mentsd el számítógépen, a telefonoddal azonos
+            Google-fiókba bejelentkezett Chrome-ban, és a szinkronizálás átviszi a telefonodra.
           </p>
         </li>
       </ul>
@@ -60,6 +60,10 @@ function CartInstructions({ plan, lines }: { plan: Plan; lines: CartLine[] }) {
           <p>
             Amikor az étlap betöltődött, egyszerűen kattints a „Teletál-kosár” könyvjelzőre, hogy automatikusan hozzáadd az
             ételeket a kosárhoz.
+          </p>
+          <p>
+            Telefonon a könyvjelzők listájából nem indul el. Koppints a címsorba, kezdd el beírni, hogy „Teletál-kosár”, és
+            válaszd a csillaggal jelölt találatot. Ez gyakran a javaslatok alján van.
           </p>
         </li>
         <li>
