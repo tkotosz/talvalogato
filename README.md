@@ -21,6 +21,10 @@ Install dependencies with `npm ci`, then run `npm run dev` and open the printed 
 
 The cart dialog walks through saving a reusable browser bookmark. Run it on the Teletál week opened by the meal picker. After confirmation it adds the selected quantities to the current Teletál cart and opens the cart for review. Sign in on Teletál when prompted. The weekly review also has a copyable list of meal codes. Weekend days use the Saturday and Sunday lines Teletál publishes, and Friday's lines for the rest. Teletál delivers them on Friday.
 
+## Menu data
+
+The app does not read Teletál directly. The **Menu data** workflow reads Teletál twice a day and commits the menus as JSON to the `data` branch, and the Worker serves those files. Run the workflow from the Actions tab to refresh the menu right away. To work with local data, run `npm run refresh-menu -- --out <folder>` and start the dev server with `TALVALOGATO_MENU_DIR=<folder>`.
+
 ## Deploy on Cloudflare Pages
 
 Pull requests to `main` check formatting and lint, run the type check and the unit tests, build the Pages bundle, and run CodeQL and dependency review. A successful CI run for a push to `main` deploys that commit to the Pages `preview` branch. The **Deploy** workflow can also be run manually on `main` to refresh the preview.
