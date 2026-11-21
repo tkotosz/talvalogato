@@ -35,7 +35,7 @@ function CustomItems({ option }: { option: MenuOption }) {
   return <MenuItems code="SM" title="Saját menü" items={items} />;
 }
 
-/** A Teletál set menu: its code and name, then its courses. */
+/** A Teletál set menu: its code and name, then its courses, each under the menu's code. */
 function SetMenuItems({ option }: { option: MenuOption }) {
   const [dish] = option.dishes;
   if (!dish) return null;
@@ -43,7 +43,13 @@ function SetMenuItems({ option }: { option: MenuOption }) {
   const courses = (option.components?.length ? option.components.map(course => course.name) : [dish.name]).filter(
     course => course && course !== name,
   );
-  return <MenuItems code={dish.code} title={name} items={courses.map((text, index) => ({ key: String(index), text }))} />;
+  return (
+    <MenuItems
+      code={dish.code}
+      title={name}
+      items={courses.map((text, index) => ({ key: String(index), code: dish.code, text }))}
+    />
+  );
 }
 
 /** Step 3: the week's decisions and what will reach the cart. */
