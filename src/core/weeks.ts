@@ -75,6 +75,27 @@ export function weekLabel(key: WeekKey): string {
   return shortDate.formatRange(monday, addDays(monday, 6));
 }
 
+/**
+ * The week for the week selector: its number and dates, such as "48. hét (november 23–29.)", or with short month names,
+ * such as "48. hét (nov. 23–29.)". The week number identifies the year, so a week spanning New Year leaves it out.
+ */
+export function weekOptionLabel(key: WeekKey, months: 'long' | 'short'): string {
+  const monday = mondayOfWeek(key);
+  if (!monday) return '';
+  const sunday = addDays(monday, 6);
+  const format = months === 'long' ? longDate : shortDate;
+  const dates =
+    monday.getUTCFullYear() === sunday.getUTCFullYear()
+      ? format.formatRange(monday, sunday)
+      : `${format.format(monday)} – ${format.format(sunday)}`;
+  return `${Number(key.slice(-2))}. hét (${dates})`;
+}
+
+/** The day's date in short form, such as "nov. 25." */
+export function shortDayLabel(week: WeekKey, day: Day): string {
+  return shortDate.format(dateForSlot(week, day));
+}
+
 export function dayLabel(week: WeekKey, day: Day): string {
   return longDate.format(dateForSlot(week, day));
 }

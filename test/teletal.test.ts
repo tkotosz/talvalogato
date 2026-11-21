@@ -21,6 +21,7 @@ test('catalog entries follow the website order and preserve names for all menu c
       <section section="Menü" ewid="1"><h2>Menü | Hagyományos konyha |</h2><div class="dummy"></div></section>
       <section section="Vakáció" ewid="1"><h2>Menü | Heti ajánlat</h2><div class="dummy"></div></section>
       <section section="Desszert"><h2>DESSZERT ÉS SÜTEMÉNY</h2>${row('T1', 'Sütemények')}</section>
+      <section section="ZZabkasa"><h2>ZabKása</h2>${row('ZK', 'ZabKása')}</section>
       <section section="Savanyúság" ewid="1"><h2>Savanyúság | Hagyományos konyha</h2><div class="dummy"></div></section>
       <section section="CzanikBalazs" ewid="1"><h2>CZANIK BALÁZS FITNESS EDZŐ AJÁNLATA |</h2><div class="dummy"></div></section>
       <section section="Z10" class="teletal-speedfitt" ewid="1"><div class="dummy"></div></section>
@@ -99,6 +100,73 @@ test('catalog entries follow the website order and preserve names for all menu c
   );
   assert.equal(catalog.find(dish => dish.code === 'Z5')?.kind, 'menu');
   assert.ok(catalog.every(({ name, price }) => name === 'Leves / Főétel' && price === 1990));
+  // Every fixture dish is named "Leves / Főétel", so the name rule makes the non-dessert dishes soups here.
+  assert.deepEqual(Object.fromEntries(catalog.map(({ code, course }) => [code, course])), {
+    25: 'soup',
+    ZK: 'breakfast',
+    G: 'soup',
+    H1: 'soup',
+    H2: 'soup',
+    H3: 'soup',
+    ZT: 'soup',
+    R: null,
+    P: null,
+    SU1: null,
+    T1: 'dessert',
+    W1: 'pickle',
+    W2: 'pickle',
+    Z1: 'soup',
+    Z2: 'soup',
+    Z5: null,
+    Z10: null,
+    Z11: null,
+    IR: null,
+    IRN: null,
+    TVE1: 'soup',
+    TV2: 'soup',
+    TVE5: 'soup',
+    TV7: 'soup',
+    NF1: 'drink',
+  });
+});
+
+test('drink names ignore the style block inside them, and mains, cold dishes, bread and drinks get their courses', async t => {
+  // The drink card markup as Teletál serves it, including the unclosed tag before the name.
+  const drink = `<table><tr kod="NF1"><td class="menu-cell-code-sub2"><h2>XIXO COLA</h2></td><td>
+    <div class="menu-card"><div class="menu-cell-text-row uk-text-break"><style>.loc_kep_110632748 {mix-blend-mode: multiply;}</style>
+      <div class=loc_kep_110632748></div <br/> XIXO Cola, cukorral és édesítőszerrel</div>
+      <a class="menu-info-button" kod="NF1" nap="3" tipus="1"></a><input ar="199"></div></td></tr></table>`;
+  const bread = `<table><tr><td class="menu-cell-code-sub2"><h2>Cipó</h2></td><td><div class="menu-card">
+    <span class="menu-item-title">Kenyércipó (burgonyás)</span><a class="menu-info-button" kod="X" nap="3" tipus="1"></a><input ar="345">
+    </div></td></tr></table>`;
+  const main = bread
+    .replace('Cipó', 'Főételek')
+    .replace('Kenyércipó (burgonyás)', 'Sült kolbász, petrezselymes burgonya')
+    .replace('kod="X"', 'kod="I"')
+    .replace('ar="345"', 'ar="1990"');
+  const cold = bread
+    .replace('Cipó', 'Hidegkonyha')
+    .replace('Kenyércipó (burgonyás)', 'Norvég saláta')
+    .replace('kod="X"', 'kod="D"')
+    .replace('ar="345"', 'ar="1590"');
+  const page = `<form id="etlap_form" ev="2026" het="48">
+    <section section="Főételek"><h2>Főételek</h2>${main}</section>
+    <section section="Hidegkonyha"><h2>Hidegkonyhai készítmények</h2>${cold}</section>
+    <section section="Cipó"><h2>Cipó</h2>${bread}</section>
+    <section section="Xixo" ewid="1"><span class="title-xixo">NAPI FRISSÍTŐK</span><div class="dummy"></div></section>
+  </form>`;
+  t.mock.method(globalThis, 'fetch', async (url: URL) => new Response(url.pathname === '/etlap/48' ? page : drink));
+
+  const catalog = await menuCatalog('2026-W48');
+  assert.deepEqual(
+    catalog.map(({ code, name, course, price }) => [code, name, course, price]),
+    [
+      ['I', 'Sült kolbász, petrezselymes burgonya', 'main', 1990],
+      ['D', 'Norvég saláta', 'cold', 1590],
+      ['X', 'Kenyércipó (burgonyás)', 'bread', 345],
+      ['NF1', 'XIXO Cola, cukorral és édesítőszerrel', 'drink', 199],
+    ],
+  );
 });
 
 test('menu photos stay with their own courses when a course has no photo', async t => {

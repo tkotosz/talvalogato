@@ -1,9 +1,56 @@
 import { ChevronRight, ClipboardList, Copy } from 'lucide-react';
 import type { PlannerView } from '../../core/planner.ts';
 import { days, type OrderSummary } from '../../core/planning.ts';
-import type { Day } from '../../core/types.ts';
-import { weekLabel } from '../../core/weeks.ts';
+import type { Day, MenuOption } from '../../core/types.ts';
+import { shortDayLabel, weekLabel } from '../../core/weeks.ts';
 import { appName, calories, copyText, money } from '../format.ts';
+
+/** A menu in the overview: a title row with its code, then one row per item, all aligned on one grid. */
+function MenuItems({
+  code,
+  title,
+  items,
+}: {
+  code: string;
+  title: string;
+  items: { key: string; code?: string; text: string }[];
+}) {
+  return (
+    <span className="review-items" lang="hu">
+      <span className="meal-code">{code}</span>
+      <span className="review-menu-title">{title}</span>
+      {items.map(item => (
+        <span key={item.key} className="review-item">
+          <span>{item.code && <span className="meal-code">{item.code}</span>}</span>
+          <span>{item.text}</span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** A custom day: its dishes with their Teletál codes. */
+function CustomItems({ option }: { option: MenuOption }) {
+  const items = option.dishes.map(dish => ({ key: dish.id, code: dish.code, text: dish.name }));
+  return <MenuItems code="SM" title="Saját menü" items={items} />;
+}
+
+/** A Teletál set menu: its code and name, then its courses, each under the menu's code. */
+function SetMenuItems({ option }: { option: MenuOption }) {
+  const [dish] = option.dishes;
+  if (!dish) return null;
+  const name = dish.menuName || dish.name;
+  const courses = (option.components?.length ? option.components.map(course => course.name) : [dish.name]).filter(
+    course => course && course !== name,
+  );
+  return (
+    <MenuItems
+      code={dish.code}
+      title={name}
+      items={courses.map((text, index) => ({ key: String(index), code: dish.code, text }))}
+    />
+  );
+}
 
 /** Step 3: the week's decisions and what will reach the cart. */
 export function OverviewScreen({
@@ -31,7 +78,8 @@ export function OverviewScreen({
       appName + ' · ' + weekLabel(plan.week),
       ...summary.map(({ day, label, option, status, issue }) => {
         if (!option) return label + ' – ' + status;
-        const dishes = option.dishes.map(dish => dish.code + ' ' + dish.name).join(' + ');
+        const dishes =
+          (option.kind === 'custom' ? 'Saját menü: ' : '') + option.dishes.map(dish => dish.code + ' ' + dish.name).join(' + ');
         return (
           label +
           (day > 5 ? ' (pénteki kiszállítás)' : '') +
@@ -80,53 +128,34 @@ export function OverviewScreen({
             <>
               <span className="review-day">
                 <strong>{label}</strong>
-                {day > 5 && <span>Pénteki kiszállítás</span>}
+                <span className="review-date">{shortDayLabel(plan.week, day)}</span>
+                {day > 5 && <span className="review-tag">Pénteki kiszállítás</span>}
               </span>
               {option ? (
-                <>
-                  <span className="review-meals">
-                    {option.dishes.map(dish => {
-                      const singleItem = option.dishes.length === 1;
-                      const name = singleItem ? dish.menuName || dish.name : dish.name;
-                      const components = singleItem && option.components?.length ? option.components : dish.components;
-                      const courseNames = (components?.length ? components.map(course => course.name) : [dish.name]).filter(
-                        course => course && course !== name,
-                      );
-                      return (
-                        <span key={dish.id} className="review-menu">
-                          <span className="meal-code">{dish.code}</span>
-                          <span lang="hu">{name}</span>
-                          {courseNames.length > 0 && (
-                            <span className="review-courses" lang="hu">
-                              {courseNames.map((course, index) => (
-                                <span key={index}>{course}</span>
-                              ))}
-                            </span>
-                          )}
-                        </span>
-                      );
-                    })}
-                    {issue && <span className="selection-issue">{issue}</span>}
-                  </span>
-                  <span className="review-numbers">
-                    <strong>{calories(option.kcal)}</strong>
-                    <span>{money(option.price)}</span>
-                  </span>
-                </>
+                <span className="review-numbers">
+                  <strong>{calories(option.kcal)}</strong> · {money(option.price)}
+                </span>
               ) : (
-                <span className="skipped-label">{status}</span>
+                <span className="review-status">{status}</span>
+              )}
+              {option && (
+                <span className="review-menu">
+                  {option.kind === 'custom' ? <CustomItems option={option} /> : <SetMenuItems option={option} />}
+                  {option.custom?.overLimit && <span className="over-limit-note">Kereten felül, engedélyezve</span>}
+                  {issue && <span className="selection-issue">{issue}</span>}
+                </span>
               )}
             </>
           );
           return (
             <li key={day}>
               {available ? (
-                <button type="button" className="review-row" onClick={() => onViewDay(day)}>
+                <button type="button" className={option ? 'review-row' : 'review-row empty'} onClick={() => onViewDay(day)}>
                   {contents}
                   <ChevronRight className="review-open" size={16} aria-hidden="true" />
                 </button>
               ) : (
-                <div className="review-row unavailable">{contents}</div>
+                <div className={option ? 'review-row unavailable' : 'review-row empty unavailable'}>{contents}</div>
               )}
             </li>
           );

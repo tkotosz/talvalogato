@@ -1,5 +1,27 @@
-import { choose, orderSummary, selectionIssue, startPlan, type DeckAction, type OrderSummary } from './planning.ts';
-import type { CatalogDish, Day, MenuOption, Plan, Preferences, PublishedWeek, WeekKey } from './types.ts';
+import { normalizeCourses } from './courses.ts';
+import { customOption, editCustom, remainingCalories, startCustom, withCourses } from './custom.ts';
+import {
+  choose,
+  dayCandidates,
+  orderSummary,
+  selectionIssue,
+  startPlan,
+  type DeckAction,
+  type OrderSummary,
+} from './planning.ts';
+import type {
+  CatalogDish,
+  CustomCourse,
+  CustomDraft,
+  CustomStage,
+  Day,
+  Dish,
+  MenuOption,
+  Plan,
+  Preferences,
+  PublishedWeek,
+  WeekKey,
+} from './types.ts';
 import { defaultWeek, eligibleDays } from './weeks.ts';
 
 export type Step = 'week' | 'meals' | 'overview';
@@ -28,7 +50,16 @@ export type PlannerAction =
   | { type: 'resetWeek' }
   | { type: 'openDay'; day: Day; edit?: boolean }
   | { type: 'decide'; day: Day; action: DeckAction; option?: MenuOption | null }
-  | { type: 'savePreferences'; preferences: Preferences };
+  | { type: 'savePreferences'; preferences: Preferences }
+  // Custom days
+  | { type: 'startCustom'; day: Day }
+  | { type: 'leaveCustom'; day: Day }
+  | { type: 'setCourses'; day: Day; courses: CustomCourse[] }
+  | { type: 'openStage'; day: Day; stage: CustomStage }
+  | { type: 'pickCourse'; day: Day; dish: Dish }
+  | { type: 'clearCourse'; day: Day }
+  | { type: 'showOverLimit'; day: Day }
+  | { type: 'saveCustom'; day: Day };
 
 /** What the planner needs from outside: published weeks that still have orderable days, the active week's catalog, and the time. */
 export interface PlannerContext {
@@ -55,6 +86,8 @@ export interface PlannerView {
   editing: boolean;
   /** The picker's day already has a decision and is not being edited. */
   dayDone: boolean;
+  /** The picker's day as a custom day in progress, if it is one. */
+  custom: CustomDraft | null;
   hasSavedProgress: boolean;
   /** Cart contents once the catalog has loaded and the overview has days to show. */
   order: OrderSummary | null;
@@ -79,7 +112,8 @@ export function plannerView(state: PlannerState, { weeks, catalog, now }: Planne
   const { plan, preferences, step } = state;
   const week = activeWeek(state, weeks, now);
   const selectedDays = plan?.week === week ? plan.selectedDays : (state.weekDays[week] ?? preferences.defaultDays);
-  const activePlan = plan?.week === week ? plan : { id: '', week, day: null, selectedDays, slots: {}, drafts: {} };
+  const activePlan: Plan =
+    plan?.week === week ? plan : { id: '', week, day: null, selectedDays, slots: {}, drafts: {}, custom: {} };
   const availableDays = eligibleDays(week, now, catalog ? deliveryDays(catalog) : undefined);
   const eligible = availableDays.filter(day => selectedDays.includes(day));
   const reviewDays = selectedDays.filter(day => eligible.includes(day) || activePlan.slots[day]);
@@ -96,7 +130,8 @@ export function plannerView(state: PlannerState, { weeks, catalog, now }: Planne
     day,
     editing,
     dayDone: step === 'meals' && catalog !== null && day !== undefined && !editing && Object.hasOwn(activePlan.slots, day),
-    hasSavedProgress: plan !== null && (Object.keys(plan.slots).length > 0 || Object.keys(plan.drafts).length > 0),
+    custom: (day !== undefined && activePlan.custom[day]) || null,
+    hasSavedProgress: plan !== null && [plan.slots, plan.drafts, plan.custom].some(record => Object.keys(record).length > 0),
     order: step === 'overview' && catalog && reviewDays.length ? orderSummary(activePlan, eligible, catalog, preferences) : null,
   };
 }
@@ -113,8 +148,46 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
 
   function openDay(day: Day, edit: boolean): PlannerState {
     if (!eligible.includes(day)) return state;
-    const plan = state.plan?.week === week ? { ...state.plan, day } : startPlan(week, day, selectedDays);
+    let plan = state.plan?.week === week ? { ...state.plan, day } : startPlan(week, day, selectedDays);
+    // Editing a custom day restores its courses into a draft; the saved day stays until the draft is saved.
+    const saved = plan.slots[day];
+    if (edit && saved?.kind === 'custom') plan = { ...plan, custom: { ...plan.custom, [day]: editCustom(saved) } };
     return { ...state, plan, step: 'meals', editingDay: edit ? day : null };
+  }
+
+  /** The plan with the current day's custom draft replaced, or null when the action does not apply to the current day. */
+  function withDraft(day: Day, update: (draft: CustomDraft) => CustomDraft | null): PlannerState {
+    const plan = state.plan;
+    const draft = plan?.week === week ? plan.custom[day] : undefined;
+    if (!plan || !draft || day !== view.day || !eligible.includes(day)) return state;
+    const next = update(draft);
+    if (!next) return state;
+    return { ...state, plan: { ...plan, custom: { ...plan.custom, [day]: next } } };
+  }
+
+  /** Saves the day's custom draft as its pick and shows the finished day. */
+  function saveCustom(day: Day): PlannerState {
+    const plan = state.plan;
+    const draft = plan?.custom[day];
+    if (!plan || !draft || day !== view.day || !eligible.includes(day)) return state;
+    const option = customOption(draft, state.preferences);
+    if (!option) return state;
+    const custom = { ...plan.custom };
+    delete custom[day];
+    return { ...state, plan: { ...plan, day, slots: { ...plan.slots, [day]: option }, custom }, editingDay: null };
+  }
+
+  /** Whether `dish` may fill the current course: still on the menu, not excluded, and within the limit unless the user allowed more. */
+  function canPick(draft: CustomDraft, dish: Dish): boolean {
+    const course = draft.stage;
+    const catalog = context.catalog;
+    if (!catalog || dish.course !== course) return false;
+    if (!dayCandidates(catalog, view.day!).some(item => item.day === dish.day && item.code === dish.code)) return false;
+    const { preferences } = state;
+    if (preferences.filterCodes && preferences.excludedCodes.includes(dish.code)) return false;
+    const remaining = remainingCalories(draft, preferences, course);
+    if (remaining === null) return true;
+    return Number.isFinite(dish.kcal) && (dish.kcal! <= remaining || draft.overLimit.includes(course));
   }
 
   switch (action.type) {
@@ -150,8 +223,15 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
       return { ...state, pendingNewPlan: null };
 
     case 'resetWeek':
+      // Starting over clears the week's decisions and returns to the week screen.
       if (state.plan?.week !== week) return state;
-      return { ...state, plan: startPlan(week, null, state.plan.selectedDays), editingDay: null };
+      return {
+        ...state,
+        plan: startPlan(week, null, state.plan.selectedDays),
+        editingDay: null,
+        step: 'week',
+        selectedWeek: week,
+      };
 
     case 'openDay':
       return openDay(action.day, action.edit === true);
@@ -165,10 +245,64 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
       const current = state.plan?.week === week ? { ...state.plan, day } : startPlan(week, day, selectedDays);
       const plan = choose(current, decision, option, eligible);
       if (decision !== 'right' && decision !== 'skip') return { ...state, plan };
-      return { ...state, plan, editingDay: null, step: plan.day === null ? 'overview' : state.step };
+      // Deciding the whole day ends a custom day in progress.
+      const custom = { ...plan.custom };
+      delete custom[day];
+      return { ...state, plan: { ...plan, custom }, editingDay: null, step: plan.day === null ? 'overview' : state.step };
     }
 
     case 'savePreferences':
       return { ...state, preferences: action.preferences };
+
+    case 'startCustom': {
+      const { day } = action;
+      if (!context.catalog || day !== view.day || !eligible.includes(day)) return state;
+      const current = state.plan?.week === week ? { ...state.plan, day } : startPlan(week, day, selectedDays);
+      return { ...state, plan: { ...current, custom: { ...current.custom, [day]: startCustom(state.preferences) } } };
+    }
+
+    case 'leaveCustom': {
+      if (!state.plan || state.plan.week !== week || !state.plan.custom[action.day]) return state;
+      const custom = { ...state.plan.custom };
+      delete custom[action.day];
+      return { ...state, plan: { ...state.plan, custom } };
+    }
+
+    case 'setCourses': {
+      const next = withDraft(action.day, draft => withCourses(draft, action.courses));
+      if (next === state) return next;
+      return { ...next, preferences: { ...next.preferences, customCourses: normalizeCourses(action.courses) } };
+    }
+
+    case 'openStage':
+      return withDraft(action.day, draft => {
+        const { stage } = action;
+        return stage === 'select' || stage === 'overview' || draft.courses.includes(stage) ? { ...draft, stage } : null;
+      });
+
+    case 'pickCourse':
+      return withDraft(action.day, draft => {
+        if (!canPick(draft, action.dish)) return null;
+        return { ...draft, picks: { ...draft.picks, [action.dish.course!]: action.dish }, stage: 'overview' };
+      });
+
+    case 'clearCourse':
+      return withDraft(action.day, draft => {
+        const course = draft.stage;
+        if (course === 'select' || course === 'overview') return null;
+        const picks = { ...draft.picks };
+        delete picks[course];
+        return { ...draft, picks, stage: 'overview' };
+      });
+
+    case 'showOverLimit':
+      return withDraft(action.day, draft => {
+        const course = draft.stage;
+        if (course === 'select' || course === 'overview' || draft.overLimit.includes(course)) return null;
+        return { ...draft, overLimit: [...draft.overLimit, course] };
+      });
+
+    case 'saveCustom':
+      return saveCustom(action.day);
   }
 }

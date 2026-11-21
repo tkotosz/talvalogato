@@ -85,14 +85,26 @@ export function App() {
     window.scrollTo(0, 0);
   }, [step, week, pickerDay]);
 
-  const dayAction: DayAction | null = showPicker
-    ? {
-        label: view.dayDone ? 'Nap szerkesztése' : 'Nap kihagyása',
-        onClick: view.dayDone
-          ? () => dispatch({ type: 'openDay', day, edit: true })
-          : () => dispatch({ type: 'decide', day, action: 'skip' }),
-      }
-    : null;
+  const customStage = showPicker && !view.dayDone ? view.custom?.stage : undefined;
+  const inCourseDeck = customStage !== undefined && customStage !== 'select' && customStage !== 'overview';
+  const canReset = view.hasSavedProgress && planner.plan?.week === week;
+  const dayAction: DayAction | null = !showPicker
+    ? step !== 'meals' && canReset
+      ? { label: 'Újrakezdés', onClick: () => setDialog('resetPlan') }
+      : null
+    : view.dayDone
+      ? { label: 'Nap szerkesztése', onClick: () => dispatch({ type: 'openDay', day, edit: true }) }
+      : inCourseDeck
+        ? { label: 'Nem kérek', onClick: () => dispatch({ type: 'clearCourse', day }) }
+        : { label: 'Nap kihagyása', onClick: () => dispatch({ type: 'decide', day, action: 'skip' }) };
+
+  // Inside a custom day, Vissza steps back through its own steps before leaving the meal picker.
+  function goBack() {
+    if (customStage === undefined) return dispatch({ type: 'navigate', step: step === 'meals' ? 'week' : 'meals' });
+    if (inCourseDeck) return dispatch({ type: 'openStage', day: day!, stage: 'overview' });
+    if (customStage === 'overview') return dispatch({ type: 'openStage', day: day!, stage: 'select' });
+    dispatch({ type: 'leaveCustom', day: day! });
+  }
 
   return (
     <>
@@ -120,9 +132,7 @@ export function App() {
           weeks={weeks}
           weekError={weekError}
           catalog={catalog.state}
-          savedWeek={planner.plan?.week}
           dispatch={dispatch}
-          onReset={view.hasSavedProgress && planner.plan?.week === week ? () => setDialog('resetPlan') : undefined}
           onRetryWeeks={published.retry}
           onRetryCatalog={catalog.retry}
         />
@@ -138,6 +148,7 @@ export function App() {
           preferences={preferences}
           editing={view.editing}
           done={view.dayDone}
+          custom={view.custom}
           dispatch={dispatch}
         />
       ) : (
@@ -151,9 +162,10 @@ export function App() {
         />
       )}
       <StepBar
+        nextLabel={step === 'week' ? (canReset ? 'Folytatás' : 'Válogatás indítása') : undefined}
         step={step}
         dayAction={dayAction}
-        onBack={() => dispatch({ type: 'navigate', step: step === 'meals' ? 'week' : 'meals' })}
+        onBack={goBack}
         onNext={() => (step === 'overview' ? setDialog('cart') : dispatch({ type: 'navigate', step: 'overview' }))}
         disabled={step === 'week' ? catalogItems === null || !eligible.length : step === 'overview' && !order?.lines.length}
       />

@@ -9,6 +9,9 @@ export interface PublishedWeek {
 }
 
 export type DishKind = 'menu' | 'soup' | 'main' | 'dessert';
+
+/** A component of a custom day: a main course or an add-on. */
+export type CustomCourse = 'breakfast' | 'soup' | 'main' | 'cold' | 'pickle' | 'bread' | 'dessert' | 'drink';
 export type CourseKind = 'soup' | 'main' | 'dessert' | 'side';
 
 /** One orderable line of the Teletál weekly menu, as read from the menu page. */
@@ -28,6 +31,8 @@ export interface CatalogDish {
   menuName: string;
   weekend: boolean;
   pickerEligible: boolean;
+  /** The custom-day course this dish can fill, or null for set menus and dishes outside the courses. */
+  course: CustomCourse | null;
 }
 
 export interface Course {
@@ -57,13 +62,36 @@ export interface Dish extends CatalogDish {
 /** A card in a swipe deck, and what a day stores once it is picked. */
 export interface MenuOption {
   id: string;
-  kind: 'menu';
+  /** A Teletál set menu, or a custom day made of single dishes. */
+  kind: 'menu' | 'custom';
   dishes: Dish[];
   kcal: number | null;
   price: number;
   title: string;
   photo?: string | null;
   components?: Course[];
+  /** How a custom day was put together, so editing can restore it. */
+  custom?: CustomChoice;
+}
+
+/** The components a custom day was built from, including ones left without a dish. */
+export interface CustomChoice {
+  courses: CustomCourse[];
+  /** The user chose to go over the calorie limit for this day. */
+  overLimit: boolean;
+}
+
+/** Where the custom-day flow is: the component selection, the menu overview, or a component's deck. */
+export type CustomStage = 'select' | 'overview' | CustomCourse;
+
+/** A custom day in progress. */
+export interface CustomDraft {
+  courses: CustomCourse[];
+  stage: CustomStage;
+  /** The dish picked for each component that has one. */
+  picks: Partial<Record<CustomCourse, Dish>>;
+  /** Components whose deck shows dishes beyond the calorie limit. */
+  overLimit: CustomCourse[];
 }
 
 export interface DayDraft {
@@ -79,7 +107,10 @@ export interface Plan {
   selectedDays: Day[];
   /** A picked menu, or null when the day was skipped. Days without a decision have no entry. */
   slots: Record<Day, MenuOption | null>;
+  /** Swipe history per day, shared by the set-menu decks and the course decks. */
   drafts: Record<Day, DayDraft>;
+  /** Custom days in progress. */
+  custom: Record<Day, CustomDraft>;
 }
 
 export interface Preferences {
@@ -89,6 +120,8 @@ export interface Preferences {
   filterCodes: boolean;
   excludedCodes: string[];
   defaultDays: Day[];
+  /** The components ticked on the last custom day. */
+  customCourses: CustomCourse[];
 }
 
 export type MenuDeckId = 'lunch' | 'fullDay';

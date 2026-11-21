@@ -1,10 +1,23 @@
-import type { CartLine, CatalogDish, Day, DayDraft, Dish, MenuDeckId, MenuOption, Plan, Preferences, WeekKey } from './types.ts';
+import { defaultCourses, normalizeCourses } from './courses.ts';
+import type {
+  CartLine,
+  CatalogDish,
+  Day,
+  DayDraft,
+  Dish,
+  DishDetails,
+  MenuDeckId,
+  MenuOption,
+  Plan,
+  Preferences,
+  WeekKey,
+} from './types.ts';
 
 export const days = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
 export const allDays: Day[] = days.map((_, index) => index + 1);
 export const menuDecks: { id: MenuDeckId; label: string }[] = [
-  { id: 'lunch', label: 'Teletál ebéd menük' },
-  { id: 'fullDay', label: 'Teletál egész napos menük' },
+  { id: 'lunch', label: 'Teletál ebédmenü' },
+  { id: 'fullDay', label: 'Teletál egész napos menü' },
 ];
 const fullDayCodes = new Set(['Z10', 'Z11', 'IRN']);
 const groupNames = new Map([
@@ -19,6 +32,7 @@ export const newPreferences: Preferences = {
   filterCodes: false,
   excludedCodes: [],
   defaultDays: allDays,
+  customCourses: defaultCourses,
 };
 export const dishCodePattern = /^[A-Z0-9][A-Z0-9-]{0,15}$/i;
 
@@ -76,11 +90,12 @@ export function restorePreferences(values: PreferenceInput | null): Preferences 
     filterCodes: values.filterCodes === true,
     excludedCodes,
     defaultDays: normalizeDays(values.defaultDays),
+    customCourses: Array.isArray(values.customCourses) ? normalizeCourses(values.customCourses) : defaultCourses,
   };
 }
 
 export function startPlan(week: WeekKey, day: Day | null, selectedDays: Day[] = allDays): Plan {
-  return { id: crypto.randomUUID(), week, day, selectedDays: normalizeDays(selectedDays), slots: {}, drafts: {} };
+  return { id: crypto.randomUUID(), week, day, selectedDays: normalizeDays(selectedDays), slots: {}, drafts: {}, custom: {} };
 }
 
 /** A plan as read back from storage, before validation. */
@@ -90,9 +105,17 @@ export interface StoredPlan extends Partial<Omit<Plan, 'day'>> {
   day?: unknown;
 }
 
-export function restorePlan({ id, week, day, selectedDays, slots, drafts }: StoredPlan): Plan {
+export function restorePlan({ id, week, day, selectedDays, slots, drafts, custom }: StoredPlan): Plan {
   const activeDay = typeof day === 'number' && Number.isInteger(day) && day >= 1 && day <= days.length ? day : null;
-  return { id, week, day: activeDay, selectedDays: normalizeDays(selectedDays), slots: slots ?? {}, drafts: drafts ?? {} };
+  return {
+    id,
+    week,
+    day: activeDay,
+    selectedDays: normalizeDays(selectedDays),
+    slots: slots ?? {},
+    drafts: drafts ?? {},
+    custom: custom ?? {},
+  };
 }
 
 // Teletál delivers weekend meals on Friday. A weekend day offers the lines Teletál publishes for that day,
@@ -100,6 +123,58 @@ export function restorePlan({ id, week, day, selectedDays, slots, drafts }: Stor
 export function dayCandidates<T extends CatalogDish>(catalog: T[], day: Day): T[] {
   const ownCodes = new Set(catalog.filter(dish => dish.day === day).map(dish => dish.code));
   return catalog.filter(dish => dish.day === day || (day > 5 && dish.day === 5 && !ownCodes.has(dish.code)));
+}
+
+/**
+ * Splits a Teletál dish name such as "Mikulás puttonya (diós, töltött csirkemell), jázmin rizs" into a title without the
+ * parenthesized parts, "Mikulás puttonya, jázmin rizs", and those parts as a description. A name without parentheses, or
+ * made only of them, stays whole.
+ */
+export function splitDishName(name: string): { title: string; description: string | null } {
+  let title = '';
+  const parts: string[] = [];
+  let depth = 0;
+  let part = '';
+  for (const char of name) {
+    if (char === '(') {
+      if (depth > 0) part += char;
+      depth += 1;
+    } else if (char === ')' && depth > 0) {
+      depth -= 1;
+      if (depth > 0) part += char;
+      else {
+        parts.push(part.trim());
+        part = '';
+      }
+    } else if (depth > 0) part += char;
+    else title += char;
+  }
+  title = title
+    .replace(/\s+([,.])/g, '$1')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  const description = parts.filter(Boolean).join(' · ');
+  if (depth > 0 || !title || !description) return { title: name, description: null };
+  return { title, description };
+}
+
+/**
+ * A catalog line with its details from Teletál's dish page. Teletál's menu page names dishes briefly, its dish page at
+ * length; the brief names are kept: the dish keeps its catalog name, and its courses take the parts of that name when
+ * they match the courses one to one. Calories and photos come from the details.
+ */
+export function withDetails(dish: CatalogDish & Partial<Dish>, details: DishDetails | undefined): Dish {
+  if (!details || !Number.isFinite(details.kcal)) return { ...dish, kcal: null };
+  const components = details.components ?? [];
+  const parts = dish.name.split(' / ');
+  const named = parts.length === components.length;
+  return {
+    ...dish,
+    ...details,
+    kind: components.length > 1 ? 'menu' : dish.kind,
+    name: dish.name,
+    components: named ? components.map((course, index) => ({ ...course, name: parts[index]! })) : components,
+  };
 }
 
 export function menuDeck(dish: CatalogDish & Partial<Dish>): MenuDeckId | null {
@@ -152,7 +227,8 @@ export function selectionIssue(
   }
   if (preferences.filterCodes && option.dishes.some(dish => preferences.excludedCodes.includes(dish.code)))
     return 'Kizárt Teletál-kód';
-  if (!matchesCalorieLimit(option.kcal, preferences))
+  // A custom day the user chose to take over the limit still goes to the cart.
+  if (!matchesCalorieLimit(option.kcal, preferences) && !option.custom?.overLimit)
     return Number.isFinite(option.kcal) ? 'Kalóriakereten felül' : 'Nincs kalóriaadat';
   return null;
 }

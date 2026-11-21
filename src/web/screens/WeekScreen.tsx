@@ -1,9 +1,10 @@
 import { CalendarDays, Check, ChevronDown, Soup, Utensils } from 'lucide-react';
 import type { PlannerAction, PlannerView } from '../../core/planner.ts';
 import type { CatalogDish, PublishedWeek, WeekKey } from '../../core/types.ts';
-import { weekLabel } from '../../core/weeks.ts';
+import { weekOptionLabel } from '../../core/weeks.ts';
 import { DayChoices } from '../components/DayChoices.tsx';
 import type { Loadable } from '../useLoad.ts';
+import { useMediaQuery } from '../useMediaQuery.ts';
 
 /** Step 1: choose the delivery week and its days. The step bar's Tovább button submits this form. */
 export function WeekScreen({
@@ -11,9 +12,7 @@ export function WeekScreen({
   weeks,
   weekError,
   catalog,
-  savedWeek,
   dispatch,
-  onReset,
   onRetryWeeks,
   onRetryCatalog,
 }: {
@@ -21,15 +20,13 @@ export function WeekScreen({
   weeks: PublishedWeek[];
   weekError: string;
   catalog: Loadable<CatalogDish[]>;
-  /** The saved plan's week, if any. */
-  savedWeek: WeekKey | undefined;
   dispatch(action: PlannerAction): void;
-  /** Present when the active week has progress that can be reset. */
-  onReset?: () => void;
   onRetryWeeks(): void;
   onRetryCatalog(): void;
 }) {
-  const { week, recommended, availableDays, selectedDays, eligible } = view;
+  const { week, availableDays, selectedDays, eligible } = view;
+  // Measured: full month names fit the selector from about 420px; phones get short ones.
+  const wide = useMediaQuery('(min-width: 480px)');
   const selectWeek = (key: WeekKey) => dispatch({ type: 'chooseWeek', week: key });
   return (
     <main className="setup">
@@ -81,18 +78,12 @@ export function WeekScreen({
               {!week && <option value="">{weekError ? 'A hetek nem érhetők el' : 'Hetek betöltése…'}</option>}
               {weeks.map(({ key }) => (
                 <option key={key} value={key}>
-                  {weekLabel(key)}
-                  {key === recommended ? ' (ajánlott)' : ''}
+                  {weekOptionLabel(key, wide ? 'long' : 'short')}
                 </option>
               ))}
             </select>
             <ChevronDown size={18} aria-hidden="true" />
           </div>
-          {onReset && (
-            <button type="button" className="text-button week-plan-link" onClick={onReset}>
-              Heti válogatás újrakezdése
-            </button>
-          )}
           {week && (
             <DayChoices
               label="Rendelési napok"
@@ -122,11 +113,6 @@ export function WeekScreen({
             <p role="status">
               {availableDays.length ? 'Válassz legalább egy rendelhető napot.' : 'Erre a hétre már nem rendelhetsz.'}
             </p>
-          )}
-          {savedWeek && savedWeek !== week && weeks.some(item => item.key === savedWeek) && (
-            <button type="button" className="text-button week-plan-link" onClick={() => selectWeek(savedWeek)}>
-              Mentett hét kiválasztása
-            </button>
           )}
         </form>
       </div>

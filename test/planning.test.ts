@@ -11,10 +11,21 @@ import {
   orderSummary,
   restorePlan,
   restorePreferences,
+  splitDishName,
   startPlan,
+  withDetails,
 } from '../src/core/planning.ts';
 import type { Course, CourseKind, Dish, MenuOption } from '../src/core/types.ts';
-import { dayLabel, defaultWeek, eligibleDays, mondayOfWeek, sourceDay, upcomingWeeks, weekLabel } from '../src/core/weeks.ts';
+import {
+  dayLabel,
+  defaultWeek,
+  eligibleDays,
+  mondayOfWeek,
+  sourceDay,
+  upcomingWeeks,
+  weekLabel,
+  weekOptionLabel,
+} from '../src/core/weeks.ts';
 
 const week = '2026-W48';
 const allDays = [1, 2, 3, 4, 5, 6, 7];
@@ -34,6 +45,7 @@ function dish(fields: Partial<Dish> & Pick<Dish, 'id' | 'code' | 'name' | 'price
     weekend: false,
     pickerEligible: true,
     ...fields,
+    course: fields.course !== undefined ? fields.course : fields.kind === 'menu' ? null : (fields.kind ?? 'main'),
   };
 }
 const course = (kind: CourseKind | undefined, name: string, kcal: number): Course => ({ kind, name, kcal, photo: null });
@@ -131,6 +143,7 @@ test('restoring a saved plan keeps choices and swipe history, and preferences ar
     selectedDays: allDays,
     slots: {},
     drafts: {},
+    custom: {},
   });
 
   assert.deepEqual(restorePreferences(null), newPreferences);
@@ -287,4 +300,68 @@ test('day and week labels use Hungarian dates, including weeks across two months
   assert.equal(dayLabel(week, 1), 'november 23.');
   assert.equal(weekLabel(week), 'nov. 23–29.');
   assert.equal(weekLabel('2026-W49').replace(/\s+/g, ' '), 'nov. 30. – dec. 6.');
+  assert.equal(weekOptionLabel(week, 'long'), '48. hét (november 23–29.)');
+  assert.equal(weekOptionLabel(week, 'short'), '48. hét (nov. 23–29.)');
+  assert.equal(weekOptionLabel('2026-W49', 'long').replace(/\s+/g, ' '), '49. hét (november 30. – december 6.)');
+  assert.equal(weekOptionLabel('2026-W53', 'short').replace(/\s+/g, ' '), '53. hét (dec. 28. – jan. 3.)');
+});
+
+test("dish details keep the brief names of Teletál's menu page, with calories and photos from the dish page", () => {
+  const setMenu = dish({
+    id: '3:1:P',
+    code: 'P',
+    kind: 'menu',
+    name: 'Lencseleves / Eszterházy pulykatokány, jázmin rizs',
+    price: 2470,
+  });
+  const long = [
+    { name: 'Lencseleves', kcal: 401, kind: 'soup' as const, photo: null },
+    {
+      name: 'Eszterházy pulykatokány (mustáros, tejfölös, sárgarépás, fehérrépás ragu), jázminrizs',
+      kcal: 762,
+      kind: 'main' as const,
+      photo: '/p.jpg',
+    },
+  ];
+  const detailed = withDetails(setMenu, { id: setMenu.id, kcal: 1163, components: long, photo: '/p.jpg' });
+  assert.deepEqual(
+    detailed.components?.map(course => [course.name, course.kcal, course.photo]),
+    [
+      ['Lencseleves', 401, null],
+      ['Eszterházy pulykatokány, jázmin rizs', 762, '/p.jpg'],
+    ],
+  );
+  assert.equal(detailed.kcal, 1163);
+
+  const threeCourses = [...long, { name: 'Somlói galuska', kcal: 300, kind: 'dessert' as const, photo: null }];
+  assert.deepEqual(
+    withDetails(setMenu, { id: setMenu.id, kcal: 1463, components: threeCourses }).components?.map(course => course.name),
+    threeCourses.map(course => course.name),
+    "names that do not match the courses one to one stay as Teletál's dish page has them",
+  );
+
+  const single = dish({ id: '3:1:Z8', code: 'Z8', name: 'Eszterházy pulykatokány, jázmin rizs', price: 2200 });
+  const singleDetails = withDetails(single, { id: single.id, kcal: 762, components: [long[1]!] });
+  assert.equal(singleDetails.name, 'Eszterházy pulykatokány, jázmin rizs');
+  assert.equal(singleDetails.components?.[0]?.name, 'Eszterházy pulykatokány, jázmin rizs');
+  assert.equal(withDetails(single, undefined).kcal, null);
+});
+
+test('dish names split into a title and the parenthesized description', () => {
+  assert.deepEqual(
+    splitDishName('Mikulás puttonya (diós, kandírozott narancsos töltött, rántott csirkemell), mandulás jázmin rizs'),
+    {
+      title: 'Mikulás puttonya, mandulás jázmin rizs',
+      description: 'diós, kandírozott narancsos töltött, rántott csirkemell',
+    },
+  );
+  assert.deepEqual(splitDishName('Rudolf ünnepi falatkái (Fahéjas csíkok (kis adag) rizzsel)'), {
+    title: 'Rudolf ünnepi falatkái',
+    description: 'Fahéjas csíkok (kis adag) rizzsel',
+  });
+  assert.deepEqual(splitDishName('Kenyércipó (burgonyás)'), { title: 'Kenyércipó', description: 'burgonyás' });
+  assert.deepEqual(splitDishName('A (b) c (d)'), { title: 'A c', description: 'b · d' });
+  assert.deepEqual(splitDishName('Lencseleves'), { title: 'Lencseleves', description: null });
+  assert.deepEqual(splitDishName('(csak leírás)'), { title: '(csak leírás)', description: null });
+  assert.deepEqual(splitDishName('Félig (nyitott'), { title: 'Félig (nyitott', description: null });
 });
