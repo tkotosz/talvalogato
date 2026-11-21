@@ -603,8 +603,11 @@ main {
   max-height: min(32dvh, 365px);
 }
 
+/* The meal picker and the overview share the step tabs' column. */
 .picker,
-.step-bar[data-step='meals'] {
+.review,
+.step-bar[data-step='meals'],
+.step-bar[data-step='overview'] {
   max-width: 635px;
 }
 .picker {
@@ -1114,10 +1117,6 @@ main {
   }
 }
 
-.review,
-.step-bar[data-step='overview'] {
-  max-width: 775px;
-}
 .review {
   padding-top: 31px;
 }
@@ -1127,10 +1126,15 @@ main {
   gap: 14px;
   margin-bottom: 20px;
 }
+/* Icon only, with its label as a tooltip, so the title keeps one line in the narrow column. */
 .review-copy {
   margin-inline-start: auto;
   flex: none;
+  width: 44px;
   min-height: 44px;
+}
+.review-copy span {
+  display: none;
 }
 .review-list {
   list-style: none;
@@ -1240,7 +1244,8 @@ button.review-row:hover {
 }
 .review-items {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
+  /* A shared minimum keeps names aligned across days; a longer code still fits. */
+  grid-template-columns: minmax(3.2em, max-content) minmax(0, 1fr);
   align-items: start;
   gap: 3px 10px;
   color: var(--muted);
@@ -1681,13 +1686,6 @@ button.code-group-title:hover {
   }
   .review-heading {
     gap: 9px;
-  }
-  .review-copy {
-    width: 44px;
-    min-height: 44px;
-  }
-  .review-copy span {
-    display: none;
   }
   .meal-code {
     margin-top: 1px;
