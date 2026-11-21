@@ -19,6 +19,7 @@ const sectionsOutsidePicker = /^(reggeli|zzabkasa|savanyusag|diacipo|dianasi|xix
 const sectionTitlePattern = /^\p{Lu}[\p{Ll}\p{M}]+(?:[ -]\p{Lu}?[\p{Ll}\p{M}]+)*$/u;
 const vegaGroupName = 'Vega & vegán';
 // Promotion lines Teletál adds under a dish name, such as "-25% MESTEREK KEDVENCE" and "Eredeti ár: 1.905 Ft".
+// They move to the dish's note as written, without further parsing.
 const promotionLine = /^-\s*\d+\s*%|^eredeti ár\b/i;
 // Teletál renders these grid headings as CSS background images.
 const imageMenuNames = new Map([
@@ -159,13 +160,12 @@ function itemsFrom($: CheerioAPI, section: string, headings: Map<string, Section
       // Drink cards put a <style> block inside the name.
       titleNodes.find('style').remove();
       titleNodes.find('br').replaceWith(' / ');
-      const name =
-        cleanText(titleNodes.text())
-          .replace(/,\s*\/\s*/g, ' / ')
-          .replace(/\s*\/\s*$/, '')
-          .split(' / ')
-          .filter(line => !promotionLine.test(line))
-          .join(' / ') || category;
+      const lines = cleanText(titleNodes.text())
+        .replace(/,\s*\/\s*/g, ' / ')
+        .replace(/\s*\/\s*$/, '')
+        .split(' / ');
+      const name = lines.filter(line => !promotionLine.test(line)).join(' / ') || category;
+      const note = lines.filter(line => promotionLine.test(line)).join(' · ') || null;
       const menuName = readMenuName(card) ?? imageMenuNames.get(code) ?? category;
       const kind = classify(section, name, code, menuName);
       const weekend = card
@@ -189,6 +189,7 @@ function itemsFrom($: CheerioAPI, section: string, headings: Map<string, Section
           weekend,
           pickerEligible,
           course: courseOf(section, kind),
+          note,
         },
       ];
     });

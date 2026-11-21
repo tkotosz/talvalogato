@@ -130,7 +130,7 @@ test('catalog entries follow the website order and preserve names for all menu c
   });
 });
 
-test('drink names ignore the style block inside them, promotion lines leave names, and mains, cold dishes, bread and drinks get their courses', async t => {
+test('drink names ignore the style block inside them, promotion lines move from names to notes, and mains, cold dishes, bread and drinks get their courses', async t => {
   // The drink card markup as Teletál serves it, including the unclosed tag before the name.
   const drink = `<table><tr kod="NF1"><td class="menu-cell-code-sub2"><h2>XIXO COLA</h2></td><td>
     <div class="menu-card"><div class="menu-cell-text-row uk-text-break"><style>.loc_kep_110632748 {mix-blend-mode: multiply;}</style>
@@ -165,13 +165,13 @@ test('drink names ignore the style block inside them, promotion lines leave name
 
   const catalog = await menuCatalog('2026-W48');
   assert.deepEqual(
-    catalog.map(({ code, name, course, price }) => [code, name, course, price]),
+    catalog.map(({ code, name, course, price, note }) => [code, name, course, price, note]),
     [
-      ['25', 'Mákos guba', 'main', 1310],
-      ['I', 'Sült kolbász, petrezselymes burgonya', 'main', 1990],
-      ['D', 'Norvég saláta', 'cold', 1590],
-      ['X', 'Kenyércipó (burgonyás)', 'bread', 345],
-      ['NF1', 'XIXO Cola, cukorral és édesítőszerrel', 'drink', 199],
+      ['25', 'Mákos guba', 'main', 1310, '-25% RENDEZŐK KEDVENCE · Eredeti ár: 1.745 Ft'],
+      ['I', 'Sült kolbász, petrezselymes burgonya', 'main', 1990, null],
+      ['D', 'Norvég saláta', 'cold', 1590, null],
+      ['X', 'Kenyércipó (burgonyás)', 'bread', 345, null],
+      ['NF1', 'XIXO Cola, cukorral és édesítőszerrel', 'drink', 199, null],
     ],
   );
 });

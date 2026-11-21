@@ -33,6 +33,8 @@ export interface CatalogDish {
   pickerEligible: boolean;
   /** The custom-day course this dish can fill, or null for set menus and dishes outside the courses. */
   course: CustomCourse | null;
+  /** Promotion lines Teletál shows under the name, as written there, or null. */
+  note?: string | null;
 }
 
 export interface Course {

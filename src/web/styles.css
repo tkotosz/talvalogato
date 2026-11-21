@@ -1876,3 +1876,7 @@ button.code-group-title:hover {
 .review-menu .over-limit-note {
   margin-top: 0;
 }
+.meal-note {
+  color: #754c16;
+  font-weight: 650;
+}
