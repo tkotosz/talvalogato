@@ -1,20 +1,21 @@
 import { ChevronRight, ClipboardList, Copy } from 'lucide-react';
-import { courseNames } from '../../core/courses.ts';
 import type { PlannerView } from '../../core/planner.ts';
 import { days, type OrderSummary } from '../../core/planning.ts';
 import type { Day, MenuOption } from '../../core/types.ts';
 import { shortDayLabel, weekLabel } from '../../core/weeks.ts';
 import { appName, calories, copyText, money } from '../format.ts';
 
-/** A custom day's dishes, labeled by component. */
+/** A custom day's dishes with their Teletál codes. */
 function CustomItems({ option }: { option: MenuOption }) {
   return (
     <>
-      <span className="review-menu-title">Saját menü</span>
+      <span className="review-menu-title">
+        <span className="meal-code">SM</span> Saját menü
+      </span>
       <span className="review-items" lang="hu">
         {option.dishes.map(dish => (
           <span key={dish.id} className="review-item">
-            <span className="review-item-label">{dish.course ? courseNames[dish.course] : ''}</span>
+            <span className="meal-code">{dish.code}</span>
             <span>{dish.name}</span>
           </span>
         ))}

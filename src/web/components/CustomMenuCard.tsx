@@ -1,10 +1,9 @@
 import { Flame } from 'lucide-react';
-import { courseNames } from '../../core/courses.ts';
 import type { MenuOption } from '../../core/types.ts';
 import { calories, money } from '../format.ts';
 import { MealPhotos } from './MealCard.tsx';
 
-/** A saved custom day: its dishes by course, with the totals. */
+/** A saved custom day: its dishes with their Teletál codes, and the totals. */
 export function CustomMenuCard({ option, target }: { option: MenuOption; target: number | null }) {
   const { dishes, kcal, price } = option;
   const overTarget = target !== null && kcal !== null && kcal > target;
@@ -12,12 +11,15 @@ export function CustomMenuCard({ option, target }: { option: MenuOption; target:
     <article className="meal-card">
       <MealPhotos courses={dishes} coverPhoto={option.photo} />
       <div className="meal-content">
-        <h2 lang="hu">Saját menü</h2>
+        <h2 lang="hu">
+          <span className="meal-code">SM</span> Saját menü
+        </h2>
         <ul className="course-list" aria-label="A menü fogásai">
           {dishes.map(dish => (
             <li key={dish.id}>
-              <span lang="hu">
-                <span className="course-label">{dish.course ? courseNames[dish.course] : ''}</span> {dish.name}
+              <span lang="hu" className="custom-dish">
+                <span className="meal-code">{dish.code}</span>
+                <span>{dish.name}</span>
               </span>
               <span>{calories(dish.kcal)}</span>
             </li>
