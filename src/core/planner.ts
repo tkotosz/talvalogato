@@ -26,27 +26,24 @@ import { defaultWeek, eligibleDays } from './weeks.ts';
 
 export type Step = 'week' | 'meals' | 'overview';
 
-/** The state of the planning flow. `plan` and `preferences` are saved; the rest lasts for the session. */
+/** The state of the planning flow. `plans` and `preferences` are saved; the rest lasts for the session. */
 export interface PlannerState {
   step: Step;
-  /** The week chosen on the week screen, or empty to use the recommended week. */
+  /** The week being planned, or empty to use the recommended week. */
   selectedWeek: WeekKey;
   /** Day choices for weeks that have no plan yet. */
   weekDays: Record<WeekKey, Day[]>;
   /** The finished day whose saved pick is being replaced. */
   editingDay: Day | null;
-  plan: Plan | null;
+  /** Each week's plan, so weeks are planned independently of each other. */
+  plans: Record<WeekKey, Plan>;
   preferences: Preferences;
-  /** Set while the user confirms replacing a plan that has progress with a plan for another week. */
-  pendingNewPlan: { week: WeekKey; step: Step } | null;
 }
 
 export type PlannerAction =
   | { type: 'chooseWeek'; week: WeekKey }
   | { type: 'setWeekDays'; days: Day[] }
   | { type: 'navigate'; step: Step }
-  | { type: 'confirmNewPlan' }
-  | { type: 'cancelNewPlan' }
   | { type: 'resetWeek' }
   | { type: 'openDay'; day: Day; edit?: boolean }
   | { type: 'clearDay'; day: Day }
@@ -73,7 +70,7 @@ export interface PlannerContext {
 export interface PlannerView {
   week: WeekKey;
   recommended: WeekKey;
-  /** The saved plan when it belongs to the active week, otherwise an empty plan for it. */
+  /** The active week's saved plan, or an empty plan for it. */
   plan: Plan;
   selectedDays: Day[];
   /** Days Teletál still takes orders for, whether or not the user selected them. */
@@ -97,27 +94,25 @@ export interface PlannerView {
   order: OrderSummary | null;
 }
 
-export function initialPlanner(plan: Plan | null, preferences: Preferences): PlannerState {
-  return { step: 'week', selectedWeek: '', weekDays: {}, editingDay: null, plan, preferences, pendingNewPlan: null };
+export function initialPlanner(plans: Record<WeekKey, Plan>, preferences: Preferences): PlannerState {
+  return { step: 'week', selectedWeek: '', weekDays: {}, editingDay: null, plans, preferences };
 }
 
 export function deliveryDays(catalog: CatalogDish[]): Set<Day> {
   return new Set(catalog.map(dish => dish.day));
 }
 
-/** The week the planner works on: the chosen week on the week screen, otherwise the saved plan's week. */
+/** The week the planner works on: the chosen week while it is published, otherwise the recommended week. */
 export function activeWeek(state: PlannerState, weeks: PublishedWeek[], now: Date): WeekKey {
-  const recommended = defaultWeek(weeks, now);
-  if (state.step === 'week') return weeks.some(item => item.key === state.selectedWeek) ? state.selectedWeek : recommended;
-  return state.plan?.week ?? recommended;
+  return weeks.some(item => item.key === state.selectedWeek) ? state.selectedWeek : defaultWeek(weeks, now);
 }
 
 export function plannerView(state: PlannerState, { weeks, catalog, now }: PlannerContext): PlannerView {
-  const { plan, preferences, step } = state;
+  const { preferences, step } = state;
   const week = activeWeek(state, weeks, now);
-  const selectedDays = plan?.week === week ? plan.selectedDays : (state.weekDays[week] ?? preferences.defaultDays);
-  const activePlan: Plan =
-    plan?.week === week ? plan : { id: '', week, day: null, selectedDays, slots: {}, drafts: {}, custom: {} };
+  const plan = state.plans[week] ?? null;
+  const selectedDays = plan ? plan.selectedDays : (state.weekDays[week] ?? preferences.defaultDays);
+  const activePlan: Plan = plan ?? { id: '', week, day: null, selectedDays, slots: {}, drafts: {}, custom: {} };
   const availableDays = eligibleDays(week, now, catalog ? deliveryDays(catalog) : undefined);
   const eligible = availableDays.filter(day => selectedDays.includes(day));
   const reviewDays = selectedDays.filter(day => eligible.includes(day) || activePlan.slots[day]);
@@ -145,42 +140,52 @@ export function plannerView(state: PlannerState, { weeks, catalog, now }: Planne
 export function reducePlanner(state: PlannerState, action: PlannerAction, context: PlannerContext): PlannerState {
   const view = plannerView(state, context);
   const { week, eligible, selectedDays } = view;
+  const plan = state.plans[week];
 
-  // Leaves the week screen for a step, starting a plan for the chosen week when needed.
+  /** The state with `next` as its week's plan. */
+  function withPlan(next: Plan, changes: Partial<PlannerState> = {}): PlannerState {
+    return { ...state, ...changes, plans: { ...state.plans, [next.week]: next } };
+  }
+
+  /** The active week's plan opened on `day`, started when the week has none yet. */
+  function planOn(day: Day): Plan {
+    return plan ? { ...plan, day } : startPlan(week, day, selectedDays);
+  }
+
+  // Leaves the week screen for a step, starting a plan for the chosen week when it has none yet.
   function openWeek(target: Step): PlannerState {
-    const plan = week && state.plan?.week !== week ? startPlan(week, eligible[0] ?? null, selectedDays) : state.plan;
-    return { ...state, plan, step: target, editingDay: null, pendingNewPlan: null };
+    const changes = { step: target, editingDay: null, selectedWeek: week };
+    if (!week || plan) return { ...state, ...changes };
+    return withPlan(startPlan(week, eligible[0] ?? null, selectedDays), changes);
   }
 
   function openDay(day: Day, edit: boolean): PlannerState {
     if (!eligible.includes(day)) return state;
-    let plan = state.plan?.week === week ? { ...state.plan, day } : startPlan(week, day, selectedDays);
+    let next = planOn(day);
     // Editing a custom day restores its courses into a draft; the saved day stays until the draft is saved.
-    const saved = plan.slots[day];
-    if (edit && saved?.kind === 'custom') plan = { ...plan, custom: { ...plan.custom, [day]: editCustom(saved) } };
-    return { ...state, plan, step: 'meals', editingDay: edit ? day : null };
+    const saved = next.slots[day];
+    if (edit && saved?.kind === 'custom') next = { ...next, custom: { ...next.custom, [day]: editCustom(saved) } };
+    return withPlan(next, { step: 'meals', editingDay: edit ? day : null });
   }
 
-  /** The plan with the current day's custom draft replaced, or null when the action does not apply to the current day. */
+  /** The plan with the current day's custom draft replaced, or the state unchanged when the action does not apply. */
   function withDraft(day: Day, update: (draft: CustomDraft) => CustomDraft | null): PlannerState {
-    const plan = state.plan;
-    const draft = plan?.week === week ? plan.custom[day] : undefined;
+    const draft = plan?.custom[day];
     if (!plan || !draft || day !== view.day || !eligible.includes(day)) return state;
     const next = update(draft);
     if (!next) return state;
-    return { ...state, plan: { ...plan, custom: { ...plan.custom, [day]: next } } };
+    return withPlan({ ...plan, custom: { ...plan.custom, [day]: next } });
   }
 
   /** Saves the day's custom draft as its pick and shows the finished day. */
   function saveCustom(day: Day): PlannerState {
-    const plan = state.plan;
     const draft = plan?.custom[day];
     if (!plan || !draft || day !== view.day || !eligible.includes(day)) return state;
     const option = customOption(draft, state.preferences);
     if (!option) return state;
     const custom = { ...plan.custom };
     delete custom[day];
-    return { ...state, plan: { ...plan, day, slots: { ...plan.slots, [day]: option }, custom }, editingDay: null };
+    return withPlan({ ...plan, day, slots: { ...plan.slots, [day]: option }, custom }, { editingDay: null });
   }
 
   /** Whether `dish` may fill the current course: still on the menu, not excluded, and within the limit unless the user allowed more. */
@@ -202,42 +207,22 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
 
     case 'setWeekDays': {
       const weekDays = { ...state.weekDays, [week]: action.days };
-      const plan = state.plan?.week === week ? { ...state.plan, selectedDays: action.days } : state.plan;
-      return { ...state, weekDays, plan };
+      return plan ? withPlan({ ...plan, selectedDays: action.days }, { weekDays }) : { ...state, weekDays };
     }
 
     case 'navigate': {
       const target = action.step;
       if (target === state.step) return state;
       if (target === 'week') return { ...state, step: 'week', selectedWeek: week };
-      if (state.step === 'week') {
-        if (week && view.hasSavedProgress && state.plan?.week !== week) {
-          return { ...state, pendingNewPlan: { week, step: target } };
-        }
-        return openWeek(target);
-      }
+      if (state.step === 'week') return openWeek(target);
       if (target === 'meals' && context.catalog && eligible[0] !== undefined) return openDay(eligible[0], false);
       return { ...state, step: target };
     }
 
-    case 'confirmNewPlan':
-      if (!state.pendingNewPlan) return state;
-      if (state.pendingNewPlan.week !== week) return { ...state, pendingNewPlan: null };
-      return openWeek(state.pendingNewPlan.step);
-
-    case 'cancelNewPlan':
-      return { ...state, pendingNewPlan: null };
-
     case 'resetWeek':
       // Starting over clears the week's decisions and returns to the week screen.
-      if (state.plan?.week !== week) return state;
-      return {
-        ...state,
-        plan: startPlan(week, null, state.plan.selectedDays),
-        editingDay: null,
-        step: 'week',
-        selectedWeek: week,
-      };
+      if (!plan) return state;
+      return withPlan(startPlan(week, null, plan.selectedDays), { editingDay: null, step: 'week', selectedWeek: week });
 
     case 'openDay':
       return openDay(action.day, action.edit === true);
@@ -245,14 +230,14 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
     case 'clearDay': {
       // Removes the day's choice and any work in progress, so the day has no decision again.
       const { day } = action;
-      if (state.plan?.week !== week || day !== view.day || !eligible.includes(day)) return state;
-      const slots = { ...state.plan.slots };
-      const drafts = { ...state.plan.drafts };
-      const custom = { ...state.plan.custom };
+      if (!plan || day !== view.day || !eligible.includes(day)) return state;
+      const slots = { ...plan.slots };
+      const drafts = { ...plan.drafts };
+      const custom = { ...plan.custom };
       delete slots[day];
       delete drafts[day];
       delete custom[day];
-      return { ...state, plan: { ...state.plan, day, slots, drafts, custom }, editingDay: null };
+      return withPlan({ ...plan, day, slots, drafts, custom }, { editingDay: null });
     }
 
     case 'decide': {
@@ -261,13 +246,12 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
       if (!catalog || day !== view.day || !eligible.includes(day)) return state;
       if (decision === 'right' && (!option || selectionIssue(option, day, eligible, catalog, state.preferences))) return state;
       if ((decision === 'left' || decision === 'up') && !option) return state;
-      const current = state.plan?.week === week ? { ...state.plan, day } : startPlan(week, day, selectedDays);
-      const plan = choose(current, decision, option, eligible);
-      if (decision !== 'right' && decision !== 'skip') return { ...state, plan };
+      const next = choose(planOn(day), decision, option, eligible);
+      if (decision !== 'right' && decision !== 'skip') return withPlan(next);
       // Deciding the whole day ends a custom day in progress.
-      const custom = { ...plan.custom };
+      const custom = { ...next.custom };
       delete custom[day];
-      return { ...state, plan: { ...plan, custom }, editingDay: null, step: plan.day === null ? 'overview' : state.step };
+      return withPlan({ ...next, custom }, { editingDay: null, step: next.day === null ? 'overview' : state.step });
     }
 
     case 'savePreferences':
@@ -276,15 +260,15 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
     case 'startCustom': {
       const { day } = action;
       if (!context.catalog || day !== view.day || !eligible.includes(day)) return state;
-      const current = state.plan?.week === week ? { ...state.plan, day } : startPlan(week, day, selectedDays);
-      return { ...state, plan: { ...current, custom: { ...current.custom, [day]: startCustom(state.preferences) } } };
+      const current = planOn(day);
+      return withPlan({ ...current, custom: { ...current.custom, [day]: startCustom(state.preferences) } });
     }
 
     case 'leaveCustom': {
-      if (!state.plan || state.plan.week !== week || !state.plan.custom[action.day]) return state;
-      const custom = { ...state.plan.custom };
+      if (!plan?.custom[action.day]) return state;
+      const custom = { ...plan.custom };
       delete custom[action.day];
-      return { ...state, plan: { ...state.plan, custom } };
+      return withPlan({ ...plan, custom });
     }
 
     case 'setCourses': {

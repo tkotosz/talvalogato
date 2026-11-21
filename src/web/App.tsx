@@ -22,7 +22,7 @@ type Dialog = 'preferences' | 'resetPlan' | 'install' | 'cart';
 export function App() {
   const [planner, setPlanner] = useState(() => {
     const saved = loadSaved();
-    return initialPlanner(saved.plan, saved.preferences);
+    return initialPlanner(saved.plans, saved.preferences);
   });
   const [calendarNow, setCalendarNow] = useState(() => new Date());
   const [dialog, setDialog] = useState<Dialog | null>(null);
@@ -71,8 +71,8 @@ export function App() {
   useEffect(() => {
     // Saving syncs with localStorage, an external system; the notice reports when the browser refuses.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!save(planner.plan, planner.preferences)) setNotice('A böngésző nem tudta menteni a változtatásokat.');
-  }, [planner.plan, planner.preferences]);
+    if (!save(planner.plans, planner.preferences)) setNotice('A böngésző nem tudta menteni a változtatásokat.');
+  }, [planner.plans, planner.preferences]);
 
   useEffect(() => {
     if (!notice) return;
@@ -87,7 +87,7 @@ export function App() {
 
   const customStage = showPicker && !view.dayDone ? view.custom?.stage : undefined;
   const inCourseDeck = customStage !== undefined && customStage !== 'select' && customStage !== 'overview';
-  const canReset = view.hasSavedProgress && planner.plan?.week === week;
+  const canReset = view.hasSavedProgress;
   const dayAction: DayAction | null = !showPicker
     ? step !== 'meals' && canReset
       ? { label: 'Újrakezdés', onClick: () => setDialog('resetPlan') }
@@ -201,19 +201,6 @@ export function App() {
               closeDialog();
             }}
           />
-        </Modal>
-      )}
-      {planner.pendingNewPlan && (
-        <Modal name="Új heti tervet indítasz?" onClose={() => dispatch({ type: 'cancelNewPlan' })}>
-          <p>Az új terv felülírja a mentett választásaidat.</p>
-          <div className="modal-actions">
-            <button type="button" className="button secondary" onClick={() => dispatch({ type: 'cancelNewPlan' })}>
-              Mégse
-            </button>
-            <button type="button" className="button primary" onClick={() => dispatch({ type: 'confirmNewPlan' })}>
-              Új terv indítása
-            </button>
-          </div>
         </Modal>
       )}
       {dialog === 'resetPlan' && (
