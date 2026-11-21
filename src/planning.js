@@ -1,15 +1,15 @@
 export const days = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
-export const optionTypes = [
-  { id: 'menu', label: 'Teletál menü' },
-  { id: 'generated', label: 'Generált menü' },
-  { id: 'single', label: 'Önálló ételek', badge: 'Önálló étel' },
+export const allDays = days.map((_, index) => index + 1);
+export const menuDecks = [
+  { id: 'lunch', label: 'Teletál ebéd menük' },
+  { id: 'fullDay', label: 'Teletál egész napos menük' },
 ];
-const defaultTypes = optionTypes.map(type => type.id);
-const priority = new Map(defaultTypes.map((id, index) => [id, index]));
-const legacyTypes = new Map([['menuWithDessert', 'menu'], ['triple', 'generated'], ['pair', 'generated']]);
+const fullDayCodes = new Set(['Z10', 'Z11', 'IRN']);
 const groupNames = new Map([['CzanikBalazs', 'Czanik Balázs'], ['KlimaAnita', 'Somogyi Kovács Anita']]);
 const emptyDraft = { excluded: [], deferred: [] };
-export const newSettings = { week: '', calories: 2000, tolerance: 10, types: defaultTypes, excludedCodes: [] };
+export const newPreferences = {
+  limitCalories: false, calories: 2000, tolerance: 10, filterCodes: false, excludedCodes: [], defaultDays: allDays,
+};
 export const dishCodePattern = /^[A-Z0-9][A-Z0-9-]{0,15}$/i;
 
 export function normalizeGroupTitle(title, section) {
@@ -24,83 +24,78 @@ export function calorieLimit({ calories, tolerance }) {
   return Math.floor((calories * (100 + tolerance) + Number.EPSILON) / 10) / 10;
 }
 
-export function startPlan(settings) {
-  return { id: crypto.randomUUID(), settings, day: 1, slots: {}, drafts: {} };
+export function validCalorieBudget({ calories, tolerance }) {
+  return Number.isInteger(calories) && calories >= 1 && Number.isFinite(tolerance)
+    && tolerance >= 0 && tolerance <= 100 && Number.isFinite(calorieLimit({ calories, tolerance }));
 }
 
-export function restorePlan({ excluded, deferred, ...plan }) {
-  const { settings } = plan;
+function normalizeDays(selection) {
+  return Array.isArray(selection) ? allDays.filter(day => selection.includes(day)) : allDays;
+}
+
+export function restorePreferences(saved, legacy) {
+  const values = saved ?? legacy;
+  if (!values) return newPreferences;
+  const validBudget = validCalorieBudget(values);
+  const excludedCodes = Array.isArray(values.excludedCodes)
+    ? [...new Set(values.excludedCodes.filter(code => typeof code === 'string' && dishCodePattern.test(code)).map(code => code.toUpperCase()))]
+    : [];
   return {
-    ...plan,
-    settings: settings.types == null ? settings : {
-      ...settings,
-      types: [...new Set(settings.types.map(type => legacyTypes.get(type) ?? type))],
-    },
-    drafts: plan.drafts ?? (plan.day <= days.length ? {
-      [plan.day]: { excluded: excluded ?? [], deferred: deferred ?? [] },
+    limitCalories: validBudget && (saved ? saved.limitCalories === true : true),
+    calories: validBudget ? values.calories : newPreferences.calories,
+    tolerance: validBudget ? values.tolerance : newPreferences.tolerance,
+    filterCodes: saved ? saved.filterCodes === true : excludedCodes.length > 0,
+    excludedCodes,
+    defaultDays: normalizeDays(values.defaultDays),
+  };
+}
+
+export function startPlan(week, day, selectedDays = allDays) {
+  return { id: crypto.randomUUID(), week, day, selectedDays: normalizeDays(selectedDays), slots: {}, drafts: {} };
+}
+
+export function restorePlan({ id, week, settings, day, selectedDays, slots, drafts, excluded, deferred }) {
+  const activeDay = Number.isInteger(day) && day >= 1 && day <= days.length ? day : null;
+  return {
+    id, week: week ?? settings?.week, day: activeDay, selectedDays: normalizeDays(selectedDays), slots: slots ?? {},
+    drafts: drafts ?? (activeDay && (excluded || deferred) ? {
+      [activeDay]: { excluded: excluded ?? [], deferred: deferred ?? [] },
     } : {}),
   };
 }
 
-export function sourceDay(day) {
-  return Math.min(day, 5);
+export function menuDeck(dish) {
+  if (fullDayCodes.has(dish.code)) return 'fullDay';
+  if (dish.code === 'IR') return 'lunch';
+  if (dish.kind !== 'menu' || dish.pickerEligible === false) return null;
+  if (!dish.components?.length) return 'lunch';
+  const kinds = new Set(dish.components.map(course => course.kind));
+  return kinds.has('soup') && kinds.has('main') ? 'lunch' : null;
 }
 
-const sumCalories = dishes => Math.round(dishes.reduce((sum, dish) => sum + dish.kcal, 0) * 10) / 10;
-
-function customCombo(dishes, kcal) {
-  const [soup, main] = dishes;
-  return {
-    id: dishes.map(dish => dish.id).join('+'), kind: 'generated', dishes,
-    kcal, price: dishes.reduce((sum, dish) => sum + dish.price, 0),
-    title: main.name, photo: main.photo ?? soup.photo,
-    components: dishes.map(dish => ({ name: dish.name, kcal: dish.kcal })),
-  };
+export function matchesCalorieLimit(kcal, preferences) {
+  return !preferences.limitCalories || (Number.isFinite(kcal) && kcal >= 0 && kcal <= calorieLimit(preferences));
 }
 
-export function mealOptions(dishes, settings) {
-  const limit = calorieLimit(settings);
-  const enabled = new Set(settings.types ?? defaultTypes);
-  const excludedCodes = new Set(settings.excludedCodes);
-  const eligible = dishes.filter(dish => !excludedCodes.has(dish.code)
-    && Number.isFinite(dish.kcal) && dish.kcal > 0 && dish.kcal <= limit);
-  const desserts = eligible.filter(dish => dish.kind === 'dessert');
-  const soups = eligible.filter(dish => dish.kind === 'soup');
-  const mains = eligible.filter(dish => dish.kind === 'main');
-  const options = eligible.flatMap(dish => {
-    const kind = dish.kind === 'menu' ? 'menu' : 'single';
-    if (dish.kind === 'dessert') return [];
-    if (!enabled.has(kind)) return [];
-    if (kind === 'menu') {
-      const components = dish.components ?? [];
-      const courseKinds = new Set(components.map(course => course.kind));
-      if (!courseKinds.has('soup') || !courseKinds.has('main')) return [];
-    }
-    return [{
-      id: dish.id, kind, dishes: [dish], kcal: dish.kcal, price: dish.price,
-      title: dish.name, photo: dish.photo, components: dish.components,
-    }];
-  });
+export function mealOptions(dishes, preferences, deck) {
+  const excluded = new Set(preferences.filterCodes ? preferences.excludedCodes : []);
+  const options = dishes.filter(dish => menuDeck(dish) === deck && !excluded.has(dish.code)
+    && matchesCalorieLimit(dish.kcal, preferences)).map(dish => ({
+    id: dish.id, kind: 'menu', dishes: [dish], kcal: dish.kcal ?? null, price: dish.price,
+    title: dish.name, photo: dish.photo, components: dish.components,
+  }));
+  if (preferences.limitCalories) options.sort((a, b) =>
+    Math.abs(a.kcal - preferences.calories) - Math.abs(b.kcal - preferences.calories) || a.price - b.price);
+  return options;
+}
 
-  if (enabled.has('generated')) {
-    for (const soup of soups) {
-      for (const main of mains) {
-        const pair = [soup, main];
-        const pairCalories = sumCalories(pair);
-        if (pairCalories > limit) continue;
-        options.push(customCombo(pair, pairCalories));
-        for (const dessert of desserts) {
-          const triple = [...pair, dessert];
-          const kcal = sumCalories(triple);
-          if (kcal <= limit) options.push(customCombo(triple, kcal));
-        }
-      }
-    }
+export function selectionIssue(option, day, eligible, catalog, preferences) {
+  if (!eligible.includes(day) || option.dishes.some(dish => !catalog.some(item => item.day === dish.day && item.code === dish.code))) {
+    return 'Már nem rendelhető';
   }
-
-  return options.sort((a, b) => priority.get(a.kind) - priority.get(b.kind)
-    || Math.abs(a.kcal - settings.calories) - Math.abs(b.kcal - settings.calories)
-    || a.price - b.price || a.title.localeCompare(b.title, 'hu'));
+  if (preferences.filterCodes && option.dishes.some(dish => preferences.excludedCodes.includes(dish.code))) return 'Kizárt Teletál-kód';
+  if (!matchesCalorieLimit(option.kcal, preferences)) return Number.isFinite(option.kcal) ? 'Kalóriakereten felül' : 'Nincs kalóriaadat';
+  return null;
 }
 
 export function dayQueue(options, plan) {
@@ -115,20 +110,18 @@ export function dayQueue(options, plan) {
   ];
 }
 
-export function choose(plan, action, option) {
+export function choose(plan, action, option, eligible) {
   const { day } = plan;
   const drafts = { ...plan.drafts };
   if (action === 'restart') {
-    const slots = { ...plan.slots };
-    delete slots[day];
     delete drafts[day];
-    return { ...plan, slots, drafts };
+    return { ...plan, drafts };
   }
   if (action === 'skip' || action === 'right') {
     const slots = { ...plan.slots, [day]: action === 'skip' ? null : option };
     delete drafts[day];
-    const pending = days.map((_, index) => index + 1).filter(candidate => !Object.hasOwn(slots, candidate));
-    const next = pending.find(candidate => candidate > day) ?? pending[0] ?? days.length + 1;
+    const pending = eligible.filter(candidate => !Object.hasOwn(slots, candidate));
+    const next = pending.find(candidate => candidate > day) ?? pending[0] ?? null;
     return { ...plan, slots, drafts, day: next };
   }
   const draft = drafts[day] ?? emptyDraft;
@@ -149,4 +142,21 @@ export function cartLines(plan) {
     }
   }
   return [...items.values()].sort((a, b) => a.day - b.day || a.code.localeCompare(b.code));
+}
+
+export function orderSummary(plan, eligible, catalog, preferences) {
+  const issues = {};
+  const slots = {};
+  for (const [key, option] of Object.entries(plan.slots)) {
+    const day = Number(key);
+    if (!option || !(plan.selectedDays ?? allDays).includes(day)) continue;
+    const issue = selectionIssue(option, day, eligible, catalog, preferences);
+    if (issue) issues[day] = issue;
+    else slots[day] = option;
+  }
+  return {
+    issues,
+    lines: cartLines({ slots }),
+    total: Object.values(slots).reduce((sum, option) => sum + option.price, 0),
+  };
 }

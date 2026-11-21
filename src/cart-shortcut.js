@@ -101,7 +101,7 @@ export async function importOnTeletal() {
 export const shortcutUrl = () => `javascript:${encodeURIComponent(`(${importOnTeletal.toString()})()`)}`;
 
 export function teletalWeekUrl(plan, lines) {
-  const [year, weekNumber] = plan.settings.week.split('-W');
+  const [year, weekNumber] = plan.week.split('-W');
   const week = String(Number(weekNumber));
   const payload = [plan.id, year, week, lines.map(({ day, code, quantity }) => [day, code, quantity])];
   return `https://www.teletal.hu/etlap/${week}#meal-deck=${encodeURIComponent(JSON.stringify(payload))}`;

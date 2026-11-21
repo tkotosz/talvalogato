@@ -1,6 +1,6 @@
 const batchSize = 8;
 // Distinguish responses cached before individual courses included photos.
-const courseDataQuery = 'courses=2';
+const courseDataQuery = 'courses=3';
 const catalogs = new Map();
 const versions = new Map();
 
@@ -20,12 +20,12 @@ export async function loadJson(path, signal) {
   });
 }
 
-export async function loadMenuCatalog(week, signal) {
-  if (!catalogs.has(week)) {
-    const catalog = await loadJson(`/api/menu?week=${week}&catalog=9`, signal);
-    catalogs.set(week, catalog);
-  }
-  return catalogs.get(week);
+export async function loadMenuCatalog(week, signal, refresh = false) {
+  const cached = catalogs.get(week);
+  if (!refresh && cached?.expires > Date.now()) return cached.items;
+  const items = await loadJson(`/api/menu?week=${week}&catalog=10${refresh ? '&recheck=1' : ''}`, signal);
+  if (!signal?.aborted) catalogs.set(week, { items, expires: Date.now() + 300_000 });
+  return items;
 }
 
 export async function loadDayDishes(week, day, dishes, signal, onProgress) {
@@ -61,11 +61,11 @@ export async function loadDayDishes(week, day, dishes, signal, onProgress) {
   }
   await Promise.all([loadBatches(), loadBatches()]);
 
-  const enriched = dishes.flatMap(dish => {
+  const enriched = dishes.map(dish => {
     const details = received.get(dish.id);
-    if (!details?.kcal) return [];
-    return [{ ...dish, ...details, kind: details.components.length > 1 ? 'menu' : dish.kind,
-      name: details.components.length === 1 ? details.components[0].name : dish.name }];
+    if (!Number.isFinite(details?.kcal)) return { ...dish, kcal: null };
+    return { ...dish, ...details, kind: details.components.length > 1 ? 'menu' : dish.kind,
+      name: details.components.length === 1 ? details.components[0].name : dish.name };
   });
-  return { dishes: enriched, unavailable: dishes.length - enriched.length, failures: failures.size };
+  return { dishes: enriched, unavailable: enriched.filter(dish => dish.kcal === null).length, failures: failures.size };
 }

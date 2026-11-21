@@ -1,6 +1,6 @@
 # Tálválogató
 
-Tálválogató is an installable planner for Teletál. It uses the published weekly menu and sums per-portion nutrition for each card. Settings control which option types appear, with Teletál set menus first, followed by custom combinations and single dishes. Each custom course is an order line, and each Teletál set menu uses one order line.
+Tálválogató is an installable planner for Teletál. Choose a delivery week, swipe through lunch or full-day menus for each day, then review your selections. The settings dialog saves a calorie limit and menu-code exclusions across weeks. Each Teletál menu uses one order line.
 
 ## Run locally
 
