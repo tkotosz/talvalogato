@@ -1,7 +1,16 @@
 import { load, type Cheerio, type CheerioAPI } from 'cheerio/slim';
 import type { AnyNode } from 'domhandler';
 import { dishCodePattern, normalizeGroupTitle } from '../core/planning.ts';
-import type { CatalogDish, Course, CourseKind, DishDetails, DishKind, PublishedWeek, WeekKey } from '../core/types.ts';
+import type {
+  CatalogDish,
+  Course,
+  CourseKind,
+  CustomCourse,
+  DishDetails,
+  DishKind,
+  PublishedWeek,
+  WeekKey,
+} from '../core/types.ts';
 import { isoWeek, mondayOfWeek, todayInBudapest } from '../core/weeks.ts';
 
 export const teletal = 'https://www.teletal.hu';
@@ -90,6 +99,18 @@ function classify(section: string, title: string, code: string, menuName: string
   return 'main';
 }
 
+/** The custom-day course of a dish, from its Teletál section and kind. */
+function courseOf(section: string, kind: DishKind): CustomCourse | null {
+  const key = plain(section);
+  if (kind === 'menu') return null;
+  if (/^(reggeli|zzabkasa)/.test(key)) return 'breakfast';
+  if (/^savanyusag/.test(key)) return 'pickle';
+  if (/^(cipo|diacipo)/.test(key)) return 'bread';
+  if (/^(xixo|ital|hell|vitamin|frissit)/.test(key)) return 'drink';
+  if (/^dianasi/.test(key)) return null;
+  return kind;
+}
+
 function readMenuName(card: Cheerio<AnyNode>): string | null {
   const heading = card.closest('tr').children('.menu-cell-code-sub2').find('h2').first().clone();
   const schoolMenu = heading
@@ -132,6 +153,8 @@ function itemsFrom($: CheerioAPI, section: string, headings: Map<string, Section
         .find('.menu-cell-text-row.uk-text-break, .menu-cell-text-row.uk-text-small, .menu-item-title')
         .first()
         .clone();
+      // Drink cards put a <style> block inside the name.
+      titleNodes.find('style').remove();
       titleNodes.find('br').replaceWith(' / ');
       const name =
         cleanText(titleNodes.text())
@@ -159,6 +182,7 @@ function itemsFrom($: CheerioAPI, section: string, headings: Map<string, Section
           menuName,
           weekend,
           pickerEligible,
+          course: courseOf(section, kind),
         },
       ];
     });
@@ -265,7 +289,10 @@ export async function menuCatalog(key: WeekKey): Promise<CatalogDish[]> {
     return itemsFrom(fragment, name, headings);
   });
 
-  const catalog = groups.flatMap(items => [...new Map(items.map(dish => [dish.id, dish])).values()]);
+  // A line can appear in more than one section (porridge is listed under breakfast too); keep its first listing.
+  const byId = new Map<string, CatalogDish>();
+  for (const dish of groups.flat()) if (!byId.has(dish.id)) byId.set(dish.id, dish);
+  const catalog = [...byId.values()];
   return distinguishGroupTitles(catalog);
 }
 
