@@ -294,6 +294,9 @@ main {
 .step-bar[data-step='overview'] .step-bar-inner.has-day-action {
   grid-template-columns: auto minmax(0, 1fr) auto;
 }
+.step-bar[data-step='overview'] .step-bar-inner.has-day-action > :nth-child(2) {
+  justify-self: center;
+}
 .setup,
 .step-bar[data-step='week'] {
   max-width: 1120px;
