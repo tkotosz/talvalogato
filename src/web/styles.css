@@ -533,10 +533,6 @@ main {
   color: #a73937;
   font-size: 0.9rem;
 }
-.week-plan-link {
-  margin: 3px auto -5px;
-  display: flex;
-}
 .day-choices {
   border: 0;
   padding: 0;
