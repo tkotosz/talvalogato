@@ -19,24 +19,25 @@ export interface Load<T> {
  */
 export function useLoad<T>(key: string | null, load: (signal: AbortSignal) => Promise<T>): Load<T> {
   const [attempt, setAttempt] = useState(0);
-  const [result, setResult] = useState<{ key: string | null; state: Loadable<T> }>({ key, state: { phase: 'loading' } });
+  // Each result remembers the request it answers, so an outdated one reads as loading.
+  const request = `${attempt}:${key}`;
+  const [result, setResult] = useState<{ request: string; state: Loadable<T> } | null>(null);
 
   useEffect(() => {
     if (key === null) return;
     const aborter = new AbortController();
     const { signal } = aborter;
-    setResult({ key, state: { phase: 'loading' } });
     load(signal).then(value => {
-      if (!signal.aborted) setResult({ key, state: { phase: 'ready', value } });
+      if (!signal.aborted) setResult({ request, state: { phase: 'ready', value } });
     }).catch((error: Error) => {
-      if (!signal.aborted) setResult({ key, state: { phase: 'error', message: error.message } });
+      if (!signal.aborted) setResult({ request, state: { phase: 'error', message: error.message } });
     });
     return () => aborter.abort();
     // The key identifies what `load` loads.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, attempt]);
+  }, [request]);
 
   const retry = useCallback(() => setAttempt(value => value + 1), []);
-  const replace = useCallback((value: T) => setResult({ key, state: { phase: 'ready', value } }), [key]);
-  return { state: result.key === key ? result.state : { phase: 'loading' }, retry, replace };
+  const replace = useCallback((value: T) => setResult({ request, state: { phase: 'ready', value } }), [request]);
+  return { state: result?.request === request ? result.state : { phase: 'loading' }, retry, replace };
 }

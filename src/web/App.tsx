@@ -66,6 +66,8 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    // Saving syncs with localStorage, an external system; the notice reports when the browser refuses.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!save(planner.plan, planner.preferences)) setNotice('A böngésző nem tudta menteni a változtatásokat.');
   }, [planner.plan, planner.preferences]);
 
