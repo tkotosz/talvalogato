@@ -201,3 +201,15 @@ test('resetting the week keeps its day choices, clears its decisions and returns
   assert.equal(fromOverview.step, 'week');
   assert.deepEqual(fromOverview.plan?.slots, {});
 });
+
+test('after a day has a decision, the next day is the next one still without a decision', () => {
+  let state = run(initialPlanner(null, newPreferences), { type: 'navigate', step: 'meals' });
+  assert.equal(plannerView(state, context).nextDay, 4);
+  state = run(state, { type: 'decide', day: 3, action: 'skip' }, { type: 'decide', day: 4, action: 'skip' });
+  state = run(state, { type: 'openDay', day: 4 });
+  assert.equal(plannerView(state, context).nextDay, 5);
+  state = run(state, { type: 'openDay', day: 7 }, { type: 'decide', day: 7, action: 'skip' }, { type: 'openDay', day: 7 });
+  assert.equal(plannerView(state, context).nextDay, 5, 'it wraps around the week');
+  for (const day of [5, 6]) state = run(state, { type: 'openDay', day }, { type: 'decide', day, action: 'skip' });
+  assert.equal(plannerView(run(state, { type: 'openDay', day: 3 }), context).nextDay, undefined);
+});
