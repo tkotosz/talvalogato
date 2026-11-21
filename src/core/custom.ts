@@ -38,6 +38,12 @@ export function remainingCalories(draft: CustomDraft, preferences: Preferences, 
   return Math.round((calorieLimit(preferences) - (totalCalories(others) ?? 0)) * 10) / 10;
 }
 
+/** What is left of the day's calorie limit after every picked dish; null without a limit. */
+export function caloriesLeft(draft: CustomDraft, preferences: Preferences): number | null {
+  if (!preferences.limitCalories) return null;
+  return Math.round((calorieLimit(preferences) - (totalCalories(pickedDishes(draft)) ?? 0)) * 10) / 10;
+}
+
 export function dishOption(dish: Dish): MenuOption {
   return {
     id: dish.id,
@@ -52,7 +58,7 @@ export function dishOption(dish: Dish): MenuOption {
 }
 
 export interface CourseDeck {
-  /** Cards in Teletál's order, dishes that fit the remaining limit first. */
+  /** Cards in Teletál's order, dishes that fit the remaining limit first, then any shown beyond it by calories. */
   options: MenuOption[];
   /** Calories left for this course under the limit, or null without a limit. */
   remaining: number | null;
@@ -72,7 +78,8 @@ export function courseDeck(dishes: Dish[], course: CustomCourse, draft: CustomDr
 
   const known = candidates.filter(dish => Number.isFinite(dish.kcal));
   const fitting = known.filter(dish => dish.kcal! <= remaining);
-  const over = known.filter(dish => dish.kcal! > remaining);
+  // Going over the limit, the smallest overshoot comes first.
+  const over = known.filter(dish => dish.kcal! > remaining).sort((a, b) => a.kcal! - b.kcal!);
   const shown = draft.overLimit.includes(course) ? [...fitting, ...over] : fitting;
   return { options: shown.map(dishOption), remaining, overLimitCount: over.length };
 }

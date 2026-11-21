@@ -12,7 +12,7 @@ A Teletál weekly meal planner: a React app and a Cloudflare Worker that reads t
 
 ## Layout
 
-- `src/core/`: platform-neutral types and rules (`types.ts`, `weeks.ts`, `planning.ts`) and the planning flow as a reducer (`planner.ts`). Imports nothing from `web` or `worker`.
+- `src/core/`: platform-neutral types and rules (`types.ts`, `weeks.ts`, `planning.ts`, `courses.ts`, `custom.ts`) and the planning flow as a reducer (`planner.ts`). Imports nothing from `web` or `worker`.
 - `src/worker/`: the Worker entry (`index.ts`) with the `/api` routes and the Teletál scraper (`teletal.ts`).
 - `src/web/`: the React app. `App.tsx` wires the reducer, data loading and dialogs; `screens/` has one file per step; `components/` the shared parts; `cart-shortcut.ts` the cart bookmark.
 - `test/`: unit tests (`*.test.ts`) and the end-to-end walkthrough (`e2e/`).
@@ -25,5 +25,6 @@ A Teletál weekly meal planner: a React app and a Cloudflare Worker that reads t
 - **Weekend days.** Teletál delivers on weekdays only; weekend meals arrive with Friday's delivery and follow Friday's ordering deadline. A weekend day offers the lines Teletál publishes for that day (`nap` 6 or 7) and Friday's lines for codes without a weekend line (`dayCandidates`). Cart lines keep the real day.
 - **Availability comes from Teletál.** A day is orderable when its date allows it (Budapest time, not today or tomorrow) and Teletál still shows enabled order inputs for it. Do not add time-of-day deadlines without checking Teletál's ordering terms.
 - **Scraper changes are checked against the live site.** Fixtures in `test/teletal.test.ts` cover known page shapes; after changing `teletal.ts`, compare `/api/menu` and `/api/nutrition` output with the real Teletál page, and keep request volume low.
+- **Catalog shape.** When `CatalogDish` changes, raise `catalogFormat` in `src/web/menu-client.ts`, so the browser and the edge cache never return a catalog in the old shape. Courses for custom days come from Teletál sections in `courseOf` (`src/worker/teletal.ts`); the rules for building a custom day live in `src/core/custom.ts`.
 - **Saved data.** Plans and preferences live in `localStorage` under `talvalogato.plan.v2` and `talvalogato.preferences.v1`. Changing their shape needs a new key or a migration in `restorePlan` and `restorePreferences`.
 - **TypeScript 6.** typescript-eslint does not support TypeScript 7 yet; keep `typescript` on 6.x until it does.
