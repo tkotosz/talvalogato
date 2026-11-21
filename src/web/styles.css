@@ -290,6 +290,10 @@ main {
 .step-bar-inner.has-day-action > :first-child {
   justify-self: start;
 }
+/* The overview's main button is the widest; the outer buttons take their own width there. */
+.step-bar[data-step='overview'] .step-bar-inner.has-day-action {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
 .setup,
 .step-bar[data-step='week'] {
   max-width: 1120px;
@@ -1593,6 +1597,9 @@ button.code-group-title:hover {
   .step-bar .button {
     padding-inline: 12px;
     font-size: 0.9rem;
+  }
+  .step-bar[data-step='overview'] .button {
+    min-width: 0;
   }
   .step-bar-inner.has-day-action {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr) minmax(0, 1fr);

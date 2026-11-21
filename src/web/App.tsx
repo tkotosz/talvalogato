@@ -87,8 +87,11 @@ export function App() {
 
   const customStage = showPicker && !view.dayDone ? view.custom?.stage : undefined;
   const inCourseDeck = customStage !== undefined && customStage !== 'select' && customStage !== 'overview';
+  const canReset = view.hasSavedProgress && planner.plan?.week === week;
   const dayAction: DayAction | null = !showPicker
-    ? null
+    ? step === 'overview' && canReset
+      ? { label: 'Újrakezdés', onClick: () => setDialog('resetPlan') }
+      : null
     : view.dayDone
       ? { label: 'Nap szerkesztése', onClick: () => dispatch({ type: 'openDay', day, edit: true }) }
       : inCourseDeck
@@ -131,7 +134,7 @@ export function App() {
           catalog={catalog.state}
           savedWeek={planner.plan?.week}
           dispatch={dispatch}
-          onReset={view.hasSavedProgress && planner.plan?.week === week ? () => setDialog('resetPlan') : undefined}
+          onReset={canReset ? () => setDialog('resetPlan') : undefined}
           onRetryWeeks={published.retry}
           onRetryCatalog={catalog.retry}
         />
