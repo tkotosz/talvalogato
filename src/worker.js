@@ -4,7 +4,7 @@ import { mondayOfWeek } from './weeks.js';
 
 const menuRequests = new Map();
 const seconds = { weeks: 300, menu: 3_600, nutrition: 21_600 };
-const detailsPattern = /^[1-5]:[1-9]:[A-Z0-9][A-Z0-9-]{0,15}$/;
+const detailsPattern = /^[1-7]:[1-9]:[A-Z0-9][A-Z0-9-]{0,15}$/;
 const decodingBytes = encoded => Uint8Array.from(atob(encoded), char => char.charCodeAt(0));
 
 async function cachedJson(request, ctx, maxAge, getValue) {

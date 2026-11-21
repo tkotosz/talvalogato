@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  calorieLimit, cartLines, choose, dayQueue, mealOptions, newPreferences, orderSummary, restorePlan, restorePreferences, startPlan,
+  calorieLimit, cartLines, choose, dayCandidates, dayQueue, mealOptions, newPreferences, orderSummary, restorePlan, restorePreferences, startPlan,
 } from '../src/planning.js';
 import { dayLabel, defaultWeek, eligibleDays, mondayOfWeek, sourceDay, upcomingWeeks, weekLabel } from '../src/weeks.js';
 
@@ -99,18 +99,40 @@ test('advancing wraps to unfinished eligible days and editing a finished plan re
 
 test('cart quantities use Friday for weekend plans and conflicts preserve picks', () => {
   const option = mealOptions([menu], newPreferences, 'lunch')[0];
-  const olderCombo = { kind: 'generated', dishes: [soup, main, dessert], kcal: 1047, price: 2850 };
+  const thursday = [soup, main, dessert].map(dish => ({ ...dish, id: dish.id.replace(/^5/, '4'), day: 4 }));
+  const olderCombo = { kind: 'generated', dishes: thursday, kcal: 1047, price: 2850 };
   const plan = { ...startPlan(week, 5), slots: { 4: olderCombo, 5: option, 6: option, 7: option } };
   for (const day of [5, 6, 7]) assert.equal(sourceDay(day), 5);
   assert.deepEqual(cartLines({ slots: { 5: option, 6: option, 7: option } }), [{ day: 5, code: 'P', name: 'Set menu', quantity: 3 }]);
-  const current = orderSummary(plan, [5, 6, 7], dishes, newPreferences);
+  const current = orderSummary(plan, [5, 6, 7], [...dishes, ...thursday], newPreferences);
   assert.deepEqual(current.issues, { 4: 'Már nem rendelhető' });
   assert.equal(current.lines[0].quantity, 3);
-  const excluded = orderSummary(plan, [4, 5, 6, 7], dishes, { ...preferences, filterCodes: true, excludedCodes: ['P'] });
+  assert.deepEqual(orderSummary({ ...plan, slots: { 4: { ...olderCombo, dishes: [soup] } } }, [4], dishes, newPreferences).issues,
+    { 4: 'Már nem rendelhető' });
+  const excluded = orderSummary(plan, [4, 5, 6, 7], [...dishes, ...thursday], { ...preferences, filterCodes: true, excludedCodes: ['P'] });
   assert.deepEqual(excluded.issues, { 5: 'Kizárt Teletál-kód', 6: 'Kizárt Teletál-kód', 7: 'Kizárt Teletál-kód' });
   assert.equal(excluded.total, olderCombo.price);
   assert.equal(plan.slots[5], option);
   assert.deepEqual(orderSummary(plan, [5, 6, 7], [], newPreferences).lines, []);
+});
+
+test('weekend days use the weekend lines Teletál publishes and Friday lines for the rest', () => {
+  const saturdayZ10 = { ...fullDay[0], id: '6:1:Z10', day: 6, name: 'Saturday full day' };
+  const saturdayIr = { ...ir, id: '6:1:IR', day: 6 };
+  const catalog = [...dishes, saturdayZ10, saturdayIr];
+  assert.deepEqual(dayCandidates(catalog, 5), dishes);
+  assert.deepEqual(dayCandidates(catalog, 6).map(dish => dish.id),
+    ['5:1:A1', '5:1:M', '5:1:T', '5:1:P', '5:1:Q', '5:1:Z11', '5:1:IRN', '6:1:Z10', '6:1:IR']);
+  assert.deepEqual(dayCandidates(catalog, 7), dishes);
+
+  const fridayPick = mealOptions([fullDay[0]], newPreferences, 'fullDay')[0];
+  const saturdayPick = mealOptions([saturdayZ10], newPreferences, 'fullDay')[0];
+  const plan = { ...startPlan(week, 5), slots: { 5: fridayPick, 6: saturdayPick, 7: fridayPick } };
+  const order = orderSummary(plan, [5, 6, 7], catalog, newPreferences);
+  assert.deepEqual(order.issues, {});
+  assert.deepEqual(order.lines.map(({ day, code, quantity }) => [day, code, quantity]), [[5, 'Z10', 2], [6, 'Z10', 1]]);
+  const savedBeforeWeekendLines = orderSummary({ ...plan, slots: { 6: fridayPick } }, [5, 6, 7], catalog, newPreferences);
+  assert.deepEqual(savedBeforeWeekendLines.issues, { 6: 'Már nem rendelhető' });
 });
 
 test('deselected days are omitted from cart quantities without removing their saved meals', () => {

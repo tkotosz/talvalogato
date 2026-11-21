@@ -13,7 +13,7 @@ export async function importOnTeletal() {
     const [id, year, week, lines] = JSON.parse(decodeURIComponent(location.hash.slice(fragment.length)));
     const form = document.getElementById('etlap_form');
     const validLine = line => Array.isArray(line) && line.length === 3
-      && Number.isInteger(line[0]) && line[0] >= 1 && line[0] <= 5
+      && Number.isInteger(line[0]) && line[0] >= 1 && line[0] <= 7
       && /^[A-Z0-9][A-Z0-9-]{0,15}$/.test(line[1])
       && Number.isInteger(line[2]) && line[2] >= 1 && line[2] <= 3;
     if (!/^[a-f0-9-]{36}$/i.test(id) || !/^20\d{2}$/.test(year) || !/^\d{1,2}$/.test(week)
@@ -36,7 +36,7 @@ export async function importOnTeletal() {
       throw new CartError('Az előző próbálkozás óta megváltozott a szállítási cím. A további ételek hozzáadása előtt ellenőrizd a Teletál-kosaradat.');
     }
 
-    const days = ['', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek'];
+    const days = ['', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
     const items = lines.map(([day, code, quantity]) => `${days[day]} ${code} × ${quantity}`);
     if (!confirm(`Hozzáadod ezeket az adagokat a Teletál-kosaradhoz?\n\n${items.join('\n')}\n\nRendelés előtt még ellenőrizheted a kosár tartalmát.`)) return;
 

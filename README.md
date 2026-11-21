@@ -10,7 +10,7 @@ Install dependencies with `npm ci`, then run `npm run dev` and open the printed 
 
 ## Send picks to Teletál
 
-The cart dialog walks through saving a reusable browser bookmark. Run it on the Teletál week opened by the meal picker. After confirmation it adds the selected quantities to the current Teletál cart and opens the cart for review. Sign in on Teletál when prompted. The weekly review also has a copyable list of meal codes. If you saved the original bookmark, update it once to send plans with more than 14 distinct cart lines.
+The cart dialog walks through saving a reusable browser bookmark. Run it on the Teletál week opened by the meal picker. After confirmation it adds the selected quantities to the current Teletál cart and opens the cart for review. Sign in on Teletál when prompted. The weekly review also has a copyable list of meal codes. Weekend days use the Saturday and Sunday lines Teletál publishes, and Friday's lines for the rest. Teletál delivers them on Friday. If you saved the bookmark earlier, update it once to send weekend lines and plans with more than 14 distinct cart lines.
 
 ## Deploy on Cloudflare Pages
 
