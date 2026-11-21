@@ -2,27 +2,40 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   calorieLimit, cartLines, choose, dayCandidates, dayQueue, mealOptions, newPreferences, orderSummary, restorePlan, restorePreferences, startPlan,
-} from '../src/planning.js';
-import { dayLabel, defaultWeek, eligibleDays, mondayOfWeek, sourceDay, upcomingWeeks, weekLabel } from '../src/weeks.js';
+} from '../src/core/planning.ts';
+import type { Course, CourseKind, Dish, MenuOption } from '../src/core/types.ts';
+import { dayLabel, defaultWeek, eligibleDays, mondayOfWeek, sourceDay, upcomingWeeks, weekLabel } from '../src/core/weeks.ts';
 
 const week = '2026-W48';
 const allDays = [1, 2, 3, 4, 5, 6, 7];
 const preferences = { ...newPreferences, limitCalories: true, calories: 1000, tolerance: 5 };
-const soup = { id: '5:1:A1', day: 5, code: 'A1', kind: 'soup', name: 'Soup', kcal: 247, price: 700 };
-const main = { id: '5:1:M', day: 5, code: 'M', kind: 'main', name: 'Main', kcal: 600, price: 1500 };
-const dessert = { id: '5:1:T', day: 5, code: 'T', kind: 'dessert', name: 'Dessert', kcal: 200, price: 650 };
-const side = { name: 'Pickled peppers', kind: 'side', kcal: 30 };
-const menu = { id: '5:1:P', day: 5, code: 'P', kind: 'menu', name: 'Set menu', kcal: 877, price: 1600, components: [soup, { ...main, kcal: 630 }] };
-const menuWithDessert = { ...menu, id: '5:1:Q', code: 'Q', kcal: 875, components: [soup, { ...main, kcal: 428 }, dessert] };
-const fullDay = ['Z10', 'Z11', 'IRN'].map(code => ({ ...menu, id: '5:1:' + code, code, kcal: 1600, components: [{ name: 'Lunch' }, { name: 'Dinner' }] }));
-const ir = { ...menu, id: '5:1:IR', code: 'IR', kcal: 980, components: [{ name: 'Lunch' }, { name: 'Dinner' }] };
+
+function dish(fields: Partial<Dish> & Pick<Dish, 'id' | 'code' | 'name' | 'price'>): Dish {
+  return { day: 5, type: 1, kind: 'main', kcal: null, section: '', groupId: '', category: '', cuisine: null,
+    menuName: fields.name, weekend: false, pickerEligible: true, ...fields };
+}
+const course = (kind: CourseKind | undefined, name: string, kcal: number): Course => ({ kind, name, kcal, photo: null });
+
+const soup = dish({ id: '5:1:A1', code: 'A1', kind: 'soup', name: 'Soup', kcal: 247, price: 700 });
+const main = dish({ id: '5:1:M', code: 'M', kind: 'main', name: 'Main', kcal: 600, price: 1500 });
+const dessert = dish({ id: '5:1:T', code: 'T', kind: 'dessert', name: 'Dessert', kcal: 200, price: 650 });
+const soupCourse = course('soup', 'Soup', 247);
+const sideCourse = course('side', 'Pickled peppers', 30);
+const menu = dish({ id: '5:1:P', code: 'P', kind: 'menu', name: 'Set menu', kcal: 877, price: 1600,
+  components: [soupCourse, course('main', 'Main', 630)] });
+const menuWithDessert = { ...menu, id: '5:1:Q', code: 'Q', kcal: 875,
+  components: [soupCourse, course('main', 'Main', 428), course('dessert', 'Dessert', 200)] };
+const twoMeals = [course(undefined, 'Lunch', 800), course(undefined, 'Dinner', 800)];
+const fullDay = ['Z10', 'Z11', 'IRN'].map(code => ({ ...menu, id: '5:1:' + code, code, kcal: 1600, components: twoMeals }));
+const ir = { ...menu, id: '5:1:IR', code: 'IR', kcal: 980, components: twoMeals };
 const dishes = [soup, main, dessert, menu, menuWithDessert, ...fullDay, ir];
 
 test('lunch and full-day decks contain separate Teletál menus', () => {
   assert.deepEqual(mealOptions(dishes, newPreferences, 'lunch').map(option => option.dishes[0].code), ['P', 'Q', 'IR']);
   assert.deepEqual(mealOptions(dishes, newPreferences, 'fullDay').map(option => option.dishes[0].code), ['Z10', 'Z11', 'IRN']);
-  const menuWithSide = { ...menu, id: '5:1:R', code: 'R', components: [soup, main, side] };
-  const menuWithoutSoup = { ...menu, id: '5:1:SU2', code: 'SU2', components: [main, dessert, side] };
+  const menuWithSide = { ...menu, id: '5:1:R', code: 'R', components: [soupCourse, course('main', 'Main', 600), sideCourse] };
+  const menuWithoutSoup = { ...menu, id: '5:1:SU2', code: 'SU2',
+    components: [course('main', 'Main', 600), course('dessert', 'Dessert', 200), sideCourse] };
   assert.deepEqual(mealOptions([menuWithSide, menuWithoutSoup], newPreferences, 'lunch').map(option => option.dishes[0].code), ['R']);
 });
 
@@ -100,7 +113,7 @@ test('advancing wraps to unfinished eligible days and editing a finished plan re
 test('cart quantities use Friday for weekend plans and conflicts preserve picks', () => {
   const option = mealOptions([menu], newPreferences, 'lunch')[0];
   const thursday = [soup, main, dessert].map(dish => ({ ...dish, id: dish.id.replace(/^5/, '4'), day: 4 }));
-  const olderCombo = { kind: 'generated', dishes: thursday, kcal: 1047, price: 2850 };
+  const olderCombo: MenuOption = { id: 'combo', kind: 'menu', title: 'Combo', dishes: thursday, kcal: 1047, price: 2850 };
   const plan = { ...startPlan(week, 5), slots: { 4: olderCombo, 5: option, 6: option, 7: option } };
   for (const day of [5, 6, 7]) assert.equal(sourceDay(day), 5);
   assert.deepEqual(cartLines({ slots: { 5: option, 6: option, 7: option } }), [{ day: 5, code: 'P', name: 'Set menu', quantity: 3 }]);
@@ -160,7 +173,7 @@ test('the next Budapest delivery week handles an ISO-year boundary and falls bac
   assert.deepEqual(upcomingWeeks(weeks, now).map(({ key }) => key), ['2026-W53', '2027-W01', '2027-W02']);
   assert.equal(defaultWeek(weeks, now), '2027-W01');
   assert.equal(defaultWeek(weeks.filter(({ key }) => key !== '2027-W01'), now), '2026-W53');
-  assert.equal(mondayOfWeek('2027-W01').toISOString(), '2027-01-04T00:00:00.000Z');
+  assert.equal(mondayOfWeek('2027-W01')?.toISOString(), '2027-01-04T00:00:00.000Z');
   assert.equal(mondayOfWeek('2027-W53'), null);
 });
 

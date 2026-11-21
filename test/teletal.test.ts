@@ -1,16 +1,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { menuCatalog, nutritionFor, teletal } from '../src/teletal.js';
+import { menuCatalog, nutritionFor, teletal } from '../src/worker/teletal.ts';
 
 test('catalog entries follow the website order and preserve names for all menu codes', async t => {
-  const row = (code, label, day = 4) => `<table><tr>
+  const row = (code: string, label: string, day = 4) => `<table><tr>
     <td class="menu-cell-code-sub2"><h2>${label}<br>1.990 FT / NAP</h2></td>
     <td><div class="menu-card">
       <a class="menu-info-button" kod="${code}" nap="${day}" tipus="1"></a>
       <span class="menu-item-title">Leves,<br>Főétel</span><input ar="1990">
     </div></td>
   </tr></table>`;
-  t.mock.method(globalThis, 'fetch', async url => new Response(url.pathname === '/etlap/48' ? `
+  const page = `
     <form id="etlap_form" ev="2026" het="48">
       <section section="promocio"><h2>A mi csapatunk kedvencei!</h2>${row('25', 'A mi csapatunk<br>kedvencei!')}</section>
       <section section="Reggeli"><h2>Pékáru és ZabKása | Hagyományos konyha</h2>${row('ZK', 'ZabKása')}</section>
@@ -33,7 +33,8 @@ test('catalog entries follow the website order and preserve names for all menu c
       <section section="szejtan" ewid="1"><span class="title-vega-vegan"></span><div class="dummy"></div></section>
       <section section="Xixo" ewid="1"><span class="title-xixo">NAPI FRISSÍTŐK</span><div class="dummy"></div></section>
     </form>
-  ` : {
+  `;
+  const sections: Record<string, string> = {
     Menü: row('R', 'EXTRA MENÜ') + row('P', 'MENÜ 1', 2),
     Vakáció: row('SU1', '<img src="/hirkep/sulido1_100.png">'),
     Savanyúság: row('W1', 'Savanyúság') + row('W2', 'Savanyúság', 6),
@@ -48,7 +49,9 @@ test('catalog entries follow the website order and preserve names for all menu c
     V3: row('TVE5', 'VEGÁN'),
     szejtan: row('TV7', 'SZEJTÁNNAL KÉSZÜLT ÉTELEK'),
     Xixo: row('NF1', 'XIXO COLA'),
-  }[url.searchParams.get('varname')]));
+  };
+  t.mock.method(globalThis, 'fetch', async (url: URL) =>
+    new Response(url.pathname === '/etlap/48' ? page : sections[url.searchParams.get('varname') ?? '']));
 
   const catalog = await menuCatalog('2026-W48');
   assert.deepEqual(catalog.map(({ code, section, menuName, category, cuisine }) => [code, section, menuName, category, cuisine]), [
@@ -80,7 +83,7 @@ test('catalog entries follow the website order and preserve names for all menu c
   ]);
   assert.deepEqual(catalog.filter(dish => dish.groupId === 'Vega & vegán').map(({ code }) => code), ['TVE1', 'TV2', 'TVE5', 'TV7']);
   assert.deepEqual(catalog.filter(dish => !dish.pickerEligible).map(({ code }) => code), ['ZK', 'W1', 'W2', 'NF1']);
-  assert.equal(catalog.find(dish => dish.code === 'Z5').kind, 'menu');
+  assert.equal(catalog.find(dish => dish.code === 'Z5')?.kind, 'menu');
   assert.ok(catalog.every(({ name, price }) => name === 'Leves / Főétel' && price === 1990));
 });
 
@@ -102,6 +105,7 @@ test('menu photos stay with their own courses when a course has no photo', async
   `));
 
   const [menu] = await nutritionFor('2026-W48', ['1:1:Q']);
+  assert.ok(menu?.components);
   assert.equal(menu.kcal, 650);
   assert.equal(menu.components[2].kcal, 0);
   assert.deepEqual(menu.components.map(({ kind, photo }) => [kind, photo]), [

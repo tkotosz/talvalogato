@@ -1,30 +1,40 @@
 import assets from 'talvalogato-assets';
-import { menuCatalog, nutritionFor, publishedWeeks } from './teletal.js';
-import { mondayOfWeek } from './weeks.js';
+import type { CatalogDish, WeekKey } from '../core/types.ts';
+import { mondayOfWeek } from '../core/weeks.ts';
+import { menuCatalog, nutritionFor, publishedWeeks } from './teletal.ts';
 
-const menuRequests = new Map();
+// The parts of the Cloudflare Workers runtime this Worker uses.
+interface ExecutionContext {
+  waitUntil(promise: Promise<unknown>): void;
+}
+interface Env {
+  ASSETS?: { fetch(request: Request): Promise<Response> };
+}
+const edgeCache = (globalThis.caches as (CacheStorage & { default?: Cache }) | undefined)?.default;
+
+const menuRequests = new Map<WeekKey, { promise: Promise<CatalogDish[]>; expires: number }>();
 const seconds = { weeks: 300, menu: 3_600, nutrition: 21_600 };
 const detailsPattern = /^[1-7]:[1-9]:[A-Z0-9][A-Z0-9-]{0,15}$/;
-const decodingBytes = encoded => Uint8Array.from(atob(encoded), char => char.charCodeAt(0));
+const decodingBytes = (encoded: string) => Uint8Array.from(atob(encoded), char => char.charCodeAt(0));
 
-async function cachedJson(request, ctx, maxAge, getValue) {
-  const cache = globalThis.caches?.default;
-  const existing = await cache?.match(request);
+async function cachedJson(request: Request, ctx: ExecutionContext | undefined, maxAge: number,
+  getValue: () => Promise<object[]>): Promise<Response> {
+  const existing = await edgeCache?.match(request);
   if (existing) return existing;
   const payload = await getValue();
   const response = Response.json(payload, {
     headers: { 'Cache-Control': `private, max-age=${maxAge}` },
   });
-  if (cache && !payload.some(entry => entry.retryable)) {
+  if (edgeCache && !payload.some(entry => 'retryable' in entry && entry.retryable)) {
     const stored = new Response(response.clone().body, {
       headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${maxAge}` },
     });
-    ctx?.waitUntil(cache.put(request, stored).catch(error => console.info('Cache write skipped', error.message)));
+    ctx?.waitUntil(edgeCache.put(request, stored).catch((error: Error) => console.info('Cache write skipped', error.message)));
   }
   return response;
 }
 
-function getCatalog(week) {
+function getCatalog(week: WeekKey): Promise<CatalogDish[]> {
   const existing = menuRequests.get(week);
   if (existing && existing.expires > Date.now()) return existing.promise;
   for (const [key, entry] of menuRequests) {
@@ -38,7 +48,7 @@ function getCatalog(week) {
   return promise;
 }
 
-async function serveApi(request, url, ctx) {
+async function serveApi(request: Request, url: URL, ctx?: ExecutionContext): Promise<Response> {
   try {
     if (url.pathname === '/api/weeks') return await cachedJson(request, ctx, seconds.weeks, publishedWeeks);
 
@@ -60,7 +70,7 @@ async function serveApi(request, url, ctx) {
     }
     return new Response('Az oldal nem található.', { status: 404 });
   } catch (error) {
-    console.warn(`Teletál data unavailable for ${url.pathname}`, error.message);
+    console.warn(`Teletál data unavailable for ${url.pathname}`, error instanceof Error ? error.message : error);
     return Response.json({ error: 'A Teletál étlapja átmenetileg nem érhető el. Próbáld újra egy kis idő múlva.' }, {
       status: 502, headers: { 'Cache-Control': 'no-store' },
     });
@@ -68,13 +78,13 @@ async function serveApi(request, url, ctx) {
 }
 
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request: Request, env?: Env, ctx?: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return new Response('Ez a művelet nem engedélyezett.', { status: 405, headers: { Allow: 'GET, HEAD' } });
     }
     if (url.pathname.startsWith('/api/')) return serveApi(request, url, ctx);
-    const asset = Object.hasOwn(assets, url.pathname) && assets[url.pathname];
+    const asset = Object.hasOwn(assets, url.pathname) ? assets[url.pathname] : undefined;
     if (!asset) return env?.ASSETS?.fetch(request) ?? new Response('Az oldal nem található.', { status: 404 });
     const [contentType, value] = asset;
     const headers = {
