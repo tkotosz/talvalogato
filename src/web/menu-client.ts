@@ -1,3 +1,4 @@
+import { withDetails } from '../core/planning.ts';
 import type { CatalogDish, Day, Dish, DishDetails, WeekKey } from '../core/types.ts';
 
 const batchSize = 8;
@@ -81,16 +82,6 @@ export async function loadDayDishes(
   }
   await Promise.all([loadBatches(), loadBatches()]);
 
-  const enriched = dishes.map((dish): Dish => {
-    const details = received.get(dish.id);
-    if (!details || !Number.isFinite(details.kcal)) return { ...dish, kcal: null };
-    const components = details.components ?? [];
-    return {
-      ...dish,
-      ...details,
-      kind: components.length > 1 ? 'menu' : dish.kind,
-      name: components.length === 1 ? components[0]!.name : dish.name,
-    };
-  });
+  const enriched = dishes.map(dish => withDetails(dish, received.get(dish.id)));
   return { dishes: enriched, unavailable: enriched.filter(dish => dish.kcal === null).length, failures: failures.size };
 }
