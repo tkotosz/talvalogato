@@ -1,3 +1,4 @@
+import { defaultMealCourses, mealCourses, normalizeCourses } from './courses.ts';
 import type { CartLine, CatalogDish, Day, DayDraft, Dish, MenuDeckId, MenuOption, Plan, Preferences, WeekKey } from './types.ts';
 
 export const days = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
@@ -19,6 +20,7 @@ export const newPreferences: Preferences = {
   filterCodes: false,
   excludedCodes: [],
   defaultDays: allDays,
+  mealCourses: defaultMealCourses,
 };
 export const dishCodePattern = /^[A-Z0-9][A-Z0-9-]{0,15}$/i;
 
@@ -76,11 +78,12 @@ export function restorePreferences(values: PreferenceInput | null): Preferences 
     filterCodes: values.filterCodes === true,
     excludedCodes,
     defaultDays: normalizeDays(values.defaultDays),
+    mealCourses: Array.isArray(values.mealCourses) ? normalizeCourses(values.mealCourses, mealCourses) : defaultMealCourses,
   };
 }
 
 export function startPlan(week: WeekKey, day: Day | null, selectedDays: Day[] = allDays): Plan {
-  return { id: crypto.randomUUID(), week, day, selectedDays: normalizeDays(selectedDays), slots: {}, drafts: {} };
+  return { id: crypto.randomUUID(), week, day, selectedDays: normalizeDays(selectedDays), slots: {}, drafts: {}, custom: {} };
 }
 
 /** A plan as read back from storage, before validation. */
@@ -90,9 +93,17 @@ export interface StoredPlan extends Partial<Omit<Plan, 'day'>> {
   day?: unknown;
 }
 
-export function restorePlan({ id, week, day, selectedDays, slots, drafts }: StoredPlan): Plan {
+export function restorePlan({ id, week, day, selectedDays, slots, drafts, custom }: StoredPlan): Plan {
   const activeDay = typeof day === 'number' && Number.isInteger(day) && day >= 1 && day <= days.length ? day : null;
-  return { id, week, day: activeDay, selectedDays: normalizeDays(selectedDays), slots: slots ?? {}, drafts: drafts ?? {} };
+  return {
+    id,
+    week,
+    day: activeDay,
+    selectedDays: normalizeDays(selectedDays),
+    slots: slots ?? {},
+    drafts: drafts ?? {},
+    custom: custom ?? {},
+  };
 }
 
 // Teletál delivers weekend meals on Friday. A weekend day offers the lines Teletál publishes for that day,
@@ -152,7 +163,8 @@ export function selectionIssue(
   }
   if (preferences.filterCodes && option.dishes.some(dish => preferences.excludedCodes.includes(dish.code)))
     return 'Kizárt Teletál-kód';
-  if (!matchesCalorieLimit(option.kcal, preferences))
+  // A custom day the user chose to take over the limit still goes to the cart.
+  if (!matchesCalorieLimit(option.kcal, preferences) && !option.custom?.overLimit)
     return Number.isFinite(option.kcal) ? 'Kalóriakereten felül' : 'Nincs kalóriaadat';
   return null;
 }
