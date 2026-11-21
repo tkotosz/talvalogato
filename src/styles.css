@@ -183,11 +183,11 @@ main { margin-inline: auto; padding-inline: max(24px, env(safe-area-inset-left))
   font-size: .84rem; font-weight: 760; box-shadow: 0 1px 5px #14261528;
 }
 .meal-tag svg { flex: none; }
-.tag-pair { background: #eafaaf; }
-.tag-menu { background: #ffefd3; }
-.tag-cuisine { background: #edf6dd; }
+.tag-generated { background: #eafaaf; }
+.tag-group { background: #edf6dd; }
 .meal-content { padding: 15px 20px 17px; }
 .meal-content h2 { font-size: clamp(1.27rem, 4.5vw, 1.8rem); font-weight: 740; letter-spacing: -.045em; line-height: 1.15; overflow-wrap: anywhere; }
+.meal-dish { margin-top: 10px; color: var(--muted); font-size: .88rem; }
 .course-list { list-style: none; padding: 0; margin-top: 10px; display: grid; gap: 4px; }
 .course-list li { display: flex; justify-content: space-between; align-items: start; gap: 10px; font-size: .88rem; color: var(--muted); }
 .course-list li > span:last-child { color: var(--ink); white-space: nowrap; font-weight: 620; }
@@ -277,7 +277,6 @@ dialog::backdrop { background: #12292088; }
 .code-filter-actions { justify-content: space-between; align-items: center; }
 .code-groups, .code-items { list-style: none; padding: 0; }
 .code-groups { display: grid; gap: 7px; }
-.code-subgroups { margin: 6px; }
 .code-group { border: 1px solid var(--line); border-radius: 10px; }
 .code-group-header { display: flex; min-height: 43px; background: var(--page); border-radius: 9px; }
 .code-group-check { display: grid; place-items: center; flex: 0 0 43px; border-right: 1px solid var(--line); cursor: pointer; }
@@ -298,7 +297,6 @@ button.code-group-title:hover { background: #eaf0e5; }
 .code-items label:hover { background: #f3f7ec; }
 .code-items input { margin: 2px 2px 0 3px; }
 .code-items .meal-code { flex: none; }
-.code-example { display: block; color: var(--muted); margin-top: 3px; line-height: 1.35; }
 .inline-icon { margin-right: 3px; }
 .instructions { padding-inline-start: 20px; margin: 15px 0 19px; }
 .instructions li + li { margin-top: 12px; }

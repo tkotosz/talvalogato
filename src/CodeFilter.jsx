@@ -4,28 +4,20 @@ import { loadMenuCatalog } from './menu-client.js';
 
 const collator = new Intl.Collator('hu', { numeric: true, sensitivity: 'base' });
 const searchText = value => value.normalize('NFD').replace(/[()\p{Diacritic}]/gu, '').toLocaleLowerCase('hu').trim();
-const compareGroups = (a, b) => collator.compare(a.label, b.label);
-
-function getGroup(groups, label) {
-  if (!groups.has(label)) groups.set(label, { label, codes: new Set(), matches: new Map(), sections: new Map() });
-  return groups.get(label);
-}
 
 function groupedCodes(catalog, query) {
   const codeQuery = query.replace(/^menu\s+/, '');
   const exactCode = catalog.some(dish => dish.code.toLowerCase() === codeQuery);
   const groups = new Map();
-  for (const { category, cuisine, code, name, menuName } of catalog) {
-    const root = getGroup(groups, cuisine || category || 'Egyéb');
-    const group = category && category !== root.label ? getGroup(root.sections, category) : root;
-    root.codes.add(code);
+  for (const { section, groupId = section, category, code, menuName } of catalog) {
+    if (!groups.has(groupId)) groups.set(groupId, { id: groupId, label: category, codes: new Set(), matches: new Map() });
+    const group = groups.get(groupId);
     group.codes.add(code);
     const match = exactCode ? code.toLowerCase() === codeQuery
-      : searchText(`${menuName ?? ''} ${code} ${root.label} ${group.label} ${name}`).includes(query);
-    if (match && !group.matches.has(code)) group.matches.set(code, { name, menuName });
+      : searchText(`${code} ${menuName} ${category}`).includes(query);
+    if (match && !group.matches.has(code)) group.matches.set(code, menuName);
   }
-  return [...groups.values()].filter(group => group.matches.size || [...group.sections.values()].some(section => section.matches.size))
-    .sort(compareGroups);
+  return [...groups.values()].filter(group => group.matches.size);
 }
 
 function CodeGroup({ group, excluded, setIncluded, searching }) {
@@ -36,7 +28,6 @@ function CodeGroup({ group, excluded, setIncluded, searching }) {
   const checked = includedCount === group.codes.size;
   const groupLabel = `${group.label} összes kódja`;
   const title = <><span>{group.label}</span><small>{includedCount}/{group.codes.size}</small></>;
-  const sections = [...group.sections.values()].filter(section => section.matches.size).sort(compareGroups);
 
   return <li className="code-group">
     <div className="code-group-header">
@@ -52,18 +43,11 @@ function CodeGroup({ group, excluded, setIncluded, searching }) {
         </button>}
     </div>
     <div id={id} hidden={!open}>
-      {open && sections.length > 0 && <ul className="code-groups code-subgroups">
-        {sections.map(section => <CodeGroup key={section.label} group={section} excluded={excluded}
-          setIncluded={setIncluded} searching={searching} />)}
-      </ul>}
-      {open && group.matches.size > 0 && <ul className="code-items">
-        {[...group.matches.entries()].sort(([a], [b]) => collator.compare(a, b)).map(([code, { name, menuName }]) => <li key={code}>
+      {open && <ul className="code-items">
+        {[...group.matches].map(([code, menuName]) => <li key={code}>
           <label>
             <input type="checkbox" checked={!excluded.has(code)} onChange={event => setIncluded([code], event.target.checked)} />
-            {menuName ? <span>
-              <strong>{menuName} <span className="meal-code">{code}</span></strong>
-              {name && <span className="code-example">{name}</span>}
-            </span> : <><span className="meal-code">{code}</span>{name && <span>{name}</span>}</>}
+            <span className="meal-code">{code}</span>{menuName !== code && <span>{menuName}</span>}
           </label>
         </li>)}
       </ul>}
@@ -103,7 +87,7 @@ export function CodeFilter({ week, excludedCodes, onChange, onClose }) {
     <p>Vedd ki a pipát egy kód vagy egy egész csoport kizárásához.</p>
     <label className="code-search">
       <Search size={17} aria-hidden="true" />
-      <input type="search" aria-label="Keresés az ételkódok között" placeholder="Kód, csoport vagy étel neve"
+      <input type="search" aria-label="Keresés az ételkódok között" placeholder="Kód, csoport vagy menünév"
         value={query} onChange={event => setQuery(event.target.value)} />
     </label>
     <div className="code-filter-results">
@@ -114,7 +98,7 @@ export function CodeFilter({ week, excludedCodes, onChange, onClose }) {
           setAttempt(value => value + 1);
         }}>Újra</button></p>
           : groups.length ? <ul className="code-groups">
-            {groups.map(group => <CodeGroup key={group.label} group={group} excluded={excluded}
+            {groups.map(group => <CodeGroup key={group.id} group={group} excluded={excluded}
               setIncluded={setIncluded} searching={Boolean(search)} />)}
           </ul> : <p role="status">{search ? 'Nincs találat.' : 'Ehhez a héthez nincs megjeleníthető kód.'}</p>}
     </div>

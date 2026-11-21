@@ -1,17 +1,24 @@
 export const days = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
 export const optionTypes = [
-  // Keep the original ID for saved settings and choices.
-  { id: 'menuWithDessert', label: '3 fogásos Teletál-menü', badge: '3 fogásos Teletál-menü' },
-  { id: 'menu', label: '2 fogásos Teletál-menü', badge: '2 fogásos Teletál-menü' },
-  { id: 'triple', label: 'Saját menü (leves + főétel + desszert)', badge: 'Leves + főétel + desszert' },
-  { id: 'pair', label: 'Saját menü (leves + főétel)', badge: 'Leves + főétel' },
+  { id: 'menu', label: 'Teletál menü' },
+  { id: 'generated', label: 'Generált menü' },
   { id: 'single', label: 'Önálló ételek', badge: 'Önálló étel' },
 ];
 const defaultTypes = optionTypes.map(type => type.id);
 const priority = new Map(defaultTypes.map((id, index) => [id, index]));
+const legacyTypes = new Map([['menuWithDessert', 'menu'], ['triple', 'generated'], ['pair', 'generated']]);
+const groupNames = new Map([['CzanikBalazs', 'Czanik Balázs'], ['KlimaAnita', 'Somogyi Kovács Anita']]);
 const emptyDraft = { excluded: [], deferred: [] };
 export const newSettings = { week: '', calories: 2000, tolerance: 10, types: defaultTypes, excludedCodes: [] };
 export const dishCodePattern = /^[A-Z0-9][A-Z0-9-]{0,15}$/i;
+
+export function normalizeGroupTitle(title, section) {
+  if (!title || title !== title.toLocaleUpperCase('hu')) return title;
+  const lower = title.toLocaleLowerCase('hu');
+  const name = groupNames.get(section);
+  if (name && lower.startsWith(`${name.toLocaleLowerCase('hu')} `)) return name + lower.slice(name.length);
+  return lower.replace(/^\p{L}/u, letter => letter.toLocaleUpperCase('hu'));
+}
 
 export function calorieLimit({ calories, tolerance }) {
   return Math.floor((calories * (100 + tolerance) + Number.EPSILON) / 10) / 10;
@@ -22,8 +29,13 @@ export function startPlan(settings) {
 }
 
 export function restorePlan({ excluded, deferred, ...plan }) {
+  const { settings } = plan;
   return {
     ...plan,
+    settings: settings.types == null ? settings : {
+      ...settings,
+      types: [...new Set(settings.types.map(type => legacyTypes.get(type) ?? type))],
+    },
     drafts: plan.drafts ?? (plan.day <= days.length ? {
       [plan.day]: { excluded: excluded ?? [], deferred: deferred ?? [] },
     } : {}),
@@ -39,7 +51,7 @@ const sumCalories = dishes => Math.round(dishes.reduce((sum, dish) => sum + dish
 function customCombo(dishes, kcal) {
   const [soup, main] = dishes;
   return {
-    id: dishes.map(dish => dish.id).join('+'), kind: dishes.length === 3 ? 'triple' : 'pair', dishes,
+    id: dishes.map(dish => dish.id).join('+'), kind: 'generated', dishes,
     kcal, price: dishes.reduce((sum, dish) => sum + dish.price, 0),
     title: main.name, photo: main.photo ?? soup.photo,
     components: dishes.map(dish => ({ name: dish.name, kcal: dish.kcal })),
@@ -56,34 +68,31 @@ export function mealOptions(dishes, settings) {
   const soups = eligible.filter(dish => dish.kind === 'soup');
   const mains = eligible.filter(dish => dish.kind === 'main');
   const options = eligible.flatMap(dish => {
-    let kind = 'single';
+    const kind = dish.kind === 'menu' ? 'menu' : 'single';
     if (dish.kind === 'dessert') return [];
-    if (dish.kind === 'menu') {
+    if (!enabled.has(kind)) return [];
+    if (kind === 'menu') {
       const components = dish.components ?? [];
       const courseKinds = new Set(components.map(course => course.kind));
       if (!courseKinds.has('soup') || !courseKinds.has('main')) return [];
-      kind = components.length > 2 ? 'menuWithDessert' : 'menu';
     }
-    if (!enabled.has(kind)) return [];
     return [{
       id: dish.id, kind, dishes: [dish], kcal: dish.kcal, price: dish.price,
       title: dish.name, photo: dish.photo, components: dish.components,
     }];
   });
 
-  if (enabled.has('pair') || enabled.has('triple')) {
+  if (enabled.has('generated')) {
     for (const soup of soups) {
       for (const main of mains) {
         const pair = [soup, main];
         const pairCalories = sumCalories(pair);
         if (pairCalories > limit) continue;
-        if (enabled.has('pair')) options.push(customCombo(pair, pairCalories));
-        if (enabled.has('triple')) {
-          for (const dessert of desserts) {
-            const triple = [...pair, dessert];
-            const kcal = sumCalories(triple);
-            if (kcal <= limit) options.push(customCombo(triple, kcal));
-          }
+        options.push(customCombo(pair, pairCalories));
+        for (const dessert of desserts) {
+          const triple = [...pair, dessert];
+          const kcal = sumCalories(triple);
+          if (kcal <= limit) options.push(customCombo(triple, kcal));
         }
       }
     }

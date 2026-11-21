@@ -8,7 +8,7 @@ import { CodeFilter } from './CodeFilter.jsx';
 import { SwipeCard } from './SwipeCard.jsx';
 import { shortcutUrl, teletalWeekUrl } from './cart-shortcut.js';
 import { loadDayDishes, loadJson, loadMenuCatalog } from './menu-client.js';
-import { calorieLimit, cartLines, choose, dayQueue, days, mealOptions, newSettings, optionTypes, restorePlan, sourceDay, startPlan } from './planning.js';
+import { calorieLimit, cartLines, choose, dayQueue, days, mealOptions, newSettings, normalizeGroupTitle, optionTypes, restorePlan, sourceDay, startPlan } from './planning.js';
 import { dayLabel, defaultWeek, weekLabel } from './weeks.js';
 import './styles.css';
 
@@ -22,7 +22,7 @@ const actions = [
   { direction: 'right', label: 'Kiválasztom', Icon: Check },
 ];
 const shortDays = ['H', 'K', 'Sze', 'Cs', 'P', 'Szo', 'V'];
-const mealBadges = Object.fromEntries(optionTypes.map(type => [type.id, type.badge]));
+const mealBadges = Object.fromEntries(optionTypes.map(({ id, label, badge = label }) => [id, badge]));
 const coursePlaceholders = {
   soup: '/meal-placeholder-soup.webp',
   main: '/meal-placeholder-main.webp',
@@ -205,7 +205,7 @@ function MealCard({ option, target, week }) {
   const [labeledDishes, setLabeledDishes] = useState(null);
   const [dish] = dishes;
   const refreshPhotos = merchantMenu && !components?.some(course => Object.hasOwn(course, 'photo'));
-  const refreshLabels = dishes.some(item => !Object.hasOwn(item, 'menuName') || !Object.hasOwn(item, 'cuisine'));
+  const refreshLabels = dishes.some(item => !Object.hasOwn(item, 'groupId'));
 
   useEffect(() => {
     if (!refreshPhotos) return;
@@ -230,10 +230,11 @@ function MealCard({ option, target, week }) {
   }, [week, dishes, refreshLabels]);
 
   const menuDishes = labeledDishes ?? dishes;
-  const { menuName, cuisine } = menuDishes[0];
-  const showCuisine = cuisine && menuDishes.every(item => item.cuisine === cuisine);
+  const { menuName, category, section } = menuDishes[0];
+  const showGroup = category && menuDishes.every(item => item.category === category);
   const fallbackHeading = hasCodes ? `Menü ${codes.join(' + ')}` : hasCourses ? 'Menü' : title;
-  const heading = merchantMenu && menuName && dish.code ? `${menuName} (${dish.code})` : fallbackHeading;
+  const showMenuName = !customCombo && menuName && dish.code;
+  const heading = showMenuName ? (menuName === dish.code ? dish.code : `${dish.code} ${menuName}`) : fallbackHeading;
   const courses = refreshedCourses ?? components;
   // A legacy cover photo has no course association until the refreshed data arrives.
   const hasLegacyCover = refreshPhotos && !refreshedCourses && option.photo;
@@ -249,15 +250,16 @@ function MealCard({ option, target, week }) {
           src={showPhoto ? photo : placeholder} alt={showPhoto ? '' : 'Illusztráció, a fogás fotója nem érhető el'}
           draggable="false" onError={showPhoto ? () => setFailed(current => [...current, photo]) : undefined} />;
       })}
-      <div className="meal-tags">
-        <span className={`meal-tag ${customCombo ? 'tag-pair' : merchantMenu ? 'tag-menu' : ''}`}>
-          {customCombo ? <Soup size={16} /> : <Utensils size={15} />} {mealBadges[kind]}
-        </span>
-        {showCuisine && <span className="meal-tag tag-cuisine">{cuisine}</span>}
-      </div>
+      {(!merchantMenu || showGroup) && <div className="meal-tags">
+        {!merchantMenu && <span className={`meal-tag${customCombo ? ' tag-generated' : ''}`}>
+          {customCombo ? <Soup size={16} /> : <Utensils size={15} />} {mealBadges[customCombo ? 'generated' : 'single']}
+        </span>}
+        {showGroup && <span className="meal-tag tag-group">{normalizeGroupTitle(category, section)}</span>}
+      </div>}
     </div>
     <div className="meal-content">
       <h2 lang="hu">{heading}</h2>
+      {showMenuName && !hasCourses && title !== heading && <p className="meal-dish" lang="hu">{title}</p>}
       {hasCourses && <ul className="course-list" aria-label="A menü fogásai">
         {components.map((part, index) => <li key={index}>
           <span lang="hu">{part.name}</span><span>{calories(part.kcal)}</span>
@@ -291,8 +293,10 @@ function Picker({ plan, updatePlan }) {
     async function load() {
       try {
         const catalog = await loadMenuCatalog(week, signal);
+        const dailyDishes = new Map(catalog.filter(dish => dish.day === providerDay && dish.pickerEligible !== false)
+          .map(dish => [dish.id, dish]));
         const { dishes, unavailable, failures } = await loadDayDishes(week, providerDay,
-          catalog.filter(dish => dish.day === providerDay), signal, (current, total) => {
+          [...dailyDishes.values()], signal, (current, total) => {
             if (!signal.aborted) setState({ phase: 'loading', progress: [current, total], key });
           });
         if (signal.aborted) return;

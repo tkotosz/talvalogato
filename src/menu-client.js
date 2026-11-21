@@ -22,7 +22,7 @@ export async function loadJson(path, signal) {
 
 export async function loadMenuCatalog(week, signal) {
   if (!catalogs.has(week)) {
-    const catalog = await loadJson(`/api/menu?week=${week}&catalog=2`, signal);
+    const catalog = await loadJson(`/api/menu?week=${week}&catalog=9`, signal);
     catalogs.set(week, catalog);
   }
   return catalogs.get(week);

@@ -1,11 +1,23 @@
 import { load } from 'cheerio/slim';
-import { dishCodePattern } from './planning.js';
+import { dishCodePattern, normalizeGroupTitle } from './planning.js';
 import { isoWeek, mondayOfWeek, todayInBudapest } from './weeks.js';
 
 export const teletal = 'https://www.teletal.hu';
 const detailSelector = 'a[kod][nap].menu-info-button, a[kod][nap].minib, a[kod][nap].mib';
-const sectionSizes = new Intl.Collator('hu', { sensitivity: 'base' });
-const skippedSections = /^(reggeli|zzabkasa|savanyusag|diacipo|dianasi|xixo|hell|ital|vitamin|frissit)/;
+const sectionsOutsidePicker = /^(reggeli|zzabkasa|savanyusag|diacipo|dianasi|xixo|hell|ital|vitamin|frissit)/;
+const sectionTitlePattern = /^\p{Lu}[\p{Ll}\p{M}]+(?:[ -]\p{Lu}?[\p{Ll}\p{M}]+)*$/u;
+const vegaGroupName = 'Vega & vegán';
+// Teletál renders these grid headings as CSS background images.
+const imageMenuNames = new Map([
+  ['Z10', 'Full Day menü'],
+  ['Z11', '8/16 időszakos böjt menü'],
+  ['IR', 'Inzulinrezisztens menü (85 g CH/nap)'],
+  ['IRN', 'Inzulinrezisztens menü (160 g CH/nap)'],
+  ['V1', vegaGroupName],
+  ['V2', vegaGroupName],
+  ['V3', vegaGroupName],
+  ['szejtan', vegaGroupName],
+]);
 const courseKinds = new Map([
   ['leves', 'soup'], ['foetel', 'main'], ['desszert', 'dessert'], ['sutemeny', 'dessert'], ['joghurt', 'dessert'],
   ['savanyusag', 'side'], ['koret', 'side'],
@@ -56,21 +68,23 @@ function readMenuName(card) {
   if (schoolMenu) return `Sulidő ${schoolMenu}`;
 
   heading.find('br').replaceWith('|');
-  const label = cleanText(heading.text().split('|')[0]);
-  if (!label || /^\d[\d.,\s]*\s*Ft\b/i.test(label)) return null;
+  const lines = heading.text().split('|').map(cleanText);
+  const priceLine = lines.findIndex(line => /^\d[\d.,\s]*\s*Ft\b/i.test(line));
+  const label = lines.slice(0, priceLine < 0 ? undefined : priceLine).filter(Boolean).join(' ');
+  if (!label) return null;
   return label === label.toLocaleUpperCase('hu')
     ? label.toLocaleLowerCase('hu').replace(/(^|\s)\p{L}/gu, letter => letter.toLocaleUpperCase('hu'))
     : label;
 }
 
 function itemsFrom($, section, headings) {
-  const { category, cuisine } = headings.get(section);
+  const { category, groupId, cuisine, pickerEligible } = headings.get(section);
   return $(detailSelector).toArray().flatMap(entry => {
     const anchor = $(entry);
     const day = Number(anchor.attr('nap'));
     const code = anchor.attr('kod')?.toUpperCase();
     const type = Number(anchor.attr('tipus') ?? 1);
-    if (day < 1 || day > 5 || !dishCodePattern.test(code ?? '') || !Number.isInteger(type)) return [];
+    if (!Number.isInteger(day) || day < 1 || day > 7 || !dishCodePattern.test(code ?? '') || !Number.isInteger(type)) return [];
 
     const card = anchor.closest('.menu-card, .mc');
     const input = card.find('input[ar]').first();
@@ -81,10 +95,36 @@ function itemsFrom($, section, headings) {
     titleNodes.find('br').replaceWith(' / ');
     const name = cleanText(titleNodes.text()).replace(/,\s*\/\s*/g, ' / ').replace(/\s*\/\s*$/, '') || category;
     const kind = classify(section, name, code);
-    const menuName = kind === 'menu' ? readMenuName(card) : null;
+    const menuName = readMenuName(card) ?? imageMenuNames.get(code) ?? category;
     const weekend = card.find('img[title]').toArray().some(img => plain($(img).attr('title')).includes('szombat'));
     return [{ id: `${day}:${type}:${code}`, day, type, code, kind, name, price,
-      category: menuName?.startsWith('Sulidő ') ? 'Sulidő' : category, cuisine, menuName, weekend }];
+      section, groupId, category: menuName.startsWith('Sulidő ') ? 'Sulidő' : category, cuisine, menuName, weekend, pickerEligible }];
+  });
+}
+
+function distinguishGroupTitles(catalog) {
+  const groupsByTitle = new Map();
+  for (const { groupId, section, category } of catalog) {
+    if (!groupsByTitle.has(category)) groupsByTitle.set(category, new Map());
+    groupsByTitle.get(category).set(groupId, section);
+  }
+
+  const replacements = new Map();
+  const usedTitles = new Set(groupsByTitle.keys());
+  for (const [title, sections] of groupsByTitle) {
+    if (sections.size < 2 || [...sections.values()].some(section => !sectionTitlePattern.test(section))) continue;
+    const proposed = [...sections].map(([groupId, section]) => [groupId, normalizeGroupTitle(section.toLocaleUpperCase('hu'), section)]);
+    const labels = new Set(proposed.map(([, label]) => label));
+    if (labels.size !== sections.size || [...labels].some(label => label !== title && usedTitles.has(label))) continue;
+    for (const [groupId, label] of proposed) {
+      replacements.set(groupId, label);
+      usedTitles.add(label);
+    }
+  }
+
+  return catalog.map(dish => {
+    const category = replacements.get(dish.groupId) ?? dish.category;
+    return category === dish.category ? dish : { ...dish, category };
   });
 }
 
@@ -118,17 +158,21 @@ export async function menuCatalog(key) {
     throw new Error('Teletál has not published this week');
   }
   const cookie = response.headers.get('set-cookie')?.match(/PHPSESSID=[^;,\s]+/i)?.[0];
-  const sections = form.find('section[section]').toArray().filter(node => !skippedSections.test(plain($(node).attr('section'))));
+  const sections = form.find('section[section]').toArray();
   if (!sections.length) throw new Error('The Teletál menu sections were missing');
   const headings = new Map(sections.map(node => {
     const section = $(node);
     const name = section.attr('section');
-    const heading = section.find('h2').first();
+    const heading = section.find('h2, .title-xixo').first();
     const text = cleanText(name === 'Zero' ? heading.find('strong').first().text() : heading.text());
     const [title, ...subtitles] = text.split('|').map(part => part.trim());
+    const category = name === 'Vakáció' ? 'Vakáció menü'
+      : normalizeGroupTitle(title, name) || imageMenuNames.get(name) || name;
     return [name, {
-      category: name === 'Vakáció' ? 'Vakáció menü' : title || name,
+      category,
+      groupId: category === vegaGroupName ? vegaGroupName : name,
       cuisine: subtitles.find(subtitle => /\bkonyha$/iu.test(subtitle)) ?? null,
+      pickerEligible: !sectionsOutsidePicker.test(plain(name)),
     }];
   }));
   const groups = await pendingPool(sections, 4, async node => {
@@ -146,8 +190,8 @@ export async function menuCatalog(key) {
     return itemsFrom(fragment, name, headings);
   });
 
-  const items = [...new Map(groups.flat().map(dish => [dish.id, dish])).values()];
-  return items.sort((a, b) => a.day - b.day || sectionSizes.compare(a.code, b.code));
+  const catalog = groups.flatMap(items => [...new Map(items.map(dish => [dish.id, dish])).values()]);
+  return distinguishGroupTitles(catalog);
 }
 
 function photoUrl(image) {
