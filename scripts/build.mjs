@@ -20,7 +20,7 @@ async function buildAssets() {
   }
 
   const client = await build({
-    entryPoints: ['src/web/app.jsx'],
+    entryPoints: { app: 'src/web/main.tsx' },
     bundle: true, write: false, outdir: 'client', entryNames: '[name]-[hash]',
     minify: true, charset: 'utf8', jsx: 'automatic', target: ['safari16.4', 'chrome110'],
     define: { 'process.env.NODE_ENV': JSON.stringify('production') },

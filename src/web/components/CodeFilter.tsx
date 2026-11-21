@@ -1,7 +1,8 @@
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
-import type { CatalogDish, WeekKey } from '../core/types.ts';
-import { loadMenuCatalog } from './menu-client.ts';
+import type { CatalogDish, WeekKey } from '../../core/types.ts';
+import { loadMenuCatalog } from '../menu-client.ts';
+import { useLoad } from '../useLoad.ts';
 
 interface CodeGroupData {
   id: string;
@@ -10,9 +11,6 @@ interface CodeGroupData {
   /** Codes matching the search, with their menu names. */
   matches: Map<string, string>;
 }
-
-type CatalogState = { phase: 'loading'; catalog?: undefined } | { phase: 'ready'; catalog: CatalogDish[] }
-  | { phase: 'error'; message: string; catalog?: undefined };
 
 const collator = new Intl.Collator('hu', { numeric: true, sensitivity: 'base' });
 const searchText = (value: string) => value.normalize('NFD').replace(/[()\p{Diacritic}]/gu, '').toLocaleLowerCase('hu').trim();
@@ -78,22 +76,11 @@ export function CodeFilter({ week, excludedCodes, onChange }: {
   onChange(codes: string[]): void;
 }) {
   const [query, setQuery] = useState('');
-  const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState<CatalogState>({ phase: 'loading' });
+  const { state, retry } = useLoad(week, signal => loadMenuCatalog(week, signal));
   const excluded = new Set(excludedCodes);
   const search = searchText(query);
-  const groups = useMemo(() => groupedCodes(state.catalog ?? [], search), [state.catalog, search]);
-
-  useEffect(() => {
-    const aborter = new AbortController();
-    const { signal } = aborter;
-    loadMenuCatalog(week, signal).then(catalog => {
-      if (!signal.aborted) setState({ phase: 'ready', catalog });
-    }).catch(error => {
-      if (!signal.aborted) setState({ phase: 'error', message: error.message });
-    });
-    return () => aborter.abort();
-  }, [week, attempt]);
+  const catalog = state.phase === 'ready' ? state.value : null;
+  const groups = useMemo(() => groupedCodes(catalog ?? [], search), [catalog, search]);
 
   function setIncluded(codes: Iterable<string>, included: boolean) {
     const next = new Set(excluded);
@@ -115,10 +102,7 @@ export function CodeFilter({ week, excludedCodes, onChange }: {
     <div className="code-filter-results">
       {excluded.size > 0 && <p className="excluded-codes"><strong>Kizárt kódok</strong> {excludedCodes.join(', ')}</p>}
       {state.phase === 'loading' ? <p role="status">Ételkódok betöltése…</p>
-        : state.phase === 'error' ? <p role="alert">{state.message} <button type="button" className="text-button" onClick={() => {
-          setState({ phase: 'loading' });
-          setAttempt(value => value + 1);
-        }}>Újra</button></p>
+        : state.phase === 'error' ? <p role="alert">{state.message} <button type="button" className="text-button" onClick={retry}>Újra</button></p>
           : groups.length ? <ul className="code-groups">
             {groups.map(group => <CodeGroup key={group.id} group={group} excluded={excluded}
               setIncluded={setIncluded} searching={Boolean(search)} />)}
