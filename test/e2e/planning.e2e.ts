@@ -119,7 +119,7 @@ test('settings, editing from the overview, resuming and switching weeks', async 
   await page.screenshot({ path: `${screenshots}settings.png`, fullPage: true });
   await page.getByRole('button', { name: 'Mentés' }).click();
   await page.locator('dialog[open]').waitFor({ state: 'detached' });
-  await page.getByRole('button', { name: 'Áttekintés' }).click();
+  await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
   await page.locator('.review').waitFor();
   assert.match(await page.locator('.review-row').first().innerText(), /Kalóriakereten felül/);
 
@@ -189,8 +189,9 @@ test('a week mixing set menus and custom days, with add-ons, a cleared component
   await page.getByRole('button', { name: 'Mentés', exact: true }).click();
   await page.getByRole('button', { name: 'Nap szerkesztése' }).waitFor();
   assert.ok((await currentDay(page))?.startsWith(`${day}, étel kiválasztva`));
+  assert.equal(await page.locator('.step-bar .primary').innerText(), 'Következő nap');
 
-  await page.getByRole('button', { name: 'Áttekintés' }).click();
+  await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
   await page.locator('.review').waitFor();
   const custom = page.locator('.review-row', { hasText: 'Saját menü' });
   assert.equal(await custom.count(), 1);
@@ -211,7 +212,7 @@ test('a week mixing set menus and custom days, with add-ons, a cleared component
   await page.getByRole('button', { name: 'Nap szerkesztése' }).waitFor();
   await page.screenshot({ path: `${screenshots}custom-saved.png`, fullPage: true });
 
-  await page.getByRole('button', { name: 'Áttekintés' }).click();
+  await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
   await page.getByRole('button', { name: 'Kosárhoz adás' }).click();
   const link = page.locator('dialog[open] a.button.primary');
   await link.waitFor({ timeout: 30_000 });
@@ -245,7 +246,7 @@ test('a calorie limit hides what does not fit and lets the user go over for a co
   await page.getByRole('button', { name: 'Kiválasztom' }).click();
   await page.locator('.custom-summary').waitFor();
   await page.getByRole('button', { name: 'Mentés', exact: true }).click();
-  await page.getByRole('button', { name: 'Áttekintés' }).click();
+  await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
   const row = page.locator('.review-row', { hasText: 'Saját menü' });
   await row.waitFor();
   if (nothingFits) assert.match(await row.innerText(), /Kereten felül, engedélyezve/);

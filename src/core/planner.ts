@@ -88,6 +88,8 @@ export interface PlannerView {
   dayDone: boolean;
   /** The picker's day as a custom day in progress, if it is one. */
   custom: CustomDraft | null;
+  /** The next orderable day without a decision after the picker's day, wrapping around the week. */
+  nextDay: Day | undefined;
   hasSavedProgress: boolean;
   /** Cart contents once the catalog has loaded and the overview has days to show. */
   order: OrderSummary | null;
@@ -106,6 +108,12 @@ export function activeWeek(state: PlannerState, weeks: PublishedWeek[], now: Dat
   const recommended = defaultWeek(weeks, now);
   if (state.step === 'week') return weeks.some(item => item.key === state.selectedWeek) ? state.selectedWeek : recommended;
   return state.plan?.week ?? recommended;
+}
+
+/** The first day after `day` that still has no decision, wrapping around to the start of the week. */
+function nextUndecided(eligible: Day[], plan: Plan, day: Day | undefined): Day | undefined {
+  const pending = eligible.filter(candidate => candidate !== day && !Object.hasOwn(plan.slots, candidate));
+  return pending.find(candidate => day !== undefined && candidate > day) ?? pending[0];
 }
 
 export function plannerView(state: PlannerState, { weeks, catalog, now }: PlannerContext): PlannerView {
@@ -131,6 +139,7 @@ export function plannerView(state: PlannerState, { weeks, catalog, now }: Planne
     editing,
     dayDone: step === 'meals' && catalog !== null && day !== undefined && !editing && Object.hasOwn(activePlan.slots, day),
     custom: (day !== undefined && activePlan.custom[day]) || null,
+    nextDay: nextUndecided(eligible, activePlan, day),
     hasSavedProgress: plan !== null && [plan.slots, plan.drafts, plan.custom].some(record => Object.keys(record).length > 0),
     order: step === 'overview' && catalog && reviewDays.length ? orderSummary(activePlan, eligible, catalog, preferences) : null,
   };
