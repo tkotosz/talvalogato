@@ -2,8 +2,9 @@ import { withDetails } from '../core/planning.ts';
 import type { CatalogDish, Day, Dish, DishDetails, WeekKey } from '../core/types.ts';
 
 const batchSize = 8;
-// Part of the catalog URL, so caches never return a catalog in an older shape. Raise it when CatalogDish changes.
-const catalogFormat = 3;
+// Part of the catalog URL, so caches never return a catalog in an older shape. Raise it when CatalogDish or the way
+// the scraper reads it changes.
+const catalogFormat = 4;
 const catalogs = new Map<WeekKey, { items: CatalogDish[]; expires: number }>();
 const versions = new Map<string, Map<string, DishDetails>>();
 
