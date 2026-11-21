@@ -12,7 +12,8 @@
     "typecheck": "tsc -p . && tsc -p test",
     "test": "node --test test/*.test.ts",
     "test:e2e": "node --test --test-concurrency=1 test/e2e/*.e2e.ts",
-    "refresh-menu": "node scripts/refresh-menu.ts"
+    "refresh-menu": "node scripts/refresh-menu.ts",
+    "demo-menu": "node scripts/demo-menu.ts"
   },
   "dependencies": {
     "cheerio": "^1.2.0",

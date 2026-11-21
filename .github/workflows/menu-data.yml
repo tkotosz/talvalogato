@@ -1,11 +1,12 @@
 name: Menu data
 
-# Reads Teletál's published menus and commits them as JSON to the data branch, which the Worker serves.
+# Commits the menu data as JSON to the data branch, which the Worker serves. The app runs as a demo: this writes the
+# invented demo menu and does not contact Teletál. To publish Teletál's real menus, run `npm run refresh-menu` in the
+# menu step instead and schedule it at 04:00 and 10:30 UTC.
 on:
   schedule:
-    # 04:00 and 10:30 UTC: early morning, and shortly after Teletál's noon ordering deadline in Budapest.
+    # Daily, so the demo moves on to new weeks.
     - cron: '0 4 * * *'
-    - cron: '30 10 * * *'
   workflow_dispatch:
 
 permissions:
@@ -43,8 +44,8 @@ jobs:
             git -C data remote add origin "$remote"
           fi
 
-      - name: Read Teletál
-        run: npm run refresh-menu -- --out data/menu
+      - name: Write the demo menu
+        run: npm run demo-menu -- --out data/menu
 
       - name: Commit changes
         working-directory: data

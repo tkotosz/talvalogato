@@ -1,10 +1,10 @@
 // Reads the published weeks and their menus from Teletál and writes them as JSON files:
 // weeks.json and one <week>.json per week. Usage: npm run refresh-menu -- --out <folder>
-import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import type { Dish, MenuWeek, MenuWeeks } from '../src/core/types.ts';
-import { weekKeyPattern } from '../src/core/weeks.ts';
+import { writeMenuFiles } from '../src/scraper/files.ts';
 import { buildWeek } from '../src/scraper/refresh.ts';
 import { menuCatalog, nutritionFor, publishedWeeks } from '../src/scraper/teletal.ts';
 
@@ -27,27 +27,16 @@ async function readDetails(week: string, ids: string[]) {
   return details;
 }
 
-const json = (value: unknown) => JSON.stringify(value, null, 2) + '\n';
 const updatedAt = new Date().toISOString();
 
 // Everything is read before anything is written, so a failed run leaves the previous data untouched.
 const weeks = await publishedWeeks();
-const files = new Map<string, string>();
+const menus: MenuWeek[] = [];
 for (const { key } of weeks) {
   const catalog = await menuCatalog(key);
   const dishes = await buildWeek(key, catalog, await previousDishes(key), readDetails);
   const missing = dishes.filter(dish => dish.kcal === null).length;
   console.log(`${key}: ${dishes.length} dishes, ${missing} without calorie data`);
-  files.set(`${key}.json`, json({ week: key, dishes } satisfies MenuWeek));
+  menus.push({ week: key, dishes });
 }
-files.set('weeks.json', json({ updatedAt, weeks } satisfies MenuWeeks));
-
-await mkdir(folder, { recursive: true });
-for (const [name, content] of files) await writeFile(join(folder, name), content);
-for (const name of await readdir(folder)) {
-  const week = name.replace(/\.json$/, '');
-  if (weekKeyPattern.test(week) && !files.has(name)) {
-    await rm(join(folder, name));
-    console.log(`${week}: no longer published, removed`);
-  }
-}
+await writeMenuFiles(folder, { updatedAt, weeks } satisfies MenuWeeks, menus);

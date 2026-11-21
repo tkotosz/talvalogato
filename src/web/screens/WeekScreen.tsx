@@ -13,6 +13,7 @@ export function WeekScreen({
   weeks,
   weekError,
   menuUpdatedAt,
+  demo,
   catalog,
   dispatch,
   onRetryWeeks,
@@ -21,8 +22,10 @@ export function WeekScreen({
   view: PlannerView;
   weeks: PublishedWeek[];
   weekError: string;
-  /** When the menu data was last refreshed, or null while it loads. */
+  /** When the menu data was last refreshed, or null while it loads and in the demo. */
   menuUpdatedAt: string | null;
+  /** The menu is invented, so the notice does not attribute it to Teletál. */
+  demo: boolean;
   catalog: Loadable<Dish[]>;
   dispatch(action: PlannerAction): void;
   onRetryWeeks(): void;
@@ -125,8 +128,8 @@ export function WeekScreen({
         </form>
       </div>
       <p className="unofficial-notice">
-        Nem hivatalos alkalmazás, nem áll kapcsolatban a <span>Teletál Ételfutár Kft.-vel</span>. Az étlap és az ételek képei a
-        Teletál tulajdonai.
+        Nem hivatalos alkalmazás, nem áll kapcsolatban a <span>Teletál Ételfutár Kft.-vel</span>.
+        {!demo && ' Az étlap és az ételek képei a Teletál tulajdonai.'}
       </p>
     </main>
   );
