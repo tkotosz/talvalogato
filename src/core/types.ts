@@ -8,6 +8,20 @@ export interface PublishedWeek {
   key: WeekKey;
 }
 
+/** The published weeks, as the menu data job last read them. */
+export interface MenuWeeks {
+  /** When the data was last refreshed, as an ISO time. */
+  updatedAt: string;
+  weeks: PublishedWeek[];
+}
+
+/** One week's menu: every orderable line with its details. The refresh time lives in MenuWeeks, so this file only
+ * changes when the menu does. */
+export interface MenuWeek {
+  week: WeekKey;
+  dishes: Dish[];
+}
+
 export type DishKind = 'menu' | 'soup' | 'main' | 'dessert';
 
 /** A component of a custom day: a main course or an add-on. */

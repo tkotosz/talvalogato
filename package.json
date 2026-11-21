@@ -11,7 +11,8 @@
     "lint": "prettier --check . && eslint .",
     "typecheck": "tsc -p . && tsc -p test",
     "test": "node --test test/*.test.ts",
-    "test:e2e": "node --test --test-concurrency=1 test/e2e/*.e2e.ts"
+    "test:e2e": "node --test --test-concurrency=1 test/e2e/*.e2e.ts",
+    "refresh-menu": "node scripts/refresh-menu.ts"
   },
   "dependencies": {
     "cheerio": "^1.2.0",
