@@ -26,7 +26,7 @@ export function WeekScreen({
   onRetryWeeks(): void;
   onRetryCatalog(): void;
 }) {
-  const { week, recommended, availableDays, selectedDays, eligible } = view;
+  const { week, availableDays, selectedDays, eligible } = view;
   const selectWeek = (key: WeekKey) => dispatch({ type: 'chooseWeek', week: key });
   return (
     <main className="setup">
@@ -79,7 +79,6 @@ export function WeekScreen({
               {weeks.map(({ key }) => (
                 <option key={key} value={key}>
                   {weekLabel(key)}
-                  {key === recommended ? ' (ajánlott)' : ''}
                 </option>
               ))}
             </select>
