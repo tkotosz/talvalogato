@@ -75,6 +75,13 @@ export function weekLabel(key: WeekKey): string {
   return shortDate.formatRange(monday, addDays(monday, 6));
 }
 
+/** The week's dates written out, such as "november 23–29."; the year appears only for a week spanning two years. */
+export function longWeekLabel(key: WeekKey): string {
+  const monday = mondayOfWeek(key);
+  if (!monday) return '';
+  return longDate.formatRange(monday, addDays(monday, 6));
+}
+
 /** The day's date in short form, such as "nov. 25." */
 export function shortDayLabel(week: WeekKey, day: Day): string {
   return shortDate.format(dateForSlot(week, day));
