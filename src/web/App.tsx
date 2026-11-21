@@ -96,7 +96,9 @@ export function App() {
       ? { label: 'Nap szerkesztése', onClick: () => dispatch({ type: 'openDay', day, edit: true }) }
       : inCourseDeck
         ? { label: 'Nem kérek', onClick: () => dispatch({ type: 'clearCourse', day }) }
-        : { label: 'Nap kihagyása', onClick: () => dispatch({ type: 'decide', day, action: 'skip' }) };
+        : view.editing
+          ? { label: 'Választás törlése', onClick: () => dispatch({ type: 'clearDay', day }) }
+          : null;
 
   // The meal picker moves through the days in calendar order; inside a custom day, Vissza steps back through its steps.
   const { previousDay, nextDay } = view;
