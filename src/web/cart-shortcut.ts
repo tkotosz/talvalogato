@@ -8,12 +8,19 @@ interface CartProgress {
   done?: true;
 }
 
+/** The cart link's data format. Raise it when the bookmark must change, and the bookmark's `supportedVersion` with it. */
+export const cartLinkVersion = 1;
+export const cartLinkFragment = '#talvalogato=';
+/** The most distinct day and code pairs one cart link may carry. */
+export const maxCartLines = 60;
+
 // Runs as a bookmark on teletal.hu, so it must stay self-contained: the app serializes it with toString().
-// Existing Teletál bookmarks use the original fragment and cart progress key.
 export async function importOnTeletal(): Promise<void> {
   const origin = 'https://www.teletal.hu';
-  const storageKey = 'meal-deck.last-cart-import';
-  const fragment = '#meal-deck=';
+  const storageKey = 'talvalogato.cart-import';
+  const fragment = '#talvalogato=';
+  const supportedVersion = 1;
+  const lineLimit = 60;
   if (location.origin !== origin || !location.hash.startsWith(fragment)) {
     alert('Nyisd meg a heti étlapot a Tálválogatóból, és ott használd ezt a könyvjelzőt.');
     return;
@@ -21,12 +28,12 @@ export async function importOnTeletal(): Promise<void> {
 
   class CartError extends Error {}
   try {
-    const [id, year, week, lines] = JSON.parse(decodeURIComponent(location.hash.slice(fragment.length))) as [
-      unknown,
-      unknown,
-      unknown,
-      unknown,
-    ];
+    // The link carries base64url-encoded JSON.
+    const encoded = location.hash.slice(fragment.length).replace(/-/g, '+').replace(/_/g, '/');
+    const { v, id, year, week, lines } = JSON.parse(atob(encoded)) as Record<string, unknown>;
+    if (typeof v !== 'number' || v > supportedVersion) {
+      throw new CartError('Ez a könyvjelző régebbi a Tálválogatónál. Mentsd el újra a kosárkönyvjelzőt a Tálválogatóból.');
+    }
     const form = document.getElementById('etlap_form');
     const validLine = (line: unknown): line is Line =>
       Array.isArray(line) &&
@@ -47,7 +54,7 @@ export async function importOnTeletal(): Promise<void> {
       !/^\d{1,2}$/.test(week) ||
       !Array.isArray(lines) ||
       !lines.length ||
-      lines.length > 21 ||
+      lines.length > lineLimit ||
       !lines.every(validLine) ||
       form?.getAttribute('ev') !== year ||
       form?.getAttribute('het') !== week ||
@@ -150,9 +157,18 @@ export async function importOnTeletal(): Promise<void> {
 
 export const shortcutUrl = () => `javascript:${encodeURIComponent(`(${importOnTeletal.toString()})()`)}`;
 
+/** The Teletál menu page of the plan's week, with the cart lines for the bookmark in the fragment. */
 export function teletalWeekUrl(plan: Pick<Plan, 'id' | 'week'>, lines: CartLine[]): string {
   const [year, weekNumber] = plan.week.split('-W');
   const week = String(Number(weekNumber));
-  const payload = [plan.id, year, week, lines.map(({ day, code, quantity }) => [day, code, quantity])];
-  return `https://www.teletal.hu/etlap/${week}#meal-deck=${encodeURIComponent(JSON.stringify(payload))}`;
+  const payload = {
+    v: cartLinkVersion,
+    id: plan.id,
+    year,
+    week,
+    lines: lines.map(({ day, code, quantity }) => [day, code, quantity]),
+  };
+  // The payload is ASCII only (an ID, digits and menu codes), so btoa can encode it directly.
+  const encoded = btoa(JSON.stringify(payload)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return `https://www.teletal.hu/etlap/${week}${cartLinkFragment}${encoded}`;
 }

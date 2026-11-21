@@ -97,8 +97,8 @@ test('a whole week across both decks reaches the overview and the cart link', as
   await page.getByRole('button', { name: 'Kosárhoz adás' }).click();
   const link = page.locator('dialog[open] a.button.primary');
   await link.waitFor({ timeout: 30_000 });
-  const payload = JSON.parse(decodeURIComponent((await link.getAttribute('href'))!.split('#meal-deck=')[1]!));
-  const lines: [number, string, number][] = payload[3];
+  const encoded = (await link.getAttribute('href'))!.split('#talvalogato=')[1]!;
+  const lines: [number, string, number][] = JSON.parse(Buffer.from(encoded, 'base64url').toString()).lines;
   assert.ok(lines.length > 0);
   for (const [day, code] of lines) {
     if (['Z10', 'Z11', 'IRN'].includes(code)) assert.ok(day >= 6, `${code} on a weekend uses the weekend line`);
