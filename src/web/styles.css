@@ -1236,16 +1236,26 @@ button.review-row:hover {
 .review-items {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  gap: 3px 14px;
-  font-size: 0.9rem;
+  gap: 3px 10px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+.review-items .meal-code {
+  color: var(--ink);
 }
 .review-item {
   display: contents;
 }
-.review-item-label {
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 650;
+.review-item .meal-code {
+  justify-self: start;
+}
+.custom-dish {
+  display: grid;
+  grid-template-columns: 3.4em minmax(0, 1fr);
+  align-items: baseline;
+}
+.custom-dish .meal-code {
+  justify-self: start;
 }
 .review-total {
   display: flex;
@@ -1811,11 +1821,6 @@ button.code-group-title:hover {
   margin: 12px 0 0;
   padding: 0;
   list-style: none;
-}
-.course-label {
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 700;
 }
 .custom-summary button {
   display: grid;
