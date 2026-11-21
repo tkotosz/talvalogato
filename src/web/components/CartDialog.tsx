@@ -9,8 +9,6 @@ import { copyText } from '../format.ts';
 import { loadMenuCatalog } from '../menu-client.ts';
 import { useLoad } from '../useLoad.ts';
 
-const cartUrl = 'https://www.teletal.hu/kosar';
-
 function CartInstructions({ plan, lines }: { plan: Plan; lines: CartLine[] }) {
   const url = teletalWeekUrl(plan, lines);
   const shortcut = shortcutUrl();
@@ -58,23 +56,20 @@ function CartInstructions({ plan, lines }: { plan: Plan; lines: CartLine[] }) {
       <h3 className="instructions-heading">Kosárba helyezés</h3>
       <ol className="instructions">
         <li>
-          <p>Nyisd meg a heti étlapot ezzel a gombbal:</p>
-          <a className="button primary wide" href={url} target="_blank" rel="noreferrer">
-            <ShoppingBasket size={19} /> Heti étlap megnyitása a Teletálon
-          </a>
+          <p>Nyisd meg a heti étlapot az itt lent található gombbal.</p>
         </li>
         <li>
           <p>
-            Az étlapon nyisd meg a „Teletál-kosár” könyvjelzőt. Telefonon a böngésző könyvjelzői között találod, Chrome-ban úgy
-            is, hogy beírod a nevét a címsorba, és a találatok közül kiválasztod.
+            Amikor az étlap betöltődött, egyszerűen kattints a „Teletál-kosár” könyvjelzőre, hogy automatikusan hozzáadd az
+            ételeket a kosárhoz.
           </p>
         </li>
         <li>
           <p>Hagyd jóvá a tételeket. Utána megnyílik a Teletál-kosár, ahol ellenőrizheted és leadhatod a rendelést.</p>
         </li>
       </ol>
-      <a className="text-button existing-cart" target="_blank" rel="noreferrer" href={cartUrl}>
-        Teletál-kosár megnyitása
+      <a className="button primary wide" href={url} target="_blank" rel="noreferrer">
+        <ShoppingBasket size={19} /> Heti étlap megnyitása a Teletálon
       </a>
     </>
   );
