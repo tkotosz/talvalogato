@@ -87,7 +87,7 @@ test('a whole week across both decks reaches the overview and the cart link', as
     const day = await currentDay(page);
     const weekend = /Szombat|Vasárnap/.test(day ?? '');
     if (index === 1) await decide(page, '', 'Nap kihagyása');
-    else await decide(page, weekend ? 'Teletál egész napos menük' : 'Teletál ebéd menük', 'Kiválasztom');
+    else await decide(page, weekend ? 'Teletál egész napos menü választása' : 'Teletál ebédmenü választása', 'Kiválasztom');
     if (index === 0) await page.screenshot({ path: `${screenshots}deck.png`, fullPage: true });
   }
 
@@ -111,7 +111,7 @@ test('settings, editing from the overview, resuming and switching weeks', async 
   const { page, errors } = await openPlanner();
   await page.getByRole('button', { name: 'Válogatás indítása' }).click();
   const firstDay = (await currentDay(page))?.split(',')[0] ?? '';
-  await decide(page, 'Teletál egész napos menük', 'Kiválasztom');
+  await decide(page, 'Teletál egész napos menü választása', 'Kiválasztom');
 
   await page.getByRole('button', { name: 'Beállítások' }).click();
   await page.getByLabel('Napi kalóriakeret').check();
@@ -159,10 +159,10 @@ async function pickFromOverview(page: Page, component: string) {
 test('a week mixing set menus and custom days, with add-ons, a cleared component and an edit', async () => {
   const { page, errors } = await openPlanner();
   await page.getByRole('button', { name: 'Válogatás indítása' }).click();
-  await decide(page, 'Teletál ebéd menük', 'Kiválasztom');
+  await decide(page, 'Teletál ebédmenü választása', 'Kiválasztom');
 
   // The custom day: components first, then the overview where each component gets its dish.
-  await page.getByRole('button', { name: 'Saját menük' }).click();
+  await page.getByRole('button', { name: 'Saját menü összeállítása' }).click();
   await page.locator('.course-choices-grid').getByRole('button', { name: 'Savanyúság' }).click();
   await page.locator('.course-choices-grid').getByRole('button', { name: 'Desszert' }).click();
   await page.screenshot({ path: `${screenshots}custom-select.png`, fullPage: true });
@@ -229,7 +229,7 @@ test('a calorie limit hides what does not fit and lets the user go over for a co
   await page.getByRole('button', { name: 'Mentés' }).click();
   await page.locator('dialog[open]').waitFor({ state: 'detached' });
   await page.getByRole('button', { name: 'Válogatás indítása' }).click();
-  await page.getByRole('button', { name: 'Saját menük' }).click();
+  await page.getByRole('button', { name: 'Saját menü összeállítása' }).click();
   await page.locator('.custom-step').getByRole('button', { name: 'Tovább' }).click();
   await pickFromOverview(page, 'Leves');
 

@@ -16,8 +16,8 @@ import type {
 export const days = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
 export const allDays: Day[] = days.map((_, index) => index + 1);
 export const menuDecks: { id: MenuDeckId; label: string }[] = [
-  { id: 'lunch', label: 'Teletál ebéd menük' },
-  { id: 'fullDay', label: 'Teletál egész napos menük' },
+  { id: 'lunch', label: 'Teletál ebédmenü' },
+  { id: 'fullDay', label: 'Teletál egész napos menü' },
 ];
 const fullDayCodes = new Set(['Z10', 'Z11', 'IRN']);
 const groupNames = new Map([
