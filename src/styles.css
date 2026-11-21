@@ -177,7 +177,8 @@ main { padding-bottom: 24px; }
 }
 .week-progress .picked { background: #e8f5c6; color: var(--ink); border-color: #e3efc6; }
 .week-progress .skipped { background: #fff1d5; color: #754c16; border-color: #dfbf86; border-style: dashed; }
-.week-progress button:hover { border-color: #8ea996; }
+.week-progress button:hover:not(:disabled) { border-color: #8ea996; }
+.week-progress button:disabled { opacity: .45; cursor: not-allowed; }
 .week-progress button[aria-current] { color: #fff; background: var(--ink); border-color: var(--ink); }
 .week-progress .skipped[aria-current] { background: #805316; border-color: #805316; }
 .day-steps { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; }

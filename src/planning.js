@@ -64,6 +64,13 @@ export function restorePlan({ id, week, settings, day, selectedDays, slots, draf
   };
 }
 
+// Teletál delivers weekend meals on Friday. A weekend day offers the lines Teletál publishes for that day,
+// plus Friday's lines for codes without a separate weekend line, such as the lunch sets.
+export function dayCandidates(catalog, day) {
+  const ownCodes = new Set(catalog.filter(dish => dish.day === day).map(dish => dish.code));
+  return catalog.filter(dish => dish.day === day || (day > 5 && dish.day === 5 && !ownCodes.has(dish.code)));
+}
+
 export function menuDeck(dish) {
   if (fullDayCodes.has(dish.code)) return 'fullDay';
   if (dish.code === 'IR') return 'lunch';
@@ -90,7 +97,8 @@ export function mealOptions(dishes, preferences, deck) {
 }
 
 export function selectionIssue(option, day, eligible, catalog, preferences) {
-  if (!eligible.includes(day) || option.dishes.some(dish => !catalog.some(item => item.day === dish.day && item.code === dish.code))) {
+  const candidates = dayCandidates(catalog, day);
+  if (!eligible.includes(day) || option.dishes.some(dish => !candidates.some(item => item.day === dish.day && item.code === dish.code))) {
     return 'Már nem rendelhető';
   }
   if (preferences.filterCodes && option.dishes.some(dish => preferences.excludedCodes.includes(dish.code))) return 'Kizárt Teletál-kód';

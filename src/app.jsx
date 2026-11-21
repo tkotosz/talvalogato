@@ -9,10 +9,10 @@ import { SwipeCard } from './SwipeCard.jsx';
 import { shortcutUrl, teletalWeekUrl } from './cart-shortcut.js';
 import { loadDayDishes, loadJson, loadMenuCatalog } from './menu-client.js';
 import {
-  allDays, calorieLimit, choose, dayQueue, days, mealOptions, menuDeck, menuDecks, orderSummary,
+  allDays, calorieLimit, choose, dayCandidates, dayQueue, days, mealOptions, menuDeck, menuDecks, orderSummary,
   normalizeGroupTitle, restorePlan, restorePreferences, selectionIssue, startPlan, validCalorieBudget,
 } from './planning.js';
-import { defaultWeek, eligibleDays, mondayOfWeek, sourceDay, upcomingWeeks, weekLabel } from './weeks.js';
+import { defaultWeek, eligibleDays, mondayOfWeek, upcomingWeeks, weekLabel } from './weeks.js';
 import './styles.css';
 
 const storageKey = 'talvalogato.plan.v2';
@@ -247,13 +247,14 @@ function PreferencesForm({ preferences, week, onSave }) {
 
 function WeekProgress({ plan, eligible, onSelect }) {
   return <ol aria-label="A heti válogatás állása" className="week-progress">
-    {eligible.map(dayNumber => {
+    {plan.selectedDays.map(dayNumber => {
       const day = days[dayNumber - 1];
+      const available = eligible.includes(dayNumber);
       const active = plan.day === dayNumber;
-      const done = Object.hasOwn(plan.slots, dayNumber);
-      const picked = Boolean(plan.slots[dayNumber]);
-      return <li key={day}><button type="button" aria-current={active ? 'step' : undefined}
-        aria-label={`${day}${done ? picked ? ', étel kiválasztva' : ', kihagyva' : ''}`}
+      const done = available && Object.hasOwn(plan.slots, dayNumber);
+      const picked = done && Boolean(plan.slots[dayNumber]);
+      return <li key={day}><button type="button" aria-current={active ? 'step' : undefined} disabled={!available}
+        aria-label={`${day}${!available ? ', nem rendelhető' : done ? picked ? ', étel kiválasztva' : ', kihagyva' : ''}`}
         className={done ? picked ? 'picked' : 'skipped' : undefined}
         onClick={() => onSelect(dayNumber)}>
         {picked && <Check size={13} aria-hidden="true" />}<span>{shortDays[dayNumber - 1]}</span>
@@ -380,15 +381,14 @@ function DayDeck({ plan, catalog, deck, preferences, budget, onAction }) {
   const [animation, setAnimation] = useState(0);
   const [state, setState] = useState({ phase: 'loading', progress: [0, 0] });
   const { week, day } = plan;
-  const providerDay = sourceDay(day);
 
   useEffect(() => {
     const aborter = new AbortController();
     const { signal } = aborter;
-    const candidates = new Map(catalog.filter(dish => dish.day === providerDay && menuDeck(dish) === deck)
+    const candidates = new Map(dayCandidates(catalog, day).filter(dish => menuDeck(dish) === deck)
       .map(dish => [dish.id, dish]));
     setState({ phase: 'loading', progress: [0, 0] });
-    loadDayDishes(week, providerDay, [...candidates.values()], signal, (current, total) => {
+    loadDayDishes(week, day, [...candidates.values()], signal, (current, total) => {
       if (!signal.aborted) setState({ phase: 'loading', progress: [current, total] });
     }).then(result => {
       if (!signal.aborted) setState({ phase: 'ready', ...result });
@@ -396,7 +396,7 @@ function DayDeck({ plan, catalog, deck, preferences, budget, onAction }) {
       if (!signal.aborted) setState({ phase: 'error', message: error.message });
     });
     return () => aborter.abort();
-  }, [week, providerDay, catalog, attempt, deck]);
+  }, [week, day, catalog, attempt, deck]);
 
   const options = useMemo(() => state.phase === 'ready' ? mealOptions(state.dishes, preferences, deck) : [],
     [state, preferences, deck]);
@@ -523,7 +523,7 @@ function CartInstructions({ plan, lines }) {
       <li>
         <strong>Mentsd el a kosárkönyvjelzőt</strong>
         <p>Hozz létre egy <b>Teletál-kosár</b> nevű könyvjelzőt, és cseréld le a címét a kimásolt parancsikonra. Számítógépen a hivatkozást a könyvjelzősávra is húzhatod.</p>
-        {lines.length > 14 && <p>Ha az első változatot mentetted el, egyszer frissítsd a könyvjelzőt a 14-nél több különböző tételt tartalmazó kosarakhoz.</p>}
+        {(lines.length > 14 || lines.some(line => line.day > 5)) && <p>Ha korábban mentetted el a könyvjelzőt, egyszer frissítsd, hogy a hétvégi menüket és a 14-nél több különböző tételt is a kosárba tehesse.</p>}
         <a ref={link => link?.setAttribute('href', shortcut)} className="drag-bookmark" onClick={event => {
           event.preventDefault();
           copyText(shortcut).then(ok => setCopyStatus(ok ? 'Parancsikon másolva' : 'Húzd a hivatkozást a könyvjelzősávra.'));
