@@ -9,7 +9,7 @@ import {
   type PlannerState,
 } from '../src/core/planner.ts';
 import { mealOptions, newPreferences } from '../src/core/planning.ts';
-import type { CatalogDish, Day, Dish } from '../src/core/types.ts';
+import type { Day, Dish } from '../src/core/types.ts';
 
 /** The week the tests plan. */
 const w48 = '2026-W48';
@@ -38,7 +38,7 @@ function menu(day: Day, code: string): Dish {
   };
 }
 // Teletál already closed Monday and Tuesday, so the orderable days are Wednesday to Sunday.
-const catalog: CatalogDish[] = [3, 4, 5].map(day => menu(day, 'P'));
+const catalog: Dish[] = [3, 4, 5].map(day => menu(day, 'P'));
 const context: PlannerContext = { weeks, catalog, now };
 const pick = (day: Day) => mealOptions([menu(Math.min(day, 5), 'P')], newPreferences, 'lunch')[0];
 

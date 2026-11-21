@@ -1,5 +1,6 @@
-import { normalizeCourses } from './courses.ts';
+import { isCourse, normalizeCourses } from './courses.ts';
 import { customOption, editCustom, remainingCalories, startCustom, withCourses } from './custom.ts';
+import { generateMenu, startGenerator } from './generate.ts';
 import {
   choose,
   dayCandidates,
@@ -10,7 +11,6 @@ import {
   type OrderSummary,
 } from './planning.ts';
 import type {
-  CatalogDish,
   CustomCourse,
   CustomDraft,
   CustomStage,
@@ -57,13 +57,17 @@ export type PlannerAction =
   | { type: 'pickCourse'; day: Day; dish: Dish }
   | { type: 'clearCourse'; day: Day }
   | { type: 'showOverLimit'; day: Day }
-  | { type: 'saveCustom'; day: Day };
+  | { type: 'saveCustom'; day: Day }
+  // Generated days: the component selection, then whole menus to accept or reject
+  | { type: 'startGenerated'; day: Day; seed: number }
+  | { type: 'rejectGenerated'; day: Day }
+  | { type: 'acceptGenerated'; day: Day };
 
 /** What the planner needs from outside: published weeks that still have orderable days, the active week's catalog, and the time. */
 export interface PlannerContext {
   weeks: PublishedWeek[];
-  /** The active week's catalog, or null while it loads. */
-  catalog: CatalogDish[] | null;
+  /** The active week's dishes, or null while they load. */
+  catalog: Dish[] | null;
   now: Date;
 }
 
@@ -98,7 +102,7 @@ export function initialPlanner(plans: Record<WeekKey, Plan>, preferences: Prefer
   return { step: 'week', selectedWeek: '', weekDays: {}, editingDay: null, plans, preferences };
 }
 
-export function deliveryDays(catalog: CatalogDish[]): Set<Day> {
+export function deliveryDays(catalog: Pick<Dish, 'day'>[]): Set<Day> {
   return new Set(catalog.map(dish => dish.day));
 }
 
@@ -201,6 +205,35 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
     return Number.isFinite(dish.kcal) && (dish.kcal! <= remaining || draft.overLimit.includes(course));
   }
 
+  /** The generated draft with a new menu from the day's dishes, or null when it is not a generated day. */
+  function withGeneratedMenu(draft: CustomDraft): CustomDraft | null {
+    if (!draft.generator || !context.catalog) return null;
+    const candidates = dayCandidates(context.catalog, view.day!);
+    const { picks, generator } = generateMenu(candidates, draft.courses, state.preferences, draft.generator);
+    return { ...draft, picks, generator, stage: 'generated' };
+  }
+
+  /** The state after the day got its decision: work in progress ends, and the planner moves on like `choose` does. */
+  function finishDay(next: Plan): PlannerState {
+    const custom = { ...next.custom };
+    delete custom[view.day!];
+    return withPlan({ ...next, custom }, { editingDay: null, step: next.day === null ? 'overview' : state.step });
+  }
+
+  /** Accepts the generated menu as the day's pick. A menu that no longer fits the menu or the settings is replaced instead. */
+  function acceptGenerated(day: Day): PlannerState {
+    const draft = plan?.custom[day];
+    const catalog = context.catalog;
+    if (!plan || !catalog || !draft?.generator || draft.stage !== 'generated' || day !== view.day || !eligible.includes(day))
+      return state;
+    const option = customOption(draft, state.preferences);
+    if (!option) return state;
+    if (selectionIssue(option, day, eligible, catalog, state.preferences)) {
+      return withDraft(day, withGeneratedMenu);
+    }
+    return finishDay(choose(planOn(day), 'right', option, eligible));
+  }
+
   switch (action.type) {
     case 'chooseWeek':
       return { ...state, selectedWeek: action.week };
@@ -249,9 +282,7 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
       const next = choose(planOn(day), decision, option, eligible);
       if (decision !== 'right' && decision !== 'skip') return withPlan(next);
       // Deciding the whole day ends a custom day in progress.
-      const custom = { ...next.custom };
-      delete custom[day];
-      return withPlan({ ...next, custom }, { editingDay: null, step: next.day === null ? 'overview' : state.step });
+      return finishDay(next);
     }
 
     case 'savePreferences':
@@ -272,7 +303,11 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
     }
 
     case 'setCourses': {
-      const next = withDraft(action.day, draft => withCourses(draft, action.courses));
+      // A generated day starts over with a new menu for the new components.
+      const next = withDraft(action.day, draft => {
+        const changed = withCourses(draft, action.courses);
+        return draft.generator ? withGeneratedMenu({ ...changed, picks: {} }) : changed;
+      });
       if (next === state) return next;
       return { ...next, preferences: { ...next.preferences, customCourses: normalizeCourses(action.courses) } };
     }
@@ -280,7 +315,10 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
     case 'openStage':
       return withDraft(action.day, draft => {
         const { stage } = action;
-        return stage === 'select' || stage === 'overview' || draft.courses.includes(stage) ? { ...draft, stage } : null;
+        if (stage === 'select') return { ...draft, stage };
+        // A generated day has no overview or component decks, and a picked day has no generated menu.
+        if (draft.generator) return stage === 'generated' ? { ...draft, stage } : null;
+        return stage === 'overview' || (isCourse(stage) && draft.courses.includes(stage)) ? { ...draft, stage } : null;
       });
 
     case 'pickCourse':
@@ -292,7 +330,7 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
     case 'clearCourse':
       return withDraft(action.day, draft => {
         const course = draft.stage;
-        if (course === 'select' || course === 'overview') return null;
+        if (!isCourse(course)) return null;
         const picks = { ...draft.picks };
         delete picks[course];
         return { ...draft, picks, stage: 'overview' };
@@ -301,11 +339,25 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
     case 'showOverLimit':
       return withDraft(action.day, draft => {
         const course = draft.stage;
-        if (course === 'select' || course === 'overview' || draft.overLimit.includes(course)) return null;
+        if (!isCourse(course) || draft.overLimit.includes(course)) return null;
         return { ...draft, overLimit: [...draft.overLimit, course] };
       });
 
     case 'saveCustom':
       return saveCustom(action.day);
+
+    case 'startGenerated': {
+      const { day } = action;
+      if (!context.catalog || day !== view.day || !eligible.includes(day)) return state;
+      const current = planOn(day);
+      const draft = { ...startCustom(state.preferences), generator: startGenerator(action.seed) };
+      return withPlan({ ...current, custom: { ...current.custom, [day]: draft } });
+    }
+
+    case 'rejectGenerated':
+      return withDraft(action.day, draft => (draft.stage === 'generated' ? withGeneratedMenu(draft) : null));
+
+    case 'acceptGenerated':
+      return acceptGenerated(action.day);
   }
 }

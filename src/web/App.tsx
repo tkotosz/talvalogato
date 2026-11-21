@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { SlidersHorizontal, Smartphone, Utensils } from 'lucide-react';
+import { isCourse } from '../core/courses.ts';
 import { initialPlanner, plannerView, reducePlanner, type PlannerAction, type PlannerContext } from '../core/planner.ts';
 import type { Dish } from '../core/types.ts';
 import { upcomingWeeks } from '../core/weeks.ts';
@@ -87,7 +88,7 @@ export function App() {
   }, [step, week, pickerDay]);
 
   const customStage = showPicker && !view.dayDone ? view.custom?.stage : undefined;
-  const inCourseDeck = customStage !== undefined && customStage !== 'select' && customStage !== 'overview';
+  const inCourseDeck = customStage !== undefined && isCourse(customStage);
   const canReset = view.hasSavedProgress;
   const dayAction: DayAction | null = !showPicker
     ? step !== 'meals' && canReset
@@ -116,7 +117,8 @@ export function App() {
 
   function backInCustomDay() {
     if (inCourseDeck) return dispatch({ type: 'openStage', day: day!, stage: 'overview' });
-    if (customStage === 'overview') return dispatch({ type: 'openStage', day: day!, stage: 'select' });
+    if (customStage === 'overview' || customStage === 'generated')
+      return dispatch({ type: 'openStage', day: day!, stage: 'select' });
     dispatch({ type: 'leaveCustom', day: day! });
   }
 

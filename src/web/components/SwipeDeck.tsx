@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Bookmark, Check, RotateCcw, Utensils, X } from 'lucide-react';
 import { dayQueue, type DeckAction } from '../../core/planning.ts';
 import type { Day, Dish, MenuOption, Plan } from '../../core/types.ts';
 import { number } from '../format.ts';
 import { MealCard } from './MealCard.tsx';
-import { SwipeCard, type SwipeCardHandle } from './SwipeCard.tsx';
+import { SwipeCard, type SwipeCardHandle, type SwipeDirection } from './SwipeCard.tsx';
 
 type CardDecision = 'left' | 'up' | 'right';
 const actions: { direction: CardDecision; label: string; Icon: typeof X }[] = [
@@ -13,6 +13,32 @@ const actions: { direction: CardDecision; label: string; Icon: typeof X }[] = [
   { direction: 'right', label: 'Kiválasztom', Icon: Check },
 ];
 const keyDecisions: Record<string, CardDecision> = { ArrowLeft: 'left', ArrowUp: 'up', ArrowRight: 'right' };
+
+/** Swipes the card with the arrow keys while `active`, unless a dialog is open or a control has the focus. */
+export function useSwipeKeys(
+  card: RefObject<SwipeCardHandle | null>,
+  active: boolean,
+  keys: Record<string, SwipeDirection>,
+): void {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const direction = keys[event.key];
+      const target = event.target as HTMLElement;
+      if (
+        !direction ||
+        !active ||
+        event.repeat ||
+        document.querySelector('dialog[open]') ||
+        !['BODY', 'DIV'].includes(target.tagName)
+      )
+        return;
+      event.preventDefault();
+      card.current?.swipe(direction);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [card, active, keys]);
+}
 
 /** How a deck names its items: set menus or single dishes. */
 export interface DeckNouns {
@@ -58,24 +84,7 @@ export function SwipeDeck({
     onAction(action, top);
   };
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      const decision = keyDecisions[event.key];
-      const target = event.target as HTMLElement;
-      if (
-        !decision ||
-        !top ||
-        event.repeat ||
-        document.querySelector('dialog[open]') ||
-        !['BODY', 'DIV'].includes(target.tagName)
-      )
-        return;
-      event.preventDefault();
-      card.current?.swipe(decision);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [top]);
+  useSwipeKeys(card, top !== undefined, keyDecisions);
 
   return (
     <>

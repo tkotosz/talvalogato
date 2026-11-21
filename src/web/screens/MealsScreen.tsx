@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, Flame, ListChecks, Sun, Truck, Utensils } from 'lucide-react';
+import { ChevronRight, Flame, ListChecks, Sparkles, Sun, Truck, Utensils } from 'lucide-react';
 import type { PlannerAction } from '../../core/planner.ts';
 import { calorieLimit, dayCandidates, days, mealOptions, menuDeck, menuDecks, selectionIssue } from '../../core/planning.ts';
 import type { Dish, CustomDraft, Day, Plan, Preferences } from '../../core/types.ts';
@@ -53,7 +53,13 @@ export function MealsScreen({
   const crumbs: { label: string; onClick?: () => void }[] = [{ label: 'Mit eszel?', onClick: toMenuTypes }];
   if (custom) {
     crumbs.push({ label: 'Összetevők', onClick: () => open('select') });
-    if (custom.stage !== 'select') crumbs.push({ label: 'Saját menü', onClick: () => open('overview') });
+    if (custom.stage !== 'select') {
+      crumbs.push(
+        custom.generator
+          ? { label: 'Generált menü', onClick: () => open('generated') }
+          : { label: 'Saját menü', onClick: () => open('overview') },
+      );
+    }
   } else if (deck) {
     crumbs.push({ label: deck.label });
   }
@@ -83,7 +89,7 @@ export function MealsScreen({
         </nav>
       )}
       {!choosing && weekendNote}
-      {budget !== null && !custom && (
+      {budget !== null && (!custom || custom.generator) && (
         <div className="picker-details">
           <span className="day-budget">
             <Flame size={18} aria-hidden="true" /> Max. {calories(budget)}
@@ -152,6 +158,13 @@ export function MealsScreen({
                 title: 'Saját menü összeállítása',
                 hint: 'Válogass fogásonként: leves, főétel, kiegészítők',
                 onClick: () => dispatch({ type: 'startCustom', day }),
+              },
+              {
+                Icon: Sparkles,
+                title: 'Menü generálása',
+                hint: 'Megadod, miből álljon, mi összerakjuk. Kérhetsz másikat is.',
+                // The seed makes each generated day different; the reducer itself stays free of randomness.
+                onClick: () => dispatch({ type: 'startGenerated', day, seed: Math.floor(Math.random() * 2 ** 32) }),
               },
             ].map(({ Icon, title, hint, onClick }) => (
               <li key={title}>
