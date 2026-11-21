@@ -44,6 +44,7 @@ export function StepBar({
   onBack,
   dayAction,
   nextLabel,
+  nextHidden = false,
   onNext,
 }: {
   step: Step;
@@ -54,6 +55,8 @@ export function StepBar({
   dayAction: DayAction | null;
   /** The main button's text, when it is not Tovább or Kosárhoz adás. */
   nextLabel?: string;
+  /** Leaves out the main button, such as Kosárhoz adás in the demo. */
+  nextHidden?: boolean;
   onNext(): void;
 }) {
   const selectingWeek = step === 'week';
@@ -71,16 +74,18 @@ export function StepBar({
             {dayAction.label}
           </button>
         )}
-        <button
-          className="button primary"
-          type={selectingWeek ? 'submit' : 'button'}
-          disabled={disabled}
-          form={selectingWeek ? 'week-selection' : undefined}
-          onClick={selectingWeek ? undefined : onNext}
-        >
-          {overview && <ShoppingBasket size={19} aria-hidden="true" />}
-          {nextLabel ?? (overview ? 'Kosárhoz adás' : 'Tovább')}
-        </button>
+        {!nextHidden && (
+          <button
+            className="button primary"
+            type={selectingWeek ? 'submit' : 'button'}
+            disabled={disabled}
+            form={selectingWeek ? 'week-selection' : undefined}
+            onClick={selectingWeek ? undefined : onNext}
+          >
+            {overview && <ShoppingBasket size={19} aria-hidden="true" />}
+            {nextLabel ?? (overview ? 'Kosárhoz adás' : 'Tovább')}
+          </button>
+        )}
       </div>
     </footer>
   );

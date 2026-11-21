@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { SlidersHorizontal, Smartphone, Utensils } from 'lucide-react';
+import { Info, SlidersHorizontal, Smartphone, Utensils } from 'lucide-react';
 import { isCourse } from '../core/courses.ts';
 import { initialPlanner, plannerView, reducePlanner, type PlannerAction, type PlannerContext } from '../core/planner.ts';
 import type { Dish } from '../core/types.ts';
@@ -32,6 +32,8 @@ export function App() {
   const published = useLoad('weeks', signal => loadMenuWeeks(signal));
   const publishedWeeks = published.state.phase === 'ready' ? published.state.value.weeks : [];
   const menuUpdatedAt = published.state.phase === 'ready' ? published.state.value.updatedAt : null;
+  // The demo menu is invented, so nothing may reach the Teletál cart.
+  const demo = published.state.phase === 'ready' && published.state.value.demo === true;
   const weeks = upcomingWeeks(publishedWeeks, calendarNow);
   const weekError =
     published.state.phase === 'error'
@@ -141,13 +143,22 @@ export function App() {
           </div>
         </div>
       </header>
+      {demo && (
+        <p className="demo-banner" role="note">
+          <Info size={18} aria-hidden="true" />
+          <span>
+            <b>Bemutató változat.</b> Az étlap kitalált, nem a Teletál valódi kínálata, ezért a kosárba küldés ki van kapcsolva.
+          </span>
+        </p>
+      )}
       <StepProgress step={step} onNavigate={target => dispatch({ type: 'navigate', step: target })} />
       {step === 'week' ? (
         <WeekScreen
           view={view}
           weeks={weeks}
           weekError={weekError}
-          menuUpdatedAt={menuUpdatedAt}
+          menuUpdatedAt={demo ? null : menuUpdatedAt}
+          demo={demo}
           catalog={catalog.state}
           dispatch={dispatch}
           onRetryWeeks={published.retry}
@@ -184,6 +195,7 @@ export function App() {
         }
         step={step}
         dayAction={dayAction}
+        nextHidden={demo && step === 'overview'}
         backLabel={step === 'meals' ? mealsBack.label : undefined}
         onBack={() => (step === 'meals' ? mealsBack.go() : dispatch({ type: 'navigate', step: 'meals' }))}
         onNext={() =>
@@ -240,7 +252,7 @@ export function App() {
           </p>
         </Modal>
       )}
-      {dialog === 'cart' && (
+      {dialog === 'cart' && !demo && (
         <Modal name="Ételek küldése a Teletál-kosárba" onClose={closeDialog}>
           {catalogItems && <CartDialogContent plan={view.plan} catalog={catalogItems} preferences={preferences} />}
         </Modal>

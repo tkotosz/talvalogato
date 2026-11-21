@@ -1,20 +1,29 @@
-// Walks through the planner in Chrome at phone width against the live Teletál menu.
+// Walks through the planner in Chrome at phone width, on the demo menu written to a scratch folder. The menu is served
+// without its demo flag, so the cart works; the last test turns the flag back on.
 // Run with `npm run test:e2e`. Set TALVALOGATO_CHROME to use a browser other than the installed Chrome.
 import assert from 'node:assert/strict';
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { after, before, test } from 'node:test';
 import { chromium, type Browser, type Page } from 'playwright-core';
+import { demoMenu } from '../../src/scraper/demo.ts';
+import { writeMenuFiles } from '../../src/scraper/files.ts';
 
 const port = 4198;
 const base = `http://127.0.0.1:${port}/`;
 const screenshots = new URL('./screenshots/', import.meta.url).pathname;
 let server: ChildProcess;
 let browser: Browser;
+let menuDir: string;
 
 before(async () => {
+  menuDir = await mkdtemp(join(tmpdir(), 'talvalogato-menu-'));
+  const { weeks, menus } = demoMenu(new Date());
+  await writeMenuFiles(menuDir, { updatedAt: weeks.updatedAt, weeks: weeks.weeks }, menus);
   server = spawn(process.execPath, ['scripts/dev.mjs'], {
-    env: { ...process.env, TALVALOGATO_PORT: String(port) },
+    env: { ...process.env, TALVALOGATO_PORT: String(port), TALVALOGATO_MENU_DIR: menuDir },
     stdio: 'ignore',
   });
   for (let attempt = 0; attempt < 100; attempt++) {
@@ -30,9 +39,10 @@ before(async () => {
 after(async () => {
   await browser?.close();
   server?.kill();
+  if (menuDir) await rm(menuDir, { recursive: true, force: true });
 });
 
-async function openPlanner(): Promise<{ page: Page; errors: string[] }> {
+async function openPlanner({ demo = false } = {}): Promise<{ page: Page; errors: string[] }> {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
     locale: 'hu-HU',
@@ -44,6 +54,12 @@ async function openPlanner(): Promise<{ page: Page; errors: string[] }> {
   page.on('console', message => {
     if (message.type() === 'error') errors.push(message.text());
   });
+  if (demo) {
+    await page.route('**/api/weeks', async route => {
+      const response = await route.fetch();
+      await route.fulfill({ response, json: { ...(await response.json()), demo: true } });
+    });
+  }
   await page.goto(base);
   await waitForWeek(page);
   return { page, errors };
@@ -326,5 +342,21 @@ test('a generated day offers whole menus within the calorie limit, and Vissza re
     assert.match(await row.innerText(), new RegExp(line.trim()));
   }
   await page.screenshot({ path: `${screenshots}generated-overview.png`, fullPage: true });
+  assert.deepEqual(errors, []);
+});
+
+test('the demo says so and leaves out the cart', async () => {
+  const { page, errors } = await openPlanner({ demo: true });
+  assert.match(await page.locator('.demo-banner').innerText(), /Bemutató változat/);
+  assert.equal(await page.locator('.menu-updated').count(), 0);
+  assert.doesNotMatch(await page.locator('.unofficial-notice').innerText(), /Teletál tulajdonai/);
+  await page.screenshot({ path: `${screenshots}demo-week.png`, fullPage: true });
+
+  await page.getByRole('button', { name: 'Válogatás indítása' }).click();
+  await decide(page, 'Teletál ebédmenü választása', 'Kiválasztom');
+  await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
+  await page.locator('.review').waitFor();
+  assert.equal(await page.getByRole('button', { name: 'Kosárhoz adás' }).count(), 0);
+  await page.screenshot({ path: `${screenshots}demo-overview.png`, fullPage: true });
   assert.deepEqual(errors, []);
 });

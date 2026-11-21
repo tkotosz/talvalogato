@@ -12,6 +12,8 @@ export interface PublishedWeek {
 export interface MenuWeeks {
   /** When the data was last refreshed, as an ISO time. */
   updatedAt: string;
+  /** Set when the menus are invented for the demo; the app then says so and hides the cart. */
+  demo?: true;
   weeks: PublishedWeek[];
 }
 

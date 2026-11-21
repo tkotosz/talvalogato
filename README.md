@@ -2,7 +2,7 @@
 
 Tálválogató is an installable planner for Teletál. Choose a delivery week, then plan each day with a Teletál lunch or full-day menu, or build your own menu course by course, swiping through the dishes. Review the week and send it to the Teletál cart. The settings dialog saves a calorie limit and menu-code exclusions across weeks. Each Teletál menu, and each dish of your own menu, uses one order line.
 
-Tálválogató is an unofficial app and is not affiliated with Teletál Ételfutár Kft. The menu and the dish photos belong to Teletál; the app links to the photos on teletal.hu.
+Tálválogató is an unofficial app and is not affiliated with Teletál Ételfutár Kft. The published site is a demo: its menus are invented, and it sends nothing to the Teletál cart.
 
 ## Run locally
 
@@ -13,8 +13,8 @@ Install dependencies with `npm ci`, then run `npm run dev` and open the printed 
 | `npm run format` | Formats the code with Prettier |
 | `npm run lint` | Checks formatting, then runs ESLint |
 | `npm run typecheck` | TypeScript, for the app and the tests |
-| `npm test` | Unit tests for the planning rules and the Teletál scraper |
-| `npm run test:e2e` | Plans a week in Chrome against the live Teletál menu; screenshots go to `test/e2e/screenshots/` |
+| `npm test` | Unit tests for the planning rules, the Teletál scraper and the demo menu |
+| `npm run test:e2e` | Plans a week in Chrome on the demo menu; screenshots go to `test/e2e/screenshots/` |
 | `npm run build` | Packages the app as a single Worker with its static assets |
 
 `AGENTS.md` describes the layout and the rules that are easy to break, and `docs/architecture.md` the structure.
@@ -25,7 +25,11 @@ The cart dialog walks through saving a reusable browser bookmark. Run it on the 
 
 ## Menu data
 
-The app does not read Teletál directly. The **Menu data** workflow reads Teletál twice a day and commits the menus as JSON to the `data` branch, and the Worker serves those files. Run the workflow from the Actions tab to refresh the menu right away. To work with local data, run `npm run refresh-menu -- --out <folder>` and start the dev server with `TALVALOGATO_MENU_DIR=<folder>`.
+The app does not read Teletál directly. The **Menu data** workflow commits the menus as JSON to the `data` branch once a day, and the Worker serves those files. Run the workflow from the Actions tab to refresh the menu right away.
+
+The workflow writes an invented demo menu (`npm run demo-menu`) and does not contact Teletál. Its `weeks.json` is marked `"demo": true`, so the app shows a demo banner and leaves out the cart. `npm run refresh-menu` reads Teletál's real menus instead; its data has no demo mark.
+
+To work with local data, write it with `npm run demo-menu -- --out <folder>` or `npm run refresh-menu -- --out <folder>`, and start the dev server with `TALVALOGATO_MENU_DIR=<folder>`.
 
 ## Deploy on Cloudflare Pages
 
