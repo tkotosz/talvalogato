@@ -132,7 +132,6 @@ export function App() {
           weeks={weeks}
           weekError={weekError}
           catalog={catalog.state}
-          savedWeek={planner.plan?.week}
           dispatch={dispatch}
           onRetryWeeks={published.retry}
           onRetryCatalog={catalog.retry}

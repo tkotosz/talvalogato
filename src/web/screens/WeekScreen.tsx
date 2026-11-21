@@ -11,7 +11,6 @@ export function WeekScreen({
   weeks,
   weekError,
   catalog,
-  savedWeek,
   dispatch,
   onRetryWeeks,
   onRetryCatalog,
@@ -20,8 +19,6 @@ export function WeekScreen({
   weeks: PublishedWeek[];
   weekError: string;
   catalog: Loadable<CatalogDish[]>;
-  /** The saved plan's week, if any. */
-  savedWeek: WeekKey | undefined;
   dispatch(action: PlannerAction): void;
   onRetryWeeks(): void;
   onRetryCatalog(): void;
@@ -113,11 +110,6 @@ export function WeekScreen({
             <p role="status">
               {availableDays.length ? 'Válassz legalább egy rendelhető napot.' : 'Erre a hétre már nem rendelhetsz.'}
             </p>
-          )}
-          {savedWeek && savedWeek !== week && weeks.some(item => item.key === savedWeek) && (
-            <button type="button" className="text-button week-plan-link" onClick={() => selectWeek(savedWeek)}>
-              Mentett hét kiválasztása
-            </button>
           )}
         </form>
       </div>
