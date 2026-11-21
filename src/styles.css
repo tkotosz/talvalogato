@@ -323,7 +323,7 @@ button.review-row:hover { background: #f3f7ec; }
 }
 .review-numbers { text-align: right; font-size: .91rem; max-width: 14ch; }
 .skipped-label { grid-column: 3; text-align: right; }
-.review-edit { grid-column: 4; color: var(--green); }
+.review-open { grid-column: 4; color: var(--green); }
 .review-total { display: flex; justify-content: space-between; align-items: baseline; gap: 9px; margin-top: 15px; }
 .review-total > span { color: var(--muted); font-size: .86rem; }
 .review-total > strong { font-size: 1.4rem; letter-spacing: -.035em; }
@@ -445,7 +445,7 @@ button.code-group-title:hover { background: #eaf0e5; }
   .review-meals { grid-column: 1; grid-row: 2; }
   .review-numbers { grid-column: 2; grid-row: 1 / span 2; }
   .skipped-label { grid-column: 2; }
-  .review-edit { grid-column: 3; grid-row: 1 / span 2; }
+  .review-open { grid-column: 3; grid-row: 1 / span 2; }
   .meal-code { margin-top: 1px; }
 }
 @media (max-width: 650px) and (max-height: 680px) {

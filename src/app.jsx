@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
-  Bookmark, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList, Copy, Download, Flame, Pencil,
+  Bookmark, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList, Copy, Download, Flame,
   RotateCcw, ShoppingBasket, SlidersHorizontal, Smartphone, Soup, Sun, Utensils, X,
 } from 'lucide-react';
 import { CodeFilter } from './CodeFilter.jsx';
@@ -571,7 +571,7 @@ function CheckedCart({ plan, preferences, onCatalog }) {
   </>;
 }
 
-function Review({ plan, visibleDays, eligible, order, onNotice, onEditDay }) {
+function Review({ plan, visibleDays, eligible, order, onNotice, onViewDay }) {
   const { issues, total } = order;
   const summary = visibleDays.map(day => {
     const available = eligible.includes(day);
@@ -627,8 +627,8 @@ function Review({ plan, visibleDays, eligible, order, onNotice, onEditDay }) {
           </> : <span className="skipped-label">{status}</span>}
         </>;
         return <li key={day}>
-          {available ? <button type="button" className="review-row" onClick={() => onEditDay(day)}>
-            {contents}<Pencil className="review-edit" size={16} role="img" aria-label="Szerkesztés" />
+          {available ? <button type="button" className="review-row" onClick={() => onViewDay(day)}>
+            {contents}<ChevronRight className="review-open" size={16} aria-hidden="true" />
           </button> : <div className="review-row unavailable">{contents}</div>}
         </li>;
       })}
@@ -841,7 +841,7 @@ function App() {
       onReset={hasSavedProgress && plan.week === week ? () => setModal({ type: 'resetPlan', week }) : undefined}
       onRetryWeeks={retryWeeks} onRetryCatalog={retryCatalog} onContinue={() => navigate('meals')} />
       : order ? <Review plan={activePlan} visibleDays={reviewDays} eligible={eligible} order={order}
-        onNotice={setNotice} onEditDay={value => selectDay(value, true)} />
+        onNotice={setNotice} onViewDay={selectDay} />
         : showPicker ? <Picker key={week + ':' + day + ':' + editing}
           plan={{ ...activePlan, day }} eligible={eligible} catalog={catalog.items} preferences={preferences} editing={editing} done={dayDone}
           onDay={value => selectDay(value)} onAction={chooseForDay} />
