@@ -17,48 +17,65 @@ function CartInstructions({ plan, lines }: { plan: Plan; lines: CartLine[] }) {
   const [copyStatus, setCopyStatus] = useState('');
   return (
     <>
+      <p>A választásaidat egy könyvjelző teszi a Teletál-kosárba. A könyvjelzőt csak egyszer kell elmentened.</p>
+
+      <h3 className="instructions-heading">Egyszeri beállítás</h3>
+      {/* React refuses javascript: URLs in href, so the bookmark link gets its address directly.
+          Dragging it to the bookmarks bar names the bookmark after the link text. */}
+      <a
+        ref={link => link?.setAttribute('href', shortcut)}
+        className="bookmark-chip"
+        title="Húzd a könyvjelzősávra, vagy kattints a másoláshoz"
+        onClick={event => {
+          event.preventDefault();
+          copyText(shortcut).then(ok =>
+            setCopyStatus(
+              ok ? 'Könyvjelzőkód kimásolva.' : 'A másolás nem sikerült. Számítógépen húzd a gombot a könyvjelzősávra.',
+            ),
+          );
+        }}
+      >
+        <Bookmark size={16} aria-hidden="true" /> Teletál-kosár
+      </a>
+      {copyStatus && <p role="status">{copyStatus}</p>}
+      <ul className="instructions">
+        <li>
+          <strong>Számítógépen</strong>
+          <p>Húzd a „Teletál-kosár” gombot a böngésző könyvjelzősávjára.</p>
+        </li>
+        <li>
+          <strong>Telefonon</strong>
+          <p>
+            Koppints a „Teletál-kosár” gombra, ezzel kimásolod a könyvjelző kódját. Ments el egy könyvjelzőt bármelyik oldalról,
+            majd szerkeszd: a neve legyen „Teletál-kosár”, a címe (URL) helyére pedig illeszd be a kimásolt kódot.
+          </p>
+        </li>
+      </ul>
       <p>
-        A kiválasztott ételeket egy könyvjelző segítségével teheted a Teletál-kosárba. Elég egyszer elmentened, utána minden héten
-        használhatod.
+        Ha a könyvjelző egyszer hibát jelez, mentsd el újra ugyanígy: a Tálválogató frissítései néha új könyvjelzőt igényelnek.
       </p>
+
+      <h3 className="instructions-heading">Kosárba helyezés</h3>
       <ol className="instructions">
         <li>
-          <strong>Mentsd el a kosárkönyvjelzőt</strong>
-          <p>
-            Hozz létre egy <b>Teletál-kosár</b> nevű könyvjelzőt, és cseréld le a címét a kimásolt parancsikonra. Számítógépen a
-            hivatkozást a könyvjelzősávra is húzhatod.
-          </p>
-          {/* React refuses javascript: URLs in href, so the bookmark link gets its address directly. */}
-          <a
-            ref={link => link?.setAttribute('href', shortcut)}
-            className="drag-bookmark"
-            onClick={event => {
-              event.preventDefault();
-              copyText(shortcut).then(ok => setCopyStatus(ok ? 'Parancsikon másolva' : 'Húzd a hivatkozást a könyvjelzősávra.'));
-            }}
-          >
-            <Bookmark size={16} /> Kosárparancsikon másolása vagy húzása
+          <p>Ha még nem vagy bejelentkezve a Teletálon, előbb jelentkezz be.</p>
+        </li>
+        <li>
+          <p>Nyisd meg a heti étlapot ezzel a gombbal:</p>
+          <a className="button primary wide" href={url} target="_blank" rel="noreferrer">
+            <ShoppingBasket size={19} /> Heti étlap megnyitása a Teletálon
           </a>
-          <p>Ha a könyvjelző hibát jelez, mentsd el újra innen: a Tálválogató frissítései néha új könyvjelzőt igényelnek.</p>
-          {copyStatus && <p role="status">{copyStatus}</p>}
         </li>
         <li>
-          <strong>Nyisd meg a heti étlapot a Teletálon</strong>
           <p>
-            Az étlapon nyisd meg a mentett könyvjelzőt, majd hagyd jóvá a mennyiségeket. Mobilon keresd a böngésző könyvjelzői
-            között vagy a címsorban.
+            Az étlapon nyisd meg a „Teletál-kosár” könyvjelzőt. Telefonon a böngésző könyvjelzői között találod, Chrome-ban úgy
+            is, hogy beírod a nevét a címsorba, és a találatok közül kiválasztod.
           </p>
         </li>
         <li>
-          <strong>Ellenőrizd a kosarat</strong>
-          <p>
-            A parancsikon megnyitja a Teletál-kosarat. Ha szükséges, jelentkezz be, majd add le a rendelést, amikor elkészültél.
-          </p>
+          <p>Hagyd jóvá a tételeket. Utána megnyílik a Teletál-kosár, ahol ellenőrizheted és leadhatod a rendelést.</p>
         </li>
       </ol>
-      <a className="button primary wide" href={url} target="_blank" rel="noreferrer">
-        <ShoppingBasket size={19} /> Heti étlap megnyitása a Teletálon
-      </a>
       <a className="text-button existing-cart" target="_blank" rel="noreferrer" href={cartUrl}>
         Teletál-kosár megnyitása
       </a>
