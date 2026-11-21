@@ -193,7 +193,7 @@ test('a week mixing set menus and custom days, with add-ons, a cleared component
   await page.locator('.review').waitFor();
   const custom = page.locator('.review-row', { hasText: 'Saját menü' });
   assert.equal(await custom.count(), 1);
-  assert.equal(await custom.locator('.review-courses > span').count(), 3);
+  assert.equal(await custom.locator('.review-item').count(), 3);
 
   // Editing replaces one dish and saves.
   await custom.click();
