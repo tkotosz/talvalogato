@@ -16,11 +16,11 @@ afterEach(() => {
 });
 
 /** A stand-in for the Teletál menu page and cart, holding quantities by `day:code`. */
-function teletalPage(url: string, cart: Record<string, number> = {}) {
+function teletalPage(url: string, cart: Record<string, number> = {}, storage = new Map<string, string>()) {
   const { hash } = new URL(url);
   const alerts: string[] = [];
   const posted: unknown[] = [];
-  const storage = new Map<string, string>();
+  let confirmations = 0;
   let openedCart = false;
   const page = {
     location: {
@@ -44,7 +44,10 @@ function teletalPage(url: string, cart: Record<string, number> = {}) {
       setItem: (key: string, value: string) => storage.set(key, value),
     },
     alert: (message: string) => alerts.push(message),
-    confirm: () => true,
+    confirm: () => {
+      confirmations += 1;
+      return true;
+    },
     fetch: async (path: string, init?: RequestInit) => {
       if (path === '/ajax/adagmentes_all') {
         const body = JSON.parse(String(init?.body));
@@ -68,7 +71,7 @@ function teletalPage(url: string, cart: Record<string, number> = {}) {
     },
   };
   Object.assign(globalThis, page);
-  return { alerts, posted, cart, storage, opened: () => openedCart };
+  return { alerts, posted, cart, storage, opened: () => openedCart, confirmations: () => confirmations };
 }
 
 const lines = (...entries: [number, string, number][]): CartLine[] =>
@@ -99,7 +102,12 @@ test('the bookmark adds weekday and weekend lines on top of the current cart and
     { adagok: { [address]: { 2026: { 48: { PN: { 3: '2' }, W1: { 5: '3' }, Z10: { 6: '1', 7: '1' } } } } } },
   ]);
   assert.equal(page.opened(), true);
-  assert.equal(JSON.parse(page.storage.get('talvalogato.cart-import')!).done, true);
+  assert.deepEqual(JSON.parse(page.storage.get('talvalogato.cart-import')!).targets, {
+    '3:PN': 2,
+    '5:W1': 3,
+    '6:Z10': 1,
+    '7:Z10': 1,
+  });
 });
 
 test('the bookmark accepts up to the line limit and asks for a new bookmark when the link is newer', async () => {
@@ -126,4 +134,29 @@ test('links without the Tálválogató fragment are not accepted', async () => {
   const page = teletalPage('https://www.teletal.hu/etlap/48#other=W10%3D');
   await importOnTeletal();
   assert.match(page.alerts[0]!, /Nyisd meg a heti étlapot a Tálválogatóból/);
+});
+
+test('running a link again adds nothing while the cart still holds its portions, and adds again once they are gone', async () => {
+  const url = teletalWeekUrl(plan, lines([3, 'PN', 1], [6, 'Z10', 1]));
+  const first = teletalPage(url);
+  await importOnTeletal();
+  assert.deepEqual(first.cart, { '3:PN': 1, '6:Z10': 1 });
+
+  // The same link again: nothing to add, so no question and no change.
+  const again = teletalPage(url, first.cart, first.storage);
+  await importOnTeletal();
+  assert.equal(again.confirmations(), 0);
+  assert.deepEqual(again.posted, []);
+  assert.equal(again.opened(), true);
+
+  // The cart was emptied since: the same link adds the portions again.
+  const emptied = teletalPage(url, {}, first.storage);
+  await importOnTeletal();
+  assert.equal(emptied.confirmations(), 1);
+  assert.deepEqual(emptied.cart, { '3:PN': 1, '6:Z10': 1 });
+
+  // The plan changed since: its new lines are added on top of what the cart holds.
+  const changed = teletalPage(teletalWeekUrl(plan, lines([3, 'PN', 1], [4, 'P', 1])), emptied.cart, emptied.storage);
+  await importOnTeletal();
+  assert.deepEqual(changed.cart, { '3:PN': 2, '6:Z10': 1, '4:P': 1 });
 });

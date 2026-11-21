@@ -5,7 +5,6 @@ interface CartProgress {
   id: string;
   address: string;
   targets: Record<string, number>;
-  done?: true;
 }
 
 /** The cart link's data format. Raise it when the bookmark must change, and the bookmark's `supportedVersion` with it. */
@@ -65,28 +64,10 @@ export async function importOnTeletal(): Promise<void> {
 
     const address = (document.getElementById('select-address') as HTMLSelectElement | null)?.value || '-1';
     if (!/^-?\d+$/.test(address)) throw new CartError('Előbb válassz szállítási címet a Teletálon.');
-    const saved = JSON.parse(localStorage.getItem(storageKey) || 'null') as CartProgress | null;
-    const previous = saved?.id === id ? saved : null;
     const goToCart = () => {
       history.replaceState(null, '', location.pathname + location.search);
       location.assign('/kosar');
     };
-    if (previous?.done) return goToCart();
-    if (previous && previous.address !== address) {
-      throw new CartError(
-        'Az előző próbálkozás óta megváltozott a szállítási cím. A további ételek hozzáadása előtt ellenőrizd a Teletál-kosaradat.',
-      );
-    }
-
-    const days = ['', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
-    const items = lines.map(([day, code, quantity]) => `${days[day]} ${code} × ${quantity}`);
-    if (
-      !confirm(
-        `Hozzáadod ezeket az adagokat a Teletál-kosaradhoz?\n\n${items.join('\n')}\n\nRendelés előtt még ellenőrizheted a kosár tartalmát.`,
-      )
-    )
-      return;
-
     const getCart = async () => {
       const response = await fetch('/kosar', { cache: 'no-store', signal: AbortSignal.timeout?.(12_000) });
       if (!response.ok) throw new CartError('Nem sikerült betölteni a Teletál-kosarat.');
@@ -102,29 +83,33 @@ export async function importOnTeletal(): Promise<void> {
     };
 
     const current = await getCart();
-    const targets =
-      previous?.targets ??
-      Object.fromEntries(
-        lines.map(([day, code, quantity]) => {
-          const key = day + ':' + code;
-          return [key, (current[key] || 0) + quantity];
-        }),
-      );
-    localStorage.setItem(storageKey, JSON.stringify({ id, address, targets }));
-
-    const changes: Record<string, Record<number, string>> = {};
-    for (const [day, code, quantity] of lines) {
-      const key = day + ':' + code;
-      const target = targets[key]!;
-      const actual = current[key] || 0;
-      if (actual === target) continue;
-      if (actual !== target - quantity) {
-        throw new CartError(
-          'A kosár tartalma megváltozott az előző próbálkozás óta. A további ételek hozzáadása előtt ellenőrizd a Teletál-kosaradat.',
-        );
-      }
-      (changes[code] ??= {})[day] = String(target);
+    // When this link was already sent and the cart still holds what it added, running it again adds nothing.
+    const saved = JSON.parse(localStorage.getItem(storageKey) || 'null') as CartProgress | null;
+    const previous = saved?.id === id && saved.address === address ? saved : null;
+    const alreadyAdded = (day: number, code: string) => {
+      const target = previous?.targets[day + ':' + code];
+      return target !== undefined && current[day + ':' + code] === target;
+    };
+    if (previous && lines.every(([day, code]) => alreadyAdded(day, code))) {
+      return goToCart();
     }
+
+    const days = ['', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
+    const items = lines.map(([day, code, quantity]) => `${days[day]} ${code} × ${quantity}`);
+    if (
+      !confirm(
+        `Hozzáadod ezeket az adagokat a Teletál-kosaradhoz?\n\n${items.join('\n')}\n\nRendelés előtt még ellenőrizheted a kosár tartalmát.`,
+      )
+    )
+      return;
+
+    // Teletál stores absolute quantities, so each line's target is what the cart holds now plus the plan's portions.
+    const targets = Object.fromEntries(
+      lines.map(([day, code, quantity]) => [day + ':' + code, (current[day + ':' + code] || 0) + quantity]),
+    );
+    localStorage.setItem(storageKey, JSON.stringify({ id, address, targets }));
+    const changes: Record<string, Record<number, string>> = {};
+    for (const [day, code] of lines) (changes[code] ??= {})[day] = String(targets[day + ':' + code]);
     if (Object.keys(changes).length) {
       const response = await fetch('/ajax/adagmentes_all', {
         method: 'POST',
@@ -142,8 +127,6 @@ export async function importOnTeletal(): Promise<void> {
     const missing = Object.keys(targets).filter(key => updated[key] !== targets[key]);
     if (missing.length) {
       alert(`A Teletál nem igazolta vissza ezeket a tételeket (${missing.join(', ')}). Ellenőrizd a kosaradat.`);
-    } else {
-      localStorage.setItem(storageKey, JSON.stringify({ id, address, targets, done: true }));
     }
     goToCart();
   } catch (error) {
