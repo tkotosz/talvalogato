@@ -85,14 +85,16 @@ export function App() {
     window.scrollTo(0, 0);
   }, [step, week, pickerDay]);
 
-  const dayAction: DayAction | null = showPicker
-    ? {
-        label: view.dayDone ? 'Nap szerkesztése' : 'Nap kihagyása',
-        onClick: view.dayDone
-          ? () => dispatch({ type: 'openDay', day, edit: true })
-          : () => dispatch({ type: 'decide', day, action: 'skip' }),
-      }
-    : null;
+  const customStage = !view.dayDone ? view.custom?.stage : undefined;
+  const dayAction: DayAction | null = !showPicker
+    ? null
+    : view.dayDone
+      ? { label: 'Nap szerkesztése', onClick: () => dispatch({ type: 'openDay', day, edit: true }) }
+      : customStage === 'summary'
+        ? { label: 'Mentés', onClick: () => dispatch({ type: 'saveCustom', day }) }
+        : customStage && customStage !== 'meals' && customStage !== 'sides'
+          ? { label: 'Kihagyom', onClick: () => dispatch({ type: 'skipCourse', day }) }
+          : { label: 'Nap kihagyása', onClick: () => dispatch({ type: 'decide', day, action: 'skip' }) };
 
   return (
     <>
@@ -138,6 +140,7 @@ export function App() {
           preferences={preferences}
           editing={view.editing}
           done={view.dayDone}
+          custom={view.custom}
           dispatch={dispatch}
         />
       ) : (

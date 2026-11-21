@@ -1,204 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Bookmark, Check, ChevronRight, Flame, RotateCcw, Soup, Sun, Utensils, X } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronRight, Flame, ListChecks, Sun, Utensils } from 'lucide-react';
 import type { PlannerAction } from '../../core/planner.ts';
-import {
-  calorieLimit,
-  dayCandidates,
-  dayQueue,
-  days,
-  mealOptions,
-  menuDeck,
-  menuDecks,
-  selectionIssue,
-  type DeckAction,
-} from '../../core/planning.ts';
-import type { CatalogDish, Day, MenuDeckId, MenuOption, Plan, Preferences } from '../../core/types.ts';
+import { calorieLimit, dayCandidates, days, mealOptions, menuDeck, menuDecks, selectionIssue } from '../../core/planning.ts';
+import type { CatalogDish, CustomDraft, Day, Plan, Preferences } from '../../core/types.ts';
+import { CustomMenuCard } from '../components/CustomMenuCard.tsx';
 import { MealCard } from '../components/MealCard.tsx';
-import { SwipeCard, type SwipeCardHandle } from '../components/SwipeCard.tsx';
+import { SwipeDeck } from '../components/SwipeDeck.tsx';
 import { WeekProgress } from '../components/WeekProgress.tsx';
-import { calories, number } from '../format.ts';
-import { loadDayDishes, type DayDishes } from '../menu-client.ts';
+import { calories } from '../format.ts';
+import { CustomDay } from './CustomDay.tsx';
 
-type CardDecision = 'left' | 'up' | 'right';
-const actions: { direction: CardDecision; label: string; Icon: typeof X }[] = [
-  { direction: 'left', label: 'Passz', Icon: X },
-  { direction: 'up', label: 'Talán', Icon: Bookmark },
-  { direction: 'right', label: 'Kiválasztom', Icon: Check },
-];
-const keyDecisions: Record<string, CardDecision> = { ArrowLeft: 'left', ArrowUp: 'up', ArrowRight: 'right' };
+const menuNouns = { checked: 'menü', missing: 'menühöz', again: 'Menük újranézése' };
 
-type DeckState =
-  { phase: 'loading'; progress: [number, number] } | ({ phase: 'ready' } & DayDishes) | { phase: 'error'; message: string };
-const startedLoading: DeckState = { phase: 'loading', progress: [0, 0] };
-
-/** The swipe deck of one menu type for the plan's current day. */
-function DayDeck({
-  plan,
-  day,
-  catalog,
-  deck,
-  preferences,
-  budget,
-  onAction,
-}: {
-  plan: Plan;
-  day: Day;
-  catalog: CatalogDish[];
-  deck: MenuDeckId;
-  preferences: Preferences;
-  budget: number | null;
-  onAction(action: DeckAction, option: MenuOption | undefined): void;
-}) {
-  const card = useRef<SwipeCardHandle>(null);
-  const [attempt, setAttempt] = useState(0);
-  const [animation, setAnimation] = useState(0);
-  const { week } = plan;
-  // Each update remembers the request it belongs to, so an outdated one reads as loading.
-  const request = `${week}:${day}:${deck}:${attempt}`;
-  const [loaded, setLoaded] = useState<{ request: string; state: DeckState } | null>(null);
-  const state = loaded?.request === request ? loaded.state : startedLoading;
-
-  useEffect(() => {
-    const aborter = new AbortController();
-    const { signal } = aborter;
-    const update = (next: DeckState) => {
-      if (!signal.aborted) setLoaded({ request, state: next });
-    };
-    const candidates = new Map(
-      dayCandidates(catalog, day)
-        .filter(dish => menuDeck(dish) === deck)
-        .map(dish => [dish.id, dish]),
-    );
-    loadDayDishes(week, day, [...candidates.values()], signal, (current, total) => {
-      update({ phase: 'loading', progress: [current, total] });
-    })
-      .then(result => update({ phase: 'ready', ...result }))
-      .catch((error: Error) => update({ phase: 'error', message: error.message }));
-    return () => aborter.abort();
-  }, [request, week, day, catalog, deck]);
-
-  const options = useMemo(
-    () => (state.phase === 'ready' ? mealOptions(state.dishes, preferences, deck) : []),
-    [state, preferences, deck],
-  );
-  const queue = dayQueue(options, { ...plan, day });
-  const top = queue[0];
-  const retry = () => setAttempt(value => value + 1);
-  const act = (action: DeckAction) => {
-    setAnimation(value => value + 1);
-    onAction(action, top);
-  };
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      const decision = keyDecisions[event.key];
-      const target = event.target as HTMLElement;
-      if (
-        !decision ||
-        !top ||
-        event.repeat ||
-        document.querySelector('dialog[open]') ||
-        !['BODY', 'DIV'].includes(target.tagName)
-      )
-        return;
-      event.preventDefault();
-      card.current?.swipe(decision);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [top]);
-
-  return (
-    <>
-      <div className="deck">
-        {state.phase === 'loading' ? (
-          <div className="placeholder-card" role="status">
-            <span className="spinner" aria-hidden="true" />
-            <h2>Étlap betöltése…</h2>
-            {state.progress[1] > 0 && (
-              <p>
-                {state.progress[0]}/{state.progress[1]} menü ellenőrizve
-              </p>
-            )}
-          </div>
-        ) : state.phase === 'error' ? (
-          <div className="placeholder-card" role="status">
-            <span className="section-icon">
-              <Soup size={25} />
-            </span>
-            <h2>Az étlap nem érhető el</h2>
-            <p>{state.message}</p>
-            <button type="button" className="button secondary" onClick={retry}>
-              Étlap újratöltése
-            </button>
-          </div>
-        ) : !top ? (
-          <div className="placeholder-card" role="status">
-            <span className="section-icon">
-              <Utensils size={25} />
-            </span>
-            <h2>{options.length ? 'Elfogytak a lehetőségek' : 'Nincs választható menü'}</h2>
-            {options.length ? (
-              <button type="button" className="button secondary" onClick={() => act('restart')}>
-                <RotateCcw size={17} /> Menük újranézése
-              </button>
-            ) : (
-              <p>Válts menütípust, vagy ellenőrizd a szűrőket a beállításokban.</p>
-            )}
-          </div>
-        ) : (
-          <>
-            {queue.length > 1 && <div className="card-backing" aria-hidden="true" />}
-            <SwipeCard
-              key={top.id + ':' + animation}
-              ref={card}
-              actions={actions}
-              onAction={direction => {
-                if (direction !== 'down') act(direction);
-              }}
-            >
-              <MealCard option={top} target={budget} />
-            </SwipeCard>
-          </>
-        )}
-      </div>
-      {top && (
-        <div className="deck-actions" aria-label="Étel kiválasztása vagy kihagyása">
-          {actions.map(({ direction, label, Icon }) => (
-            <button
-              type="button"
-              key={direction}
-              className={'decision decision-' + direction}
-              onClick={() => card.current?.swipe(direction)}
-            >
-              <span className="decision-icon">
-                <Icon size={23} strokeWidth={2.2} />
-              </span>
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
-      )}
-      {top && (
-        <div className="day-links" aria-live="polite">
-          {number.format(queue.length)} lehetőség maradt
-        </div>
-      )}
-      {state.phase === 'ready' && state.unavailable > 0 && (
-        <p className="nutrition-note">
-          {number.format(state.unavailable)} menühöz nem érhető el kalóriaadat.
-          {state.failures > 0 && (
-            <button type="button" className="text-button" onClick={retry}>
-              Adatok újratöltése
-            </button>
-          )}
-        </p>
-      )}
-    </>
-  );
-}
-
-/** Step 2: one day at a time, first the menu type, then its swipe deck. A finished day shows its decision. */
+/** Step 2: one day at a time, first the menu type, then its swipe deck or the custom-day flow. A finished day shows its decision. */
 export function MealsScreen({
   plan,
   day,
@@ -207,6 +21,7 @@ export function MealsScreen({
   preferences,
   editing,
   done,
+  custom,
   dispatch,
 }: {
   plan: Plan;
@@ -216,12 +31,16 @@ export function MealsScreen({
   preferences: Preferences;
   editing: boolean;
   done: boolean;
+  /** The day as a custom day in progress, if it is one. */
+  custom: CustomDraft | null;
   dispatch(action: PlannerAction): void;
 }) {
   const [deck, setDeck] = useState<(typeof menuDecks)[number] | null>(null);
   const picked = plan.slots[day];
   const budget = preferences.limitCalories ? calorieLimit(preferences) : null;
   const issue = done && picked && selectionIssue(picked, day, eligible, catalog, preferences);
+  const chosen = custom ? 'Saját menü' : deck?.label;
+  const toMenuTypes = () => (custom ? dispatch({ type: 'leaveCustom', day }) : setDeck(null));
 
   return (
     <main className="picker" aria-label={`Napi válogatás · ${days[day - 1]}`}>
@@ -229,40 +48,42 @@ export function MealsScreen({
       {!done && (
         <nav className="day-steps" aria-label="A napi válogatás lépései">
           <ol>
-            <li aria-current={!deck ? 'step' : undefined}>
-              {deck ? (
-                <button type="button" onClick={() => setDeck(null)}>
+            <li aria-current={!chosen ? 'step' : undefined}>
+              {chosen ? (
+                <button type="button" onClick={toMenuTypes}>
                   Menütípus
                 </button>
               ) : (
                 <span>Menütípus</span>
               )}
             </li>
-            <li aria-current={deck ? 'step' : undefined}>
+            <li aria-current={chosen ? 'step' : undefined}>
               <ChevronRight size={15} aria-hidden="true" />
-              <span>Menük</span>
+              <span>{custom ? 'Fogások' : 'Menük'}</span>
             </li>
           </ol>
-          {deck && <p>{deck.label}</p>}
+          {chosen && <p>{chosen}</p>}
         </nav>
       )}
-      {(day > 5 || budget !== null) && (
+      {(day > 5 || (budget !== null && !custom)) && (
         <div className="picker-details">
           {day > 5 && <span>Pénteki kiszállítás</span>}
-          {budget !== null && (
+          {budget !== null && !custom && (
             <span className="day-budget">
               <Flame size={18} aria-hidden="true" /> Max. {calories(budget)}
             </span>
           )}
         </div>
       )}
-      {editing && picked && (
+      {editing && picked && !custom && (
         <p className="editing-note">Jelenlegi választás · {picked.dishes.map(dish => dish.menuName || dish.name).join(' + ')}</p>
       )}
       {done ? (
         <>
           <div className="deck">
-            {picked ? (
+            {picked?.kind === 'custom' ? (
+              <CustomMenuCard option={picked} target={budget} />
+            ) : picked ? (
               <MealCard option={picked} target={budget} />
             ) : (
               <div className="placeholder-card">
@@ -272,14 +93,26 @@ export function MealsScreen({
           </div>
           {issue && <p className="selection-issue completed-day-issue">{issue}</p>}
         </>
+      ) : custom ? (
+        <CustomDay plan={plan} day={day} draft={custom} catalog={catalog} preferences={preferences} dispatch={dispatch} />
       ) : deck ? (
-        <DayDeck
+        <SwipeDeck
           plan={plan}
           day={day}
-          catalog={catalog}
-          deck={deck.id}
-          preferences={preferences}
-          budget={budget}
+          deckKey={deck.id}
+          candidates={dayCandidates(catalog, day).filter(dish => menuDeck(dish) === deck.id)}
+          buildOptions={dishes => mealOptions(dishes, preferences, deck.id)}
+          target={budget}
+          nouns={menuNouns}
+          empty={() => (
+            <>
+              <span className="section-icon">
+                <Utensils size={25} />
+              </span>
+              <h2>Nincs választható menü</h2>
+              <p>Válts menütípust, vagy ellenőrizd a szűrőket a beállításokban.</p>
+            </>
+          )}
           onAction={(action, option) => dispatch({ type: 'decide', day, action, option })}
         />
       ) : (
@@ -294,6 +127,10 @@ export function MealsScreen({
                 </button>
               );
             })}
+            <button type="button" className="button secondary" onClick={() => dispatch({ type: 'startCustom', day })}>
+              <ListChecks size={24} aria-hidden="true" />
+              <span>Saját menük</span>
+            </button>
           </div>
         </div>
       )}

@@ -31,7 +31,8 @@ export function OverviewScreen({
       appName + ' · ' + weekLabel(plan.week),
       ...summary.map(({ day, label, option, status, issue }) => {
         if (!option) return label + ' – ' + status;
-        const dishes = option.dishes.map(dish => dish.code + ' ' + dish.name).join(' + ');
+        const dishes =
+          (option.kind === 'custom' ? 'Saját menü: ' : '') + option.dishes.map(dish => dish.code + ' ' + dish.name).join(' + ');
         return (
           label +
           (day > 5 ? ' (pénteki kiszállítás)' : '') +
@@ -85,27 +86,41 @@ export function OverviewScreen({
               {option ? (
                 <>
                   <span className="review-meals">
-                    {option.dishes.map(dish => {
-                      const singleItem = option.dishes.length === 1;
-                      const name = singleItem ? dish.menuName || dish.name : dish.name;
-                      const components = singleItem && option.components?.length ? option.components : dish.components;
-                      const courseNames = (components?.length ? components.map(course => course.name) : [dish.name]).filter(
-                        course => course && course !== name,
-                      );
-                      return (
-                        <span key={dish.id} className="review-menu">
-                          <span className="meal-code">{dish.code}</span>
-                          <span lang="hu">{name}</span>
-                          {courseNames.length > 0 && (
-                            <span className="review-courses" lang="hu">
-                              {courseNames.map((course, index) => (
-                                <span key={index}>{course}</span>
-                              ))}
+                    {option.kind === 'custom' ? (
+                      <span className="review-menu">
+                        <span lang="hu">Saját menü</span>
+                        <span className="review-courses" lang="hu">
+                          {option.dishes.map(dish => (
+                            <span key={dish.id}>
+                              <span className="meal-code">{dish.code}</span> {dish.name}
                             </span>
-                          )}
+                          ))}
                         </span>
-                      );
-                    })}
+                        {option.custom?.overLimit && <span className="over-limit-note">Kereten felül, engedélyezve</span>}
+                      </span>
+                    ) : null}
+                    {option.kind !== 'custom' &&
+                      option.dishes.map(dish => {
+                        const singleItem = option.dishes.length === 1;
+                        const name = singleItem ? dish.menuName || dish.name : dish.name;
+                        const components = singleItem && option.components?.length ? option.components : dish.components;
+                        const courseNames = (components?.length ? components.map(course => course.name) : [dish.name]).filter(
+                          course => course && course !== name,
+                        );
+                        return (
+                          <span key={dish.id} className="review-menu">
+                            <span className="meal-code">{dish.code}</span>
+                            <span lang="hu">{name}</span>
+                            {courseNames.length > 0 && (
+                              <span className="review-courses" lang="hu">
+                                {courseNames.map((course, index) => (
+                                  <span key={index}>{course}</span>
+                                ))}
+                              </span>
+                            )}
+                          </span>
+                        );
+                      })}
                     {issue && <span className="selection-issue">{issue}</span>}
                   </span>
                   <span className="review-numbers">

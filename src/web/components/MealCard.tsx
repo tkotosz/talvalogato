@@ -23,7 +23,7 @@ interface PhotoCourse {
 }
 
 /** One photo per course: side by side for two courses, a gallery for more. */
-function MealPhotos({
+export function MealPhotos({
   courses,
   coverPhoto,
   children,
@@ -98,34 +98,39 @@ function MealPhotos({
   );
 }
 
-/** A Teletál menu with its courses, calories and price. `target` is the calorie limit, if any. */
+/** A Teletál menu with its courses, or a single dish for a custom-day course, with calories and price. */
 export function MealCard({ option, target }: { option: MenuOption; target: number | null }) {
   const { title, components = [], dishes, kcal, price } = option;
-  const { code, menuName, category, section } = dishes[0]!;
-  const heading = menuName === code ? code : `${code} ${menuName}`;
-  const showGroup = category && category !== menuName;
+  const { code, menuName, category, section, course } = dishes[0]!;
+  // A single dish is named after itself; its Teletál group goes into a tag.
+  const single = Boolean(course);
+  const name = single ? title : menuName;
+  const heading = name === code ? code : `${code} ${name}`;
+  const group = single ? (menuName !== title ? menuName : category) : category;
+  const showGroup = group && group !== name;
   const coverage = menuCoverage.get(code);
+  const listCourses = !single && components.length > 0;
   return (
     <article className="meal-card">
       <MealPhotos courses={components.length ? components : dishes} coverPhoto={option.photo}>
         {showGroup && (
           <div className="meal-tags">
-            <span className="meal-tag tag-group">{normalizeGroupTitle(category, section)}</span>
+            <span className="meal-tag tag-group">{normalizeGroupTitle(group, section)}</span>
           </div>
         )}
       </MealPhotos>
       <div className="meal-content">
         <h2 lang="hu">
           <span className="meal-code">{code}</span>
-          {menuName !== code ? ` ${menuName}` : null}
+          {name !== code ? ` ${name}` : null}
         </h2>
         {coverage && <p className="meal-dish">{coverage}</p>}
-        {!components.length && title !== heading && (
+        {!single && !components.length && title !== heading && (
           <p className="meal-dish" lang="hu">
             {title}
           </p>
         )}
-        {components.length > 0 && (
+        {listCourses && (
           <ul className="course-list" aria-label="A menü fogásai">
             {components.map((part, index) => (
               <li key={index}>
