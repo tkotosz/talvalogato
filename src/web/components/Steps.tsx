@@ -40,6 +40,7 @@ export interface DayAction {
 export function StepBar({
   step,
   disabled,
+  backLabel,
   onBack,
   dayAction,
   nextLabel,
@@ -47,6 +48,8 @@ export function StepBar({
 }: {
   step: Step;
   disabled: boolean;
+  /** The back button's text, when it is not Vissza. */
+  backLabel?: string;
   onBack(): void;
   dayAction: DayAction | null;
   /** The main button's text, when it is not Tovább or Kosárhoz adás. */
@@ -60,7 +63,7 @@ export function StepBar({
       <div className={dayAction && !selectingWeek ? 'step-bar-inner has-day-action' : 'step-bar-inner'}>
         {!selectingWeek && (
           <button type="button" className="button secondary" onClick={onBack}>
-            Vissza
+            {backLabel ?? 'Vissza'}
           </button>
         )}
         {dayAction && (

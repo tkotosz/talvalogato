@@ -98,16 +98,20 @@ export function App() {
         ? { label: 'Nem kérek', onClick: () => dispatch({ type: 'clearCourse', day }) }
         : { label: 'Nap kihagyása', onClick: () => dispatch({ type: 'decide', day, action: 'skip' }) };
 
-  // After a day's decision the meal picker leads on to the next undecided day; otherwise to the overview.
-  const nextDay = view.dayDone ? view.nextDay : undefined;
+  // The meal picker moves through the days in calendar order; inside a custom day, Vissza steps back through its steps.
+  const { previousDay, nextDay } = view;
   const mealsNext =
     nextDay !== undefined
       ? { label: 'Következő nap', go: () => dispatch({ type: 'openDay', day: nextDay }) }
       : { label: 'Áttekintés', go: () => dispatch({ type: 'navigate', step: 'overview' }) };
+  const mealsBack =
+    customStage !== undefined
+      ? { label: 'Vissza', go: backInCustomDay }
+      : previousDay !== undefined
+        ? { label: 'Előző nap', go: () => dispatch({ type: 'openDay', day: previousDay }) }
+        : { label: 'Vissza', go: () => dispatch({ type: 'navigate', step: 'week' }) };
 
-  // Inside a custom day, Vissza steps back through its own steps before leaving the meal picker.
-  function goBack() {
-    if (customStage === undefined) return dispatch({ type: 'navigate', step: step === 'meals' ? 'week' : 'meals' });
+  function backInCustomDay() {
     if (inCourseDeck) return dispatch({ type: 'openStage', day: day!, stage: 'overview' });
     if (customStage === 'overview') return dispatch({ type: 'openStage', day: day!, stage: 'select' });
     dispatch({ type: 'leaveCustom', day: day! });
@@ -174,7 +178,8 @@ export function App() {
         }
         step={step}
         dayAction={dayAction}
-        onBack={goBack}
+        backLabel={step === 'meals' ? mealsBack.label : undefined}
+        onBack={() => (step === 'meals' ? mealsBack.go() : dispatch({ type: 'navigate', step: 'meals' }))}
         onNext={() =>
           step === 'overview'
             ? setDialog('cart')
