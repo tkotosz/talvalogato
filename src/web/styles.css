@@ -1,4 +1,6 @@
 :root {
+  /* The shared content column of the step tabs, every step and the bottom bar. */
+  --column: 720px;
   color-scheme: light;
   font-family:
     'Inter',
@@ -208,7 +210,7 @@ main {
   width: 100%;
 }
 .step-progress {
-  width: min(100% - 26px, 587px);
+  width: min(100% - 26px, var(--column));
   margin: 18px auto 0;
 }
 .step-progress ol {
@@ -297,42 +299,37 @@ main {
 .step-bar[data-step='overview'] .step-bar-inner.has-day-action > :nth-child(2) {
   justify-self: center;
 }
-.setup,
-.step-bar[data-step='week'] {
-  max-width: 1120px;
-  padding-inline: 32px;
-}
 .setup {
   padding-top: 30px;
 }
 .setup-grid {
   display: grid;
-  grid-template-columns: 1.22fr 1fr;
-  align-items: start;
-  gap: 25px;
+  gap: 16px;
 }
 .welcome,
 .settings-card {
   min-width: 0;
   border-radius: 27px;
 }
+/* A banner: the welcome text beside the card illustration. */
 .welcome {
-  min-height: 420px;
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  padding: 33px 36px;
-  background: radial-gradient(ellipse at 76% 99%, #3d624c 0%, transparent 54%), #1b352b;
+  padding: 30px 32px;
+  background: radial-gradient(ellipse at 84% 99%, #3d624c 0%, transparent 54%), #1b352b;
   color: white;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  align-items: center;
+  gap: 12px;
 }
 .welcome-copy {
   position: relative;
   z-index: 2;
 }
 .welcome h1 {
-  font-size: clamp(2.8rem, 5vw, 4.6rem);
+  font-size: clamp(2.4rem, 4.5vw, 3.4rem);
   line-height: 0.98;
   letter-spacing: -0.075em;
   font-weight: 770;
@@ -344,12 +341,10 @@ main {
   font-size: 1.02rem;
 }
 .deck-art {
-  align-self: end;
   justify-self: center;
   width: 100%;
-  height: 230px;
+  height: 210px;
   position: relative;
-  margin-top: 20px;
 }
 .deck-art::before {
   content: '';
@@ -603,12 +598,20 @@ main {
   max-height: min(32dvh, 365px);
 }
 
-/* The meal picker and the overview share the step tabs' column. */
+/* Every step shares the step tabs' column (plus the side padding). */
+.setup,
 .picker,
 .review,
-.step-bar[data-step='meals'],
-.step-bar[data-step='overview'] {
-  max-width: 635px;
+.step-bar {
+  max-width: calc(var(--column) + 48px);
+}
+/* A swipe card keeps its proportions in the wider column. */
+.deck,
+.deck-actions,
+.day-links,
+.nutrition-note {
+  max-width: 587px;
+  margin-inline: auto;
 }
 .picker {
   padding-top: 23px;
@@ -1493,15 +1496,15 @@ button.code-group-title:hover {
 }
 
 @media (max-width: 850px) {
-  .setup,
-  .step-bar[data-step='week'] {
-    padding-inline: 22px;
-  }
   .setup {
     padding-top: 28px;
   }
   .welcome {
+    grid-template-columns: 1fr;
     padding-inline: 25px;
+  }
+  .deck-art {
+    display: none;
   }
   .settings-card {
     padding: 22px;
@@ -1597,7 +1600,7 @@ button.code-group-title:hover {
     box-shadow: 0 -6px 20px #182f280d;
   }
   .step-bar-inner {
-    max-width: 587px;
+    max-width: var(--column);
     margin-inline: auto;
     border: 0;
     padding: 0;
