@@ -101,7 +101,7 @@ export function MealPhotos({
 /** A Teletál menu with its courses, or a single dish for a custom-day course, with calories and price. */
 export function MealCard({ option, target }: { option: MenuOption; target: number | null }) {
   const { title, components = [], dishes, kcal, price } = option;
-  const { code, menuName, category, section, course } = dishes[0]!;
+  const { code, menuName, category, section, course, note } = dishes[0]!;
   // A single dish is named after itself; its Teletál group goes into a tag.
   const single = Boolean(course);
   // A single dish's title leaves out Teletál's parenthesized description, which gets its own line.
@@ -130,6 +130,11 @@ export function MealCard({ option, target }: { option: MenuOption; target: numbe
         {single && dishName.description && (
           <p className="meal-dish" lang="hu">
             {dishName.description}
+          </p>
+        )}
+        {note && (
+          <p className="meal-dish meal-note" lang="hu">
+            {note}
           </p>
         )}
         {!single && !components.length && title !== heading && (
