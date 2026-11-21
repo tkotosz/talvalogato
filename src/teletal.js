@@ -52,11 +52,11 @@ function pendingPool(items, width, task) {
   })).then(() => values);
 }
 
-function classify(section, title, code) {
+function classify(section, title, code, menuName) {
   const key = plain(section);
   const name = plain(title);
   if (/^(menu|vakacio|z10|z11|z12|irn?$)/.test(key)
-    || /^ZR7$|^SU\d$|^Z1[012]$/.test(code)) return 'menu';
+    || /^ZR7$|^SU\d$|^Z1[012]$/.test(code) || /\bmenu\b/.test(plain(menuName))) return 'menu';
   if (key.startsWith('desszert') || code === 'ZR8' || code === 'Z9') return 'dessert';
   if (key === 'leves' || key === 'v1' || name.includes('leves')) return 'soup';
   return 'main';
@@ -94,8 +94,8 @@ function itemsFrom($, section, headings) {
     const titleNodes = card.find('.menu-cell-text-row.uk-text-break, .menu-cell-text-row.uk-text-small, .menu-item-title').first().clone();
     titleNodes.find('br').replaceWith(' / ');
     const name = cleanText(titleNodes.text()).replace(/,\s*\/\s*/g, ' / ').replace(/\s*\/\s*$/, '') || category;
-    const kind = classify(section, name, code);
     const menuName = readMenuName(card) ?? imageMenuNames.get(code) ?? category;
+    const kind = classify(section, name, code, menuName);
     const weekend = card.find('img[title]').toArray().some(img => plain($(img).attr('title')).includes('szombat'));
     return [{ id: `${day}:${type}:${code}`, day, type, code, kind, name, price,
       section, groupId, category: menuName.startsWith('Sulidő ') ? 'Sulidő' : category, cuisine, menuName, weekend, pickerEligible }];
@@ -220,11 +220,11 @@ function readComponents($) {
     const photo = images.toArray().map(image => photoUrl($(image))).find(Boolean) ?? null;
     return {
       name: cleanText(heading.text()),
-      kcal: Number(value.replace(/kcal\s*$/i, '').trim().replaceAll(',', '')),
+      kcal: Number(value.replace(/kcal\s*$/i, '').trim().replaceAll(',', '') || NaN),
       kind: courseKinds.get(label),
       photo,
     };
-  }).filter(component => Number.isFinite(component.kcal) && component.kcal > 0);
+  }).filter(component => Number.isFinite(component.kcal) && component.kcal >= 0);
 }
 
 export async function nutritionFor(key, ids) {

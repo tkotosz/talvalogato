@@ -55,7 +55,7 @@ function CodeGroup({ group, excluded, setIncluded, searching }) {
   </li>;
 }
 
-export function CodeFilter({ week, excludedCodes, onChange, onClose }) {
+export function CodeFilter({ week, excludedCodes, onChange }) {
   const [query, setQuery] = useState('');
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState({ phase: 'loading' });
@@ -88,7 +88,8 @@ export function CodeFilter({ week, excludedCodes, onChange, onClose }) {
     <label className="code-search">
       <Search size={17} aria-hidden="true" />
       <input type="search" aria-label="Keresés az ételkódok között" placeholder="Kód, csoport vagy menünév"
-        value={query} onChange={event => setQuery(event.target.value)} />
+        value={query} onChange={event => setQuery(event.target.value)}
+        onKeyDown={event => { if (event.key === 'Enter') event.preventDefault(); }} />
     </label>
     <div className="code-filter-results">
       {excluded.size > 0 && <p className="excluded-codes"><strong>Kizárt kódok</strong> {excludedCodes.join(', ')}</p>}
@@ -104,7 +105,6 @@ export function CodeFilter({ week, excludedCodes, onChange, onClose }) {
     </div>
     <div className="modal-actions code-filter-actions">
       <button type="button" className="text-button" disabled={!excluded.size} onClick={() => onChange([])}>Kizárások törlése</button>
-      <button type="button" className="button primary" onClick={onClose}>Kész</button>
     </div>
   </>;
 }

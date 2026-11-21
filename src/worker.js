@@ -3,7 +3,7 @@ import { menuCatalog, nutritionFor, publishedWeeks } from './teletal.js';
 import { mondayOfWeek } from './weeks.js';
 
 const menuRequests = new Map();
-const seconds = { weeks: 300, menu: 600, nutrition: 21_600 };
+const seconds = { weeks: 300, menu: 3_600, nutrition: 21_600 };
 const detailsPattern = /^[1-5]:[1-9]:[A-Z0-9][A-Z0-9-]{0,15}$/;
 const decodingBytes = encoded => Uint8Array.from(atob(encoded), char => char.charCodeAt(0));
 
@@ -46,6 +46,9 @@ async function serveApi(request, url, ctx) {
     if (!mondayOfWeek(week)) return Response.json({ error: 'Válassz a közzétett hetek közül.' }, { status: 400 });
 
     if (url.pathname === '/api/menu') {
+      if (url.searchParams.get('recheck') === '1') {
+        return Response.json(await menuCatalog(week), { headers: { 'Cache-Control': 'no-store' } });
+      }
       return await cachedJson(request, ctx, seconds.menu, () => getCatalog(week));
     }
     if (url.pathname === '/api/nutrition') {

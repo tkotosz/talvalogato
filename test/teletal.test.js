@@ -37,7 +37,8 @@ test('catalog entries follow the website order and preserve names for all menu c
     Menü: row('R', 'EXTRA MENÜ') + row('P', 'MENÜ 1', 2),
     Vakáció: row('SU1', '<img src="/hirkep/sulido1_100.png">'),
     Savanyúság: row('W1', 'Savanyúság') + row('W2', 'Savanyúság', 6),
-    CzanikBalazs: row('Z1', 'Balázsfitness', 1) + row('Z2', 'Balázsfit<br><font>(csökkentett mennyiség:<br> max. 30 dkg)</font>'),
+    CzanikBalazs: row('Z1', 'Balázsfitness', 1) + row('Z2', 'Balázsfit<br><font>(csökkentett mennyiség:<br> max. 30 dkg)</font>')
+      + row('Z5', 'OFFICE MENÜ'),
     Z10: row('Z10', ''),
     Z11: row('Z11', ''),
     IR: row('IR', ''),
@@ -66,6 +67,7 @@ test('catalog entries follow the website order and preserve names for all menu c
     ['W2', 'Savanyúság', 'Savanyúság', 'Savanyúság', 'Hagyományos konyha'],
     ['Z1', 'CzanikBalazs', 'Balázsfitness', 'Czanik Balázs fitness edző ajánlata', null],
     ['Z2', 'CzanikBalazs', 'Balázsfit (csökkentett mennyiség: max. 30 dkg)', 'Czanik Balázs fitness edző ajánlata', null],
+    ['Z5', 'CzanikBalazs', 'Office Menü', 'Czanik Balázs fitness edző ajánlata', null],
     ['Z10', 'Z10', 'Full Day menü', 'Full Day menü', null],
     ['Z11', 'Z11', '8/16 időszakos böjt menü', '8/16 időszakos böjt menü', null],
     ['IR', 'IR', 'Inzulinrezisztens menü (85 g CH/nap)', 'Inzulinrezisztens menü (85 g CH/nap)', null],
@@ -78,6 +80,7 @@ test('catalog entries follow the website order and preserve names for all menu c
   ]);
   assert.deepEqual(catalog.filter(dish => dish.groupId === 'Vega & vegán').map(({ code }) => code), ['TVE1', 'TV2', 'TVE5', 'TV7']);
   assert.deepEqual(catalog.filter(dish => !dish.pickerEligible).map(({ code }) => code), ['ZK', 'W1', 'W2', 'NF1']);
+  assert.equal(catalog.find(dish => dish.code === 'Z5').kind, 'menu');
   assert.ok(catalog.every(({ name, price }) => name === 'Leves / Főétel' && price === 1990));
 });
 
@@ -95,11 +98,12 @@ test('menu photos stay with their own courses when a course has no photo', async
     <h2>Hétfő: Q (3) desszert</h2>
     <h1 class="uk-article-title">Desszert</h1>
     <img src="/etel_kepek/dessert.jpg">
-    <span class="en_adag">180 kcal</span>
+    <span class="en_adag">0 kcal</span>
   `));
 
   const [menu] = await nutritionFor('2026-W48', ['1:1:Q']);
-  assert.equal(menu.kcal, 830);
+  assert.equal(menu.kcal, 650);
+  assert.equal(menu.components[2].kcal, 0);
   assert.deepEqual(menu.components.map(({ kind, photo }) => [kind, photo]), [
     ['soup', `${teletal}/etel_kepek/soup.jpg`],
     ['main', null],

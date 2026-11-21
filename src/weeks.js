@@ -33,9 +33,29 @@ export function dateForSlot(week, day) {
   return addDays(mondayOfWeek(week), day - 1);
 }
 
+export function sourceDay(day) {
+  return Math.min(day, 5);
+}
+
+export function eligibleDays(week, now = new Date(), deliveryDays) {
+  const monday = mondayOfWeek(week);
+  if (!monday) return [];
+  const earliest = addDays(todayInBudapest(now), 2);
+  return [1, 2, 3, 4, 5, 6, 7].filter(day => {
+    const deliveryDay = sourceDay(day);
+    return addDays(monday, deliveryDay - 1) >= earliest && (!deliveryDays || deliveryDays.has(deliveryDay));
+  });
+}
+
+export function upcomingWeeks(weeks, now = new Date()) {
+  return weeks.filter(week => eligibleDays(week.key, now).length > 0)
+    .sort((a, b) => a.key.localeCompare(b.key));
+}
+
 export function defaultWeek(weeks, now = new Date()) {
   const next = isoWeek(addDays(todayInBudapest(now), 7));
-  return weeks.find(week => week.key >= next)?.key ?? weeks.at(-1)?.key;
+  const upcoming = upcomingWeeks(weeks, now);
+  return upcoming.find(week => week.key === next)?.key ?? upcoming[0]?.key ?? '';
 }
 
 const shortDate = new Intl.DateTimeFormat('hu-HU', { day: 'numeric', month: 'short', timeZone: 'UTC' });
