@@ -124,6 +124,10 @@ export function WeekScreen({
           )}
         </form>
       </div>
+      <p className="unofficial-notice">
+        Nem hivatalos alkalmazás, nem áll kapcsolatban a <span>Teletál Ételfutár Kft.-vel</span>. Az étlap és az ételek képei a
+        Teletál tulajdonai.
+      </p>
     </main>
   );
 }
