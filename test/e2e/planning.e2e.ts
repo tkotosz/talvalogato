@@ -274,3 +274,57 @@ test('a calorie limit hides what does not fit and lets the user go over for a co
   assert.equal(await page.getByRole('button', { name: 'Kosárhoz adás' }).isDisabled(), false);
   assert.deepEqual(errors, []);
 });
+
+test('a generated day offers whole menus within the calorie limit, and Vissza returns to the components', async () => {
+  const { page, errors } = await openPlanner();
+  await page.getByRole('button', { name: 'Beállítások' }).click();
+  await page.getByLabel('Napi kalóriakeret').check();
+  await page.locator('#target').fill('1500');
+  await page.locator('#tolerance').fill('0');
+  await page.getByRole('button', { name: 'Mentés' }).click();
+  await page.locator('dialog[open]').waitFor({ state: 'detached' });
+  await page.getByRole('button', { name: 'Válogatás indítása' }).click();
+
+  await page.getByRole('button', { name: 'Menü generálása' }).click();
+  await page.locator('.course-choices-grid').getByRole('button', { name: 'Desszert' }).click();
+  await page.locator('.custom-step').getByRole('button', { name: 'Tovább' }).click();
+  const card = page.locator('.swipe-card');
+  await card.waitFor();
+  assert.match(await card.innerText(), /Generált menü/);
+  const dishCount = await card.locator('.course-list li').count();
+  assert.equal(dishCount, 3, 'soup, main and dessert');
+  await page.screenshot({ path: `${screenshots}generated.png`, fullPage: true });
+
+  // Each rejected menu is replaced by another one that still fits the limit.
+  const menus = new Set<string>();
+  for (let round = 0; round < 4; round++) {
+    const text = (await card.locator('.course-list').textContent()) ?? '';
+    menus.add(text);
+    const kcal = Number((await card.locator('.calorie-badge').innerText()).replace(/[^\d,]/g, '').replace(',', '.'));
+    assert.ok(kcal <= 1500, `${kcal} kcal fits the 1500 kcal limit`);
+    await page.getByRole('button', { name: 'Másikat kérek' }).click();
+    await page.waitForFunction(before => document.querySelector('.swipe-card .course-list')?.textContent !== before, text);
+  }
+  assert.equal(menus.size, 4);
+
+  // Vissza returns to the components; a new selection generates a new menu.
+  await page.locator('.step-bar').getByRole('button', { name: 'Vissza' }).click();
+  await page.locator('.course-choices-grid').getByRole('button', { name: 'Desszert' }).click();
+  await page.locator('.custom-step').getByRole('button', { name: 'Tovább' }).click();
+  await card.waitFor();
+  assert.equal(await card.locator('.course-list li').count(), 2);
+
+  const day = (await currentDay(page))?.split(',')[0] ?? '';
+  const accepted = await card.locator('.course-list').innerText();
+  await page.getByRole('button', { name: 'Kiválasztom' }).click();
+  await page.locator(`.week-progress button[aria-label="${day}, étel kiválasztva"]`).waitFor();
+  await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
+  const row = page.locator('.review-row', { hasText: 'Saját menü' });
+  await row.waitFor();
+  assert.equal(await row.locator('.review-item').count(), 2);
+  for (const line of accepted.split('\n').filter(part => /^[A-Z0-9]+$/.test(part.trim()))) {
+    assert.match(await row.innerText(), new RegExp(line.trim()));
+  }
+  await page.screenshot({ path: `${screenshots}generated-overview.png`, fullPage: true });
+  assert.deepEqual(errors, []);
+});

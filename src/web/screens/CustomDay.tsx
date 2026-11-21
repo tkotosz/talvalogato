@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Check, ChevronRight, Flame, Minus, Plus } from 'lucide-react';
-import { courseNames, extraCourses, mainCourses } from '../../core/courses.ts';
+import { courseNames, extraCourses, isCourse, mainCourses } from '../../core/courses.ts';
 import { courseDeck, pickedDishes, remainingCalories, totalCalories } from '../../core/custom.ts';
 import type { PlannerAction } from '../../core/planner.ts';
 import { calorieLimit, dayCandidates } from '../../core/planning.ts';
 import type { Dish, CustomCourse, CustomDraft, Day, Plan, Preferences } from '../../core/types.ts';
+import { GeneratedDeck } from '../components/GeneratedDeck.tsx';
 import { SwipeDeck } from '../components/SwipeDeck.tsx';
 import { calories, money } from '../format.ts';
 
@@ -114,7 +115,10 @@ function MenuOverview({
   );
 }
 
-/** The custom-day flow for the plan's day: the component selection, the menu overview, and one deck per component. */
+/**
+ * The custom-day flow for the plan's day: the component selection, then the menu overview and one deck per component, or
+ * on a generated day the generated menus.
+ */
 export function CustomDay({
   plan,
   day,
@@ -134,6 +138,19 @@ export function CustomDay({
   if (stage === 'select') {
     return <CourseSelection draft={draft} onDone={courses => dispatch({ type: 'setCourses', day, courses })} />;
   }
+  if (stage === 'generated') {
+    return (
+      <GeneratedDeck
+        day={day}
+        draft={draft}
+        catalog={catalog}
+        preferences={preferences}
+        onAccept={() => dispatch({ type: 'acceptGenerated', day })}
+        onReject={() => dispatch({ type: 'rejectGenerated', day })}
+        onChangeCourses={() => dispatch({ type: 'openStage', day, stage: 'select' })}
+      />
+    );
+  }
   if (stage === 'overview') {
     return (
       <MenuOverview
@@ -145,6 +162,7 @@ export function CustomDay({
       />
     );
   }
+  if (!isCourse(stage)) return null;
   return (
     <CourseDeck
       key={stage}

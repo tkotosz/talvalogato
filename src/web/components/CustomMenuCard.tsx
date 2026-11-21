@@ -3,8 +3,17 @@ import type { MenuOption } from '../../core/types.ts';
 import { calories, money } from '../format.ts';
 import { MealPhotos } from './MealCard.tsx';
 
-/** A saved custom day: its dishes with their Teletál codes, and the totals. */
-export function CustomMenuCard({ option, target }: { option: MenuOption; target: number | null }) {
+/** A custom day, saved or generated: its dishes with their Teletál codes, and the totals. */
+export function CustomMenuCard({
+  option,
+  target,
+  generated = false,
+}: {
+  option: MenuOption;
+  target: number | null;
+  /** A menu the app put together and the user has not accepted yet. */
+  generated?: boolean;
+}) {
   const { dishes, kcal, price } = option;
   const overTarget = target !== null && kcal !== null && kcal > target;
   return (
@@ -12,7 +21,15 @@ export function CustomMenuCard({ option, target }: { option: MenuOption; target:
       <MealPhotos courses={dishes} coverPhoto={option.photo} />
       <div className="meal-content">
         <h2 lang="hu">
-          <span className="meal-code">SM</span> Saját menü
+          {generated ? (
+            <>
+              <span className="meal-code">GM</span> Generált menü
+            </>
+          ) : (
+            <>
+              <span className="meal-code">SM</span> Saját menü
+            </>
+          )}
         </h2>
         <ul className="course-list" aria-label="A menü fogásai">
           {dishes.map(dish => (

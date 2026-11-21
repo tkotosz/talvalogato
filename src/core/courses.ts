@@ -22,3 +22,8 @@ export const courseNames: Record<CustomCourse, string> = {
 export function normalizeCourses(selection: unknown): CustomCourse[] {
   return Array.isArray(selection) ? allCourses.filter(course => selection.includes(course)) : [];
 }
+
+/** Whether a custom-day stage is one component's deck. */
+export function isCourse(stage: string): stage is CustomCourse {
+  return (allCourses as string[]).includes(stage);
+}

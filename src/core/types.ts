@@ -97,8 +97,14 @@ export interface CustomChoice {
   overLimit: boolean;
 }
 
-/** Where the custom-day flow is: the component selection, the menu overview, or a component's deck. */
-export type CustomStage = 'select' | 'overview' | CustomCourse;
+/** Where the custom-day flow is: the component selection, the menu overview, a component's deck, or a generated menu. */
+export type CustomStage = 'select' | 'overview' | CustomCourse | 'generated';
+
+/** What a generated day needs to continue: the random sequence and how often each dish was offered, by dish ID. */
+export interface Generator {
+  seed: number;
+  shown: Record<string, number>;
+}
 
 /** A custom day in progress. */
 export interface CustomDraft {
@@ -108,6 +114,8 @@ export interface CustomDraft {
   picks: Partial<Record<CustomCourse, Dish>>;
   /** Components whose deck shows dishes beyond the calorie limit. */
   overLimit: CustomCourse[];
+  /** Set when the app generates whole menus for this day instead of the user picking each dish. */
+  generator?: Generator;
 }
 
 export interface DayDraft {
