@@ -4,11 +4,11 @@ import { courseNames, extraCourses, mainCourses } from '../../core/courses.ts';
 import { courseDeck, pickedDishes, remainingCalories, totalCalories } from '../../core/custom.ts';
 import type { PlannerAction } from '../../core/planner.ts';
 import { calorieLimit, dayCandidates } from '../../core/planning.ts';
-import type { CatalogDish, CustomCourse, CustomDraft, Day, Plan, Preferences } from '../../core/types.ts';
+import type { Dish, CustomCourse, CustomDraft, Day, Plan, Preferences } from '../../core/types.ts';
 import { SwipeDeck } from '../components/SwipeDeck.tsx';
 import { calories, money } from '../format.ts';
 
-const courseNouns = { checked: 'étel', missing: 'ételhez', again: 'Ételek újranézése' };
+const courseNouns = { missing: 'ételhez', again: 'Ételek újranézése' };
 
 /** Toggle buttons for a group of components. */
 function CourseChoices({
@@ -126,7 +126,7 @@ export function CustomDay({
   plan: Plan;
   day: Day;
   draft: CustomDraft;
-  catalog: CatalogDish[];
+  catalog: Dish[];
   preferences: Preferences;
   dispatch(action: PlannerAction): void;
 }) {
@@ -172,7 +172,7 @@ function CourseDeck({
   day: Day;
   course: CustomCourse;
   draft: CustomDraft;
-  catalog: CatalogDish[];
+  catalog: Dish[];
   preferences: Preferences;
   dispatch(action: PlannerAction): void;
 }) {
@@ -191,7 +191,6 @@ function CourseDeck({
       <SwipeDeck
         plan={plan}
         day={day}
-        deckKey={`course:${course}`}
         candidates={candidates}
         buildOptions={loaded => courseDeck(loaded, course, draft, preferences).options}
         target={remaining}

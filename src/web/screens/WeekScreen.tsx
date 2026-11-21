@@ -1,8 +1,9 @@
 import { CalendarDays, Check, ChevronDown, Soup, Utensils } from 'lucide-react';
 import type { PlannerAction, PlannerView } from '../../core/planner.ts';
-import type { CatalogDish, PublishedWeek, WeekKey } from '../../core/types.ts';
+import type { Dish, PublishedWeek, WeekKey } from '../../core/types.ts';
 import { weekOptionLabel } from '../../core/weeks.ts';
 import { DayChoices } from '../components/DayChoices.tsx';
+import { sinceLabel } from '../format.ts';
 import type { Loadable } from '../useLoad.ts';
 import { useMediaQuery } from '../useMediaQuery.ts';
 
@@ -11,6 +12,7 @@ export function WeekScreen({
   view,
   weeks,
   weekError,
+  menuUpdatedAt,
   catalog,
   dispatch,
   onRetryWeeks,
@@ -19,7 +21,9 @@ export function WeekScreen({
   view: PlannerView;
   weeks: PublishedWeek[];
   weekError: string;
-  catalog: Loadable<CatalogDish[]>;
+  /** When the menu data was last refreshed, or null while it loads. */
+  menuUpdatedAt: string | null;
+  catalog: Loadable<Dish[]>;
   dispatch(action: PlannerAction): void;
   onRetryWeeks(): void;
   onRetryCatalog(): void;
@@ -87,6 +91,7 @@ export function WeekScreen({
             </select>
             <ChevronDown size={18} aria-hidden="true" />
           </div>
+          {menuUpdatedAt && <p className="menu-updated">Étlap frissítve: {sinceLabel(menuUpdatedAt)}</p>}
           {week && (
             <DayChoices
               label="Rendelési napok"

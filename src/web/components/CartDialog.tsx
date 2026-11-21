@@ -2,12 +2,10 @@ import { useState } from 'react';
 import { Bookmark, ShoppingBasket } from 'lucide-react';
 import { deliveryDays } from '../../core/planner.ts';
 import { orderSummary } from '../../core/planning.ts';
-import type { CartLine, CatalogDish, Plan, Preferences } from '../../core/types.ts';
+import type { CartLine, Dish, Plan, Preferences } from '../../core/types.ts';
 import { eligibleDays } from '../../core/weeks.ts';
 import { maxCartLines, shortcutUrl, teletalWeekUrl } from '../cart-shortcut.ts';
 import { copyText } from '../format.ts';
-import { loadMenuCatalog } from '../menu-client.ts';
-import { useLoad } from '../useLoad.ts';
 
 function CartInstructions({ plan, lines }: { plan: Plan; lines: CartLine[] }) {
   const url = teletalWeekUrl(plan, lines);
@@ -75,34 +73,19 @@ function CartInstructions({ plan, lines }: { plan: Plan; lines: CartLine[] }) {
   );
 }
 
-/** Rechecks the week's menu with Teletál, then explains how to send the orderable picks to the cart. */
+/** Explains how to send the week's orderable picks to the Teletál cart. */
 export function CartDialogContent({
   plan,
+  catalog,
   preferences,
-  onCatalog,
 }: {
   plan: Plan;
+  /** The week's dishes as last published. */
+  catalog: Dish[];
   preferences: Preferences;
-  /** Receives the rechecked catalog, so the overview shows current availability too. */
-  onCatalog(catalog: CatalogDish[]): void;
 }) {
-  const { state, retry } = useLoad(plan.week, async signal => {
-    const catalog = await loadMenuCatalog(plan.week, signal, true);
-    if (!signal.aborted) onCatalog(catalog);
-    return orderSummary(plan, eligibleDays(plan.week, new Date(), deliveryDays(catalog)), catalog, preferences);
-  });
-
-  if (state.phase === 'loading') return <p role="status">Rendelhető tételek ellenőrzése…</p>;
-  if (state.phase === 'error')
-    return (
-      <p role="alert">
-        {state.message}{' '}
-        <button type="button" className="text-button" onClick={retry}>
-          Újra
-        </button>
-      </p>
-    );
-  const { lines, issues } = state.value;
+  // The bookmark reads Teletál's cart afterwards and reports anything that did not arrive.
+  const { lines, issues } = orderSummary(plan, eligibleDays(plan.week, new Date(), deliveryDays(catalog)), catalog, preferences);
   if (!lines.length) return <p role="status">A választásaid közül jelenleg egyik sem küldhető a kosárba.</p>;
   if (lines.length > maxCartLines) {
     return (

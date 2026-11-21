@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { SlidersHorizontal, Smartphone, Utensils } from 'lucide-react';
 import { initialPlanner, plannerView, reducePlanner, type PlannerAction, type PlannerContext } from '../core/planner.ts';
-import type { CatalogDish, PublishedWeek } from '../core/types.ts';
+import type { Dish } from '../core/types.ts';
 import { upcomingWeeks } from '../core/weeks.ts';
 import { CartDialogContent } from './components/CartDialog.tsx';
 import { InstallButton } from './components/InstallButton.tsx';
@@ -9,7 +9,7 @@ import { Modal } from './components/Modal.tsx';
 import { PreferencesForm } from './components/PreferencesForm.tsx';
 import { StepBar, StepProgress, type DayAction } from './components/Steps.tsx';
 import { appName } from './format.ts';
-import { loadJson, loadMenuCatalog } from './menu-client.ts';
+import { loadMenuCatalog, loadMenuWeeks } from './menu-client.ts';
 import { MealsScreen } from './screens/MealsScreen.tsx';
 import { OverviewScreen } from './screens/OverviewScreen.tsx';
 import { StatusScreen } from './screens/StatusScreen.tsx';
@@ -28,8 +28,9 @@ export function App() {
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [notice, setNotice] = useState('');
 
-  const published = useLoad('weeks', signal => loadJson<PublishedWeek[]>('/api/weeks', signal));
-  const publishedWeeks = published.state.phase === 'ready' ? published.state.value : [];
+  const published = useLoad('weeks', signal => loadMenuWeeks(signal));
+  const publishedWeeks = published.state.phase === 'ready' ? published.state.value.weeks : [];
+  const menuUpdatedAt = published.state.phase === 'ready' ? published.state.value.updatedAt : null;
   const weeks = upcomingWeeks(publishedWeeks, calendarNow);
   const weekError =
     published.state.phase === 'error'
@@ -43,7 +44,7 @@ export function App() {
   // The catalog depends on the active week, which does not depend on the catalog.
   const week = plannerView(planner, { weeks, catalog: null, now: calendarNow }).week;
   const catalog = useLoad(week || null, signal => loadMenuCatalog(week, signal));
-  const catalogItems: CatalogDish[] | null = catalog.state.phase === 'ready' ? catalog.state.value : null;
+  const catalogItems: Dish[] | null = catalog.state.phase === 'ready' ? catalog.state.value : null;
   const view = plannerView(planner, { weeks, catalog: catalogItems, now: calendarNow });
   const { step, preferences } = planner;
   const { day, eligible, availableDays, order } = view;
@@ -144,6 +145,7 @@ export function App() {
           view={view}
           weeks={weeks}
           weekError={weekError}
+          menuUpdatedAt={menuUpdatedAt}
           catalog={catalog.state}
           dispatch={dispatch}
           onRetryWeeks={published.retry}
@@ -238,7 +240,7 @@ export function App() {
       )}
       {dialog === 'cart' && (
         <Modal name="Ételek küldése a Teletál-kosárba" onClose={closeDialog}>
-          <CartDialogContent plan={view.plan} preferences={preferences} onCatalog={catalog.replace} />
+          {catalogItems && <CartDialogContent plan={view.plan} catalog={catalogItems} preferences={preferences} />}
         </Modal>
       )}
       {notice && (
