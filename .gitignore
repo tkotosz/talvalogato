@@ -3,3 +3,4 @@ dist/
 pages-dist/
 .wrangler/
 .openai/.cache/
+test/e2e/screenshots/
