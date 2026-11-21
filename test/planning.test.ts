@@ -15,7 +15,16 @@ import {
   withDetails,
 } from '../src/core/planning.ts';
 import type { Course, CourseKind, Dish, MenuOption } from '../src/core/types.ts';
-import { dayLabel, defaultWeek, eligibleDays, mondayOfWeek, sourceDay, upcomingWeeks, weekLabel } from '../src/core/weeks.ts';
+import {
+  dayLabel,
+  defaultWeek,
+  eligibleDays,
+  longWeekLabel,
+  mondayOfWeek,
+  sourceDay,
+  upcomingWeeks,
+  weekLabel,
+} from '../src/core/weeks.ts';
 
 const week = '2026-W48';
 const allDays = [1, 2, 3, 4, 5, 6, 7];
@@ -290,6 +299,9 @@ test('day and week labels use Hungarian dates, including weeks across two months
   assert.equal(dayLabel(week, 1), 'november 23.');
   assert.equal(weekLabel(week), 'nov. 23–29.');
   assert.equal(weekLabel('2026-W49').replace(/\s+/g, ' '), 'nov. 30. – dec. 6.');
+  assert.equal(longWeekLabel(week), 'november 23–29.');
+  assert.equal(longWeekLabel('2026-W49').replace(/\s+/g, ' '), 'november 30. – december 6.');
+  assert.equal(longWeekLabel('2026-W53').replace(/\s+/g, ' '), '2026. december 28. – 2027. január 3.');
 });
 
 test("dish details keep the brief names of Teletál's menu page, with calories and photos from the dish page", () => {

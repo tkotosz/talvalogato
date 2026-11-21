@@ -1,7 +1,7 @@
 import { CalendarDays, Check, ChevronDown, Soup, Utensils } from 'lucide-react';
 import type { PlannerAction, PlannerView } from '../../core/planner.ts';
 import type { CatalogDish, PublishedWeek, WeekKey } from '../../core/types.ts';
-import { weekLabel } from '../../core/weeks.ts';
+import { longWeekLabel } from '../../core/weeks.ts';
 import { DayChoices } from '../components/DayChoices.tsx';
 import type { Loadable } from '../useLoad.ts';
 
@@ -75,7 +75,7 @@ export function WeekScreen({
               {!week && <option value="">{weekError ? 'A hetek nem érhetők el' : 'Hetek betöltése…'}</option>}
               {weeks.map(({ key }) => (
                 <option key={key} value={key}>
-                  {weekLabel(key)}
+                  {longWeekLabel(key)}
                 </option>
               ))}
             </select>
