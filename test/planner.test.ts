@@ -177,7 +177,7 @@ test('day choices apply to the plan of the same week and are kept per week other
   assert.deepEqual(plannerView(state, context).selectedDays, [1, 2]);
 });
 
-test('resetting the week keeps its day choices and clears its decisions', () => {
+test('resetting the week keeps its day choices, clears its decisions and returns to the week screen', () => {
   const state = run(
     initialPlanner(null, newPreferences),
     { type: 'navigate', step: 'meals' },
@@ -189,4 +189,15 @@ test('resetting the week keeps its day choices and clears its decisions', () => 
   assert.deepEqual(state.plan?.slots, {});
   assert.deepEqual(state.plan?.selectedDays, [3, 4]);
   assert.equal(plannerView(state, context).hasSavedProgress, false);
+  assert.equal(state.step, 'week');
+
+  const fromOverview = run(
+    initialPlanner(null, newPreferences),
+    { type: 'navigate', step: 'meals' },
+    { type: 'decide', day: 3, action: 'skip' },
+    { type: 'navigate', step: 'overview' },
+    { type: 'resetWeek' },
+  );
+  assert.equal(fromOverview.step, 'week');
+  assert.deepEqual(fromOverview.plan?.slots, {});
 });

@@ -223,8 +223,15 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
       return { ...state, pendingNewPlan: null };
 
     case 'resetWeek':
+      // Starting over clears the week's decisions and returns to the week screen.
       if (state.plan?.week !== week) return state;
-      return { ...state, plan: startPlan(week, null, state.plan.selectedDays), editingDay: null };
+      return {
+        ...state,
+        plan: startPlan(week, null, state.plan.selectedDays),
+        editingDay: null,
+        step: 'week',
+        selectedWeek: week,
+      };
 
     case 'openDay':
       return openDay(action.day, action.edit === true);
