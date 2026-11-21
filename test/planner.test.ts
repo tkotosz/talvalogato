@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  initialPlanner, plannerView, reducePlanner, type PlannerAction, type PlannerContext, type PlannerState,
+  initialPlanner,
+  plannerView,
+  reducePlanner,
+  type PlannerAction,
+  type PlannerContext,
+  type PlannerState,
 } from '../src/core/planner.ts';
 import { mealOptions, newPreferences, startPlan } from '../src/core/planning.ts';
 import type { CatalogDish, Day, Dish } from '../src/core/types.ts';
@@ -11,8 +16,23 @@ const now = new Date('2026-11-21T10:00:00Z');
 const weeks = [{ key: '2026-W48' }, { key: '2026-W49' }];
 
 function menu(day: Day, code: string): Dish {
-  return { id: `${day}:1:${code}`, day, type: 1, code, kind: 'menu', name: `Menu ${code}`, price: 1500, section: 'Menü',
-    groupId: 'Menü', category: 'Menü', cuisine: null, menuName: `Menü ${code}`, weekend: false, pickerEligible: true, kcal: 900 };
+  return {
+    id: `${day}:1:${code}`,
+    day,
+    type: 1,
+    code,
+    kind: 'menu',
+    name: `Menu ${code}`,
+    price: 1500,
+    section: 'Menü',
+    groupId: 'Menü',
+    category: 'Menü',
+    cuisine: null,
+    menuName: `Menü ${code}`,
+    weekend: false,
+    pickerEligible: true,
+    kcal: 900,
+  };
 }
 // Teletál already closed Monday and Tuesday, so the orderable days are Wednesday to Sunday.
 const catalog: CatalogDish[] = [3, 4, 5].map(day => menu(day, 'P'));
@@ -36,8 +56,11 @@ test('the week screen recommends next week and opening it starts a plan on the f
 });
 
 test('returning to the week screen and back resumes the same week', () => {
-  let state = run(initialPlanner(null, newPreferences), { type: 'navigate', step: 'meals' },
-    { type: 'decide', day: 3, action: 'right', option: pick(3) });
+  let state = run(
+    initialPlanner(null, newPreferences),
+    { type: 'navigate', step: 'meals' },
+    { type: 'decide', day: 3, action: 'right', option: pick(3) },
+  );
   const planId = state.plan?.id;
   state = run(state, { type: 'navigate', step: 'week' });
   assert.equal(state.selectedWeek, '2026-W48');
@@ -48,8 +71,13 @@ test('returning to the week screen and back resumes the same week', () => {
 });
 
 test('starting another week asks before replacing a plan with progress', () => {
-  const started = run(initialPlanner(null, newPreferences), { type: 'navigate', step: 'meals' },
-    { type: 'decide', day: 3, action: 'skip' }, { type: 'navigate', step: 'week' }, { type: 'chooseWeek', week: '2026-W49' });
+  const started = run(
+    initialPlanner(null, newPreferences),
+    { type: 'navigate', step: 'meals' },
+    { type: 'decide', day: 3, action: 'skip' },
+    { type: 'navigate', step: 'week' },
+    { type: 'chooseWeek', week: '2026-W49' },
+  );
   const asking = run(started, { type: 'navigate', step: 'meals' });
   assert.deepEqual(asking.pendingNewPlan, { week: '2026-W49', step: 'meals' });
   assert.equal(asking.step, 'week');
@@ -65,8 +93,10 @@ test('starting another week asks before replacing a plan with progress', () => {
 });
 
 test('a plan without progress is replaced without asking', () => {
-  const state = run({ ...initialPlanner(startPlan('2026-W48', 3), newPreferences), selectedWeek: '2026-W49' },
-    { type: 'navigate', step: 'meals' });
+  const state = run(
+    { ...initialPlanner(startPlan('2026-W48', 3), newPreferences), selectedWeek: '2026-W49' },
+    { type: 'navigate', step: 'meals' },
+  );
   assert.equal(state.pendingNewPlan, null);
   assert.equal(state.plan?.week, '2026-W49');
 });
@@ -78,13 +108,24 @@ test('the overview opens after the last orderable day has a decision', () => {
   state = run(state, { type: 'decide', day: 7, action: 'skip' });
   assert.equal(state.step, 'overview');
   const { order } = plannerView(state, context);
-  assert.deepEqual(order?.lines.map(({ day, code, quantity }) => [day, code, quantity]), [[3, 'P', 1], [4, 'P', 1], [5, 'P', 2]]);
+  assert.deepEqual(
+    order?.lines.map(({ day, code, quantity }) => [day, code, quantity]),
+    [
+      [3, 'P', 1],
+      [4, 'P', 1],
+      [5, 'P', 2],
+    ],
+  );
 });
 
 test('a finished day opens from the overview and is replaced only when the user confirms', () => {
-  let state = run(initialPlanner(null, newPreferences), { type: 'navigate', step: 'meals' },
-    { type: 'decide', day: 3, action: 'right', option: pick(3) }, { type: 'navigate', step: 'overview' },
-    { type: 'openDay', day: 3 });
+  let state = run(
+    initialPlanner(null, newPreferences),
+    { type: 'navigate', step: 'meals' },
+    { type: 'decide', day: 3, action: 'right', option: pick(3) },
+    { type: 'navigate', step: 'overview' },
+    { type: 'openDay', day: 3 },
+  );
   assert.equal(state.step, 'meals');
   assert.equal(plannerView(state, context).dayDone, true);
 
@@ -101,8 +142,13 @@ test('a finished day opens from the overview and is replaced only when the user 
 });
 
 test('Vissza targets: the meal picker returns to the week screen and the overview reopens the first day', () => {
-  let state = run(initialPlanner(null, newPreferences), { type: 'navigate', step: 'meals' },
-    { type: 'decide', day: 3, action: 'skip' }, { type: 'decide', day: 4, action: 'skip' }, { type: 'navigate', step: 'overview' });
+  let state = run(
+    initialPlanner(null, newPreferences),
+    { type: 'navigate', step: 'meals' },
+    { type: 'decide', day: 3, action: 'skip' },
+    { type: 'decide', day: 4, action: 'skip' },
+    { type: 'navigate', step: 'overview' },
+  );
   state = run(state, { type: 'navigate', step: 'meals' });
   assert.equal(plannerView(state, context).day, 3);
   assert.equal(run(state, { type: 'navigate', step: 'week' }).step, 'week');
@@ -117,8 +163,12 @@ test('decisions for a day that is no longer current or orderable are ignored', (
 });
 
 test('day choices apply to the plan of the same week and are kept per week otherwise', () => {
-  let state = run(initialPlanner(null, newPreferences), { type: 'navigate', step: 'meals' }, { type: 'navigate', step: 'week' },
-    { type: 'setWeekDays', days: [3, 5] });
+  let state = run(
+    initialPlanner(null, newPreferences),
+    { type: 'navigate', step: 'meals' },
+    { type: 'navigate', step: 'week' },
+    { type: 'setWeekDays', days: [3, 5] },
+  );
   assert.deepEqual(state.plan?.selectedDays, [3, 5]);
   state = run(state, { type: 'chooseWeek', week: '2026-W49' }, { type: 'setWeekDays', days: [1, 2] });
   assert.deepEqual(state.weekDays['2026-W49'], [1, 2]);
@@ -127,9 +177,14 @@ test('day choices apply to the plan of the same week and are kept per week other
 });
 
 test('resetting the week keeps its day choices and clears its decisions', () => {
-  const state = run(initialPlanner(null, newPreferences), { type: 'navigate', step: 'meals' },
-    { type: 'decide', day: 3, action: 'skip' }, { type: 'navigate', step: 'week' }, { type: 'setWeekDays', days: [3, 4] },
-    { type: 'resetWeek' });
+  const state = run(
+    initialPlanner(null, newPreferences),
+    { type: 'navigate', step: 'meals' },
+    { type: 'decide', day: 3, action: 'skip' },
+    { type: 'navigate', step: 'week' },
+    { type: 'setWeekDays', days: [3, 4] },
+    { type: 'resetWeek' },
+  );
   assert.deepEqual(state.plan?.slots, {});
   assert.deepEqual(state.plan?.selectedDays, [3, 4]);
   assert.equal(plannerView(state, context).hasSavedProgress, false);

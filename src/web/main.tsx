@@ -4,7 +4,9 @@ import './styles.css';
 
 createRoot(document.getElementById('root')!).render(<App />);
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch((error: Error) => {
-    console.info('Service worker registration unavailable', error.message);
-  }));
+  window.addEventListener('load', () =>
+    navigator.serviceWorker.register('/sw.js').catch((error: Error) => {
+      console.info('Service worker registration unavailable', error.message);
+    }),
+  );
 }

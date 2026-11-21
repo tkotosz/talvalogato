@@ -7,7 +7,8 @@
     "build": "node scripts/build.mjs",
     "build:pages": "node scripts/build.mjs --pages",
     "dev": "node --watch --watch-preserve-output scripts/dev.mjs",
-    "lint": "eslint .",
+    "format": "prettier --write .",
+    "lint": "prettier --check . && eslint .",
     "typecheck": "tsc -p . && tsc -p test",
     "test": "node --test test/*.test.ts",
     "test:e2e": "node --test --test-concurrency=1 test/e2e/*.e2e.ts"
@@ -30,6 +31,7 @@
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.14.0",
     "playwright-core": "1.65.0",
+    "prettier": "3.9.10",
     "typescript": "6.0.3",
     "typescript-eslint": "8.73.0"
   }

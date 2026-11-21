@@ -22,16 +22,20 @@ interface SwipeCardProps {
 }
 
 const vectors: Record<SwipeDirection, [number, number]> = {
-  left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1],
+  left: [-1, 0],
+  right: [1, 0],
+  up: [0, -1],
+  down: [0, 1],
 };
 
 function directionOf({ x, y }: { x: number; y: number }): SwipeDirection {
-  return Math.abs(x) > Math.abs(y) ? (x < 0 ? 'left' : 'right') : (y < 0 ? 'up' : 'down');
+  return Math.abs(x) > Math.abs(y) ? (x < 0 ? 'left' : 'right') : y < 0 ? 'up' : 'down';
 }
 
-export const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(function SwipeCard({
-  actions, onAction, distance = 82, velocity = 600, children,
-}, ref) {
+export const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(function SwipeCard(
+  { actions, onAction, distance = 82, velocity = 600, children },
+  ref,
+) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotate = useTransform(x, [-450, 0, 450], [-14, 0, 14]);
@@ -68,28 +72,34 @@ export const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(function Sw
   useImperativeHandle(ref, () => ({ swipe: settle }));
   const currentAction = actions.find(action => action.direction === intent);
 
-  return <motion.div
-    ref={card}
-    className="swipe-card"
-    style={{ x, y, rotate: reducedMotion ? 0 : rotate, opacity }}
-    drag
-    dragMomentum={false}
-    onDrag={(_, { offset }) => {
-      const direction = directionOf(offset);
-      setIntent(Math.hypot(offset.x, offset.y) > distance * 0.6 ? direction : null);
-    }}
-    onDragEnd={(_, info) => {
-      if (Math.hypot(info.offset.x, info.offset.y) >= distance) {
-        settle(directionOf(info.offset));
-      } else if (Math.hypot(info.offset.x, info.offset.y) >= 20 && Math.hypot(info.velocity.x, info.velocity.y) >= velocity) {
-        settle(directionOf(info.velocity));
-      } else {
-        settle(null);
-      }
-    }}
-    whileTap={reducedMotion ? undefined : { cursor: 'grabbing' }}
-  >
-    {children}
-    {currentAction && <span aria-hidden="true" className={`swipe-intent intent-${intent}`}>{currentAction.label}</span>}
-  </motion.div>;
+  return (
+    <motion.div
+      ref={card}
+      className="swipe-card"
+      style={{ x, y, rotate: reducedMotion ? 0 : rotate, opacity }}
+      drag
+      dragMomentum={false}
+      onDrag={(_, { offset }) => {
+        const direction = directionOf(offset);
+        setIntent(Math.hypot(offset.x, offset.y) > distance * 0.6 ? direction : null);
+      }}
+      onDragEnd={(_, info) => {
+        if (Math.hypot(info.offset.x, info.offset.y) >= distance) {
+          settle(directionOf(info.offset));
+        } else if (Math.hypot(info.offset.x, info.offset.y) >= 20 && Math.hypot(info.velocity.x, info.velocity.y) >= velocity) {
+          settle(directionOf(info.velocity));
+        } else {
+          settle(null);
+        }
+      }}
+      whileTap={reducedMotion ? undefined : { cursor: 'grabbing' }}
+    >
+      {children}
+      {currentAction && (
+        <span aria-hidden="true" className={`swipe-intent intent-${intent}`}>
+          {currentAction.label}
+        </span>
+      )}
+    </motion.div>
+  );
 });

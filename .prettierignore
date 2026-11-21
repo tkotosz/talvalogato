@@ -1,0 +1,6 @@
+dist/
+pages-dist/
+.wrangler/
+test/e2e/screenshots/
+package-lock.json
+*.md

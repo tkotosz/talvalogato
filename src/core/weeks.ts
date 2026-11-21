@@ -3,7 +3,10 @@ import type { Day, PublishedWeek, WeekKey } from './types.ts';
 const dayMs = 86_400_000;
 export const weekKeyPattern = /^(20\d{2})-W(0[1-9]|[1-4]\d|5[0-3])$/;
 const budapest = new Intl.DateTimeFormat('en-CA', {
-  timeZone: 'Europe/Budapest', year: 'numeric', month: '2-digit', day: '2-digit',
+  timeZone: 'Europe/Budapest',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
 });
 
 export function todayInBudapest(now = new Date()): Date {
@@ -13,7 +16,7 @@ export function todayInBudapest(now = new Date()): Date {
 
 export function isoWeek(date: Date): WeekKey {
   const thursday = new Date(date.getTime());
-  thursday.setUTCDate(thursday.getUTCDate() + 3 - (thursday.getUTCDay() + 6) % 7);
+  thursday.setUTCDate(thursday.getUTCDate() + 3 - ((thursday.getUTCDay() + 6) % 7));
   const year = thursday.getUTCFullYear();
   const week = Math.ceil(((thursday.getTime() - Date.UTC(year, 0, 1)) / dayMs + 1) / 7);
   return `${year}-W${String(week).padStart(2, '0')}`;
@@ -27,7 +30,7 @@ export function mondayOfWeek(key: string): Date | null {
   const [, year, week] = weekKeyPattern.exec(key) ?? [];
   if (!year) return null;
   const jan4 = new Date(Date.UTC(Number(year), 0, 4));
-  const monday = addDays(jan4, -(jan4.getUTCDay() + 6) % 7 + (Number(week) - 1) * 7);
+  const monday = addDays(jan4, (-(jan4.getUTCDay() + 6) % 7) + (Number(week) - 1) * 7);
   return isoWeek(monday) === key ? monday : null;
 }
 
@@ -54,8 +57,7 @@ export function eligibleDays(week: WeekKey, now = new Date(), deliveryDays?: Set
 }
 
 export function upcomingWeeks(weeks: PublishedWeek[], now = new Date()): PublishedWeek[] {
-  return weeks.filter(week => eligibleDays(week.key, now).length > 0)
-    .sort((a, b) => a.key.localeCompare(b.key));
+  return weeks.filter(week => eligibleDays(week.key, now).length > 0).sort((a, b) => a.key.localeCompare(b.key));
 }
 
 export function defaultWeek(weeks: PublishedWeek[], now = new Date()): WeekKey {
