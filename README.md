@@ -4,9 +4,17 @@ Tálválogató is an installable planner for Teletál. Choose a delivery week, s
 
 ## Run locally
 
-Install dependencies with `npm ci`, then run `npm run dev` and open the printed URL. `npm test` checks the planner and week logic. `npm run build` packages the app as a single Worker with its static assets.
+Install dependencies with `npm ci`, then run `npm run dev` and open the printed URL. The page reloads when a file in `src/` or `public/` changes.
 
-`src/SwipeCard.jsx` is a reusable React component. Pass the allowed directions and labels in `actions`, handle the result with `onAction`, and optionally use the component ref to trigger a swipe from a button or keyboard shortcut. The caller owns the content and the deck order.
+| Command | What it does |
+| --- | --- |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript, for the app and the tests |
+| `npm test` | Unit tests for the planning rules and the Teletál scraper |
+| `npm run test:e2e` | Plans a week in Chrome against the live Teletál menu; screenshots go to `test/e2e/screenshots/` |
+| `npm run build` | Packages the app as a single Worker with its static assets |
+
+`AGENTS.md` describes the layout and the rules that are easy to break, and `docs/architecture.md` the structure.
 
 ## Send picks to Teletál
 
@@ -14,7 +22,7 @@ The cart dialog walks through saving a reusable browser bookmark. Run it on the 
 
 ## Deploy on Cloudflare Pages
 
-Pull requests to `main` run the unit tests, build the Pages bundle, and run CodeQL and dependency review. A successful CI run for a push to `main` deploys that commit to the Pages `preview` branch. The **Deploy** workflow can also be run manually on `main` to refresh the preview.
+Pull requests to `main` run the linter, the type check and the unit tests, build the Pages bundle, and run CodeQL and dependency review. A successful CI run for a push to `main` deploys that commit to the Pages `preview` branch. The **Deploy** workflow can also be run manually on `main` to refresh the preview.
 
 Publishing a GitHub Release runs CI on the tag's commit and deploys it to the Pages production branch, `main`.
 
