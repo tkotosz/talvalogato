@@ -11,6 +11,7 @@ import {
   orderSummary,
   restorePlan,
   restorePreferences,
+  splitDishName,
   startPlan,
   withDetails,
 } from '../src/core/planning.ts';
@@ -344,4 +345,23 @@ test("dish details keep the brief names of Teletál's menu page, with calories a
   assert.equal(singleDetails.name, 'Eszterházy pulykatokány, jázmin rizs');
   assert.equal(singleDetails.components?.[0]?.name, 'Eszterházy pulykatokány, jázmin rizs');
   assert.equal(withDetails(single, undefined).kcal, null);
+});
+
+test('dish names split into a title and the parenthesized description', () => {
+  assert.deepEqual(
+    splitDishName('Mikulás puttonya (diós, kandírozott narancsos töltött, rántott csirkemell), mandulás jázmin rizs'),
+    {
+      title: 'Mikulás puttonya, mandulás jázmin rizs',
+      description: 'diós, kandírozott narancsos töltött, rántott csirkemell',
+    },
+  );
+  assert.deepEqual(splitDishName('Rudolf ünnepi falatkái (Fahéjas csíkok (kis adag) rizzsel)'), {
+    title: 'Rudolf ünnepi falatkái',
+    description: 'Fahéjas csíkok (kis adag) rizzsel',
+  });
+  assert.deepEqual(splitDishName('Kenyércipó (burgonyás)'), { title: 'Kenyércipó', description: 'burgonyás' });
+  assert.deepEqual(splitDishName('A (b) c (d)'), { title: 'A c', description: 'b · d' });
+  assert.deepEqual(splitDishName('Lencseleves'), { title: 'Lencseleves', description: null });
+  assert.deepEqual(splitDishName('(csak leírás)'), { title: '(csak leírás)', description: null });
+  assert.deepEqual(splitDishName('Félig (nyitott'), { title: 'Félig (nyitott', description: null });
 });

@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { ChevronLeft, ChevronRight, Flame } from 'lucide-react';
-import { normalizeGroupTitle } from '../../core/planning.ts';
+import { normalizeGroupTitle, splitDishName } from '../../core/planning.ts';
 import type { MenuOption } from '../../core/types.ts';
 import { calories, money } from '../format.ts';
 
@@ -104,7 +104,9 @@ export function MealCard({ option, target }: { option: MenuOption; target: numbe
   const { code, menuName, category, section, course } = dishes[0]!;
   // A single dish is named after itself; its Teletál group goes into a tag.
   const single = Boolean(course);
-  const name = single ? title : menuName;
+  // A single dish's title leaves out Teletál's parenthesized description, which gets its own line.
+  const dishName = splitDishName(title);
+  const name = single ? dishName.title : menuName;
   const heading = name === code ? code : `${code} ${name}`;
   const group = single ? (menuName !== title ? menuName : category) : category;
   const showGroup = group && group !== name;
@@ -125,6 +127,11 @@ export function MealCard({ option, target }: { option: MenuOption; target: numbe
           {name !== code ? ` ${name}` : null}
         </h2>
         {coverage && <p className="meal-dish">{coverage}</p>}
+        {single && dishName.description && (
+          <p className="meal-dish" lang="hu">
+            {dishName.description}
+          </p>
+        )}
         {!single && !components.length && title !== heading && (
           <p className="meal-dish" lang="hu">
             {title}
