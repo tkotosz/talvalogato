@@ -1136,18 +1136,35 @@ main {
 .review-list li + li {
   border-top: 1px solid var(--line);
 }
+.meal-code {
+  background: #eef3e7;
+  border-radius: 4px;
+  padding: 1px 4px;
+  font-size: 0.79rem;
+  font-weight: 750;
+}
+.meal-content h2 .meal-code {
+  display: inline-block;
+  margin-inline-end: 0.2em;
+  font-size: 0.63em;
+  letter-spacing: 0;
+  line-height: 1.35;
+  vertical-align: 0.14em;
+}
 .review-row {
   display: grid;
-  grid-template-columns: 103px minmax(0, 1fr) auto 16px;
-  align-items: center;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto 16px;
+  align-items: baseline;
+  gap: 8px 12px;
   width: 100%;
-  min-height: 57px;
-  padding: 13px 15px;
+  padding: 14px 16px 16px;
   border: 0;
   background: none;
   color: inherit;
   text-align: left;
+}
+.review-row.empty {
+  padding-block: 11px;
 }
 button.review-row:hover {
   background: #f3f7ec;
@@ -1164,66 +1181,71 @@ button.review-row:hover {
 .review-list li:last-child .review-row {
   border-radius: 0 0 15px 15px;
 }
-.review-day,
-.review-numbers {
-  display: grid;
-  gap: 2px;
+.review-day {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
 }
 .review-day strong {
-  font-size: 0.93rem;
+  font-size: 1rem;
 }
-.review-day > span,
-.review-numbers > span,
-.skipped-label {
-  font-size: 0.86rem;
+.review-date,
+.review-status {
   color: var(--muted);
+  font-size: 0.86rem;
 }
-.review-meals {
-  display: grid;
-  gap: 5px;
-  font-size: 0.94rem;
+.review-tag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef3e7;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+.review-numbers {
+  color: var(--muted);
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+.review-numbers strong {
+  color: var(--ink);
+}
+.review-open {
+  grid-column: 3;
+  grid-row: 1;
+  align-self: center;
+  color: var(--green);
 }
 .review-menu {
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: 4px 5px;
+  gap: 6px;
   overflow-wrap: anywhere;
 }
+.review-menu-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
 .review-courses {
-  grid-column: 2;
   display: grid;
   gap: 2px;
   color: var(--muted);
-  font-size: 0.86rem;
+  font-size: 0.88rem;
 }
-.meal-code {
-  background: #eef3e7;
-  border-radius: 4px;
-  padding: 1px 4px;
-  font-size: 0.79rem;
-  font-weight: 750;
+.review-items {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 3px 14px;
+  font-size: 0.9rem;
 }
-.meal-content h2 .meal-code {
-  display: inline-block;
-  margin-inline-end: 0.2em;
-  font-size: 0.63em;
-  letter-spacing: 0;
-  line-height: 1.35;
-  vertical-align: 0.14em;
+.review-item {
+  display: contents;
 }
-.review-numbers {
-  text-align: right;
-  font-size: 0.91rem;
-  max-width: 14ch;
-}
-.skipped-label {
-  grid-column: 3;
-  text-align: right;
-}
-.review-open {
-  grid-column: 4;
-  color: var(--green);
+.review-item-label {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 650;
 }
 .review-total {
   display: flex;
@@ -1653,33 +1675,6 @@ button.code-group-title:hover {
   .review-copy span {
     display: none;
   }
-  .review-row {
-    grid-template-columns: minmax(0, 1fr) auto 16px;
-    gap: 5px 8px;
-    padding: 10px 11px;
-  }
-  .review-day {
-    grid-column: 1;
-    display: flex;
-    align-items: baseline;
-    gap: 5px;
-    flex-wrap: wrap;
-  }
-  .review-meals {
-    grid-column: 1;
-    grid-row: 2;
-  }
-  .review-numbers {
-    grid-column: 2;
-    grid-row: 1 / span 2;
-  }
-  .skipped-label {
-    grid-column: 2;
-  }
-  .review-open {
-    grid-column: 3;
-    grid-row: 1 / span 2;
-  }
   .meal-code {
     margin-top: 1px;
   }
@@ -1851,10 +1846,5 @@ button.code-group-title:hover {
   font-weight: 680;
 }
 .review-menu .over-limit-note {
-  grid-column: 2;
-  margin-top: 2px;
-}
-.review-menu .meal-code svg {
-  display: block;
-  margin-block: 2px;
+  margin-top: 0;
 }

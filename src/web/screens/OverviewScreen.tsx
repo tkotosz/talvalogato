@@ -1,9 +1,51 @@
-import { ChevronRight, ClipboardList, Copy, ListChecks } from 'lucide-react';
+import { ChevronRight, ClipboardList, Copy } from 'lucide-react';
+import { courseNames } from '../../core/courses.ts';
 import type { PlannerView } from '../../core/planner.ts';
 import { days, type OrderSummary } from '../../core/planning.ts';
-import type { Day } from '../../core/types.ts';
-import { weekLabel } from '../../core/weeks.ts';
+import type { Day, MenuOption } from '../../core/types.ts';
+import { shortDayLabel, weekLabel } from '../../core/weeks.ts';
 import { appName, calories, copyText, money } from '../format.ts';
+
+/** A custom day's dishes, labeled by component. */
+function CustomItems({ option }: { option: MenuOption }) {
+  return (
+    <>
+      <span className="review-menu-title">Saját menü</span>
+      <span className="review-items" lang="hu">
+        {option.dishes.map(dish => (
+          <span key={dish.id} className="review-item">
+            <span className="review-item-label">{dish.course ? courseNames[dish.course] : ''}</span>
+            <span>{dish.name}</span>
+          </span>
+        ))}
+      </span>
+    </>
+  );
+}
+
+/** A Teletál set menu: its code and name, then its courses. */
+function SetMenuItems({ option }: { option: MenuOption }) {
+  const [dish] = option.dishes;
+  if (!dish) return null;
+  const name = dish.menuName || dish.name;
+  const courses = (option.components?.length ? option.components.map(course => course.name) : [dish.name]).filter(
+    course => course && course !== name,
+  );
+  return (
+    <>
+      <span className="review-menu-title">
+        <span className="meal-code">{dish.code}</span> {name}
+      </span>
+      {courses.length > 0 && (
+        <span className="review-courses" lang="hu">
+          {courses.map((course, index) => (
+            <span key={index}>{course}</span>
+          ))}
+        </span>
+      )}
+    </>
+  );
+}
 
 /** Step 3: the week's decisions and what will reach the cart. */
 export function OverviewScreen({
@@ -81,70 +123,34 @@ export function OverviewScreen({
             <>
               <span className="review-day">
                 <strong>{label}</strong>
-                {day > 5 && <span>Pénteki kiszállítás</span>}
+                <span className="review-date">{shortDayLabel(plan.week, day)}</span>
+                {day > 5 && <span className="review-tag">Pénteki kiszállítás</span>}
               </span>
               {option ? (
-                <>
-                  <span className="review-meals">
-                    {option.kind === 'custom' ? (
-                      <span className="review-menu">
-                        <span className="meal-code" aria-hidden="true">
-                          <ListChecks size={13} />
-                        </span>
-                        <span lang="hu">Saját menü</span>
-                        <span className="review-courses" lang="hu">
-                          {option.dishes.map(dish => (
-                            <span key={dish.id}>
-                              <span className="meal-code">{dish.code}</span> {dish.name}
-                            </span>
-                          ))}
-                        </span>
-                        {option.custom?.overLimit && <span className="over-limit-note">Kereten felül, engedélyezve</span>}
-                      </span>
-                    ) : null}
-                    {option.kind !== 'custom' &&
-                      option.dishes.map(dish => {
-                        const singleItem = option.dishes.length === 1;
-                        const name = singleItem ? dish.menuName || dish.name : dish.name;
-                        const components = singleItem && option.components?.length ? option.components : dish.components;
-                        const courseNames = (components?.length ? components.map(course => course.name) : [dish.name]).filter(
-                          course => course && course !== name,
-                        );
-                        return (
-                          <span key={dish.id} className="review-menu">
-                            <span className="meal-code">{dish.code}</span>
-                            <span lang="hu">{name}</span>
-                            {courseNames.length > 0 && (
-                              <span className="review-courses" lang="hu">
-                                {courseNames.map((course, index) => (
-                                  <span key={index}>{course}</span>
-                                ))}
-                              </span>
-                            )}
-                          </span>
-                        );
-                      })}
-                    {issue && <span className="selection-issue">{issue}</span>}
-                  </span>
-                  <span className="review-numbers">
-                    <strong>{calories(option.kcal)}</strong>
-                    <span>{money(option.price)}</span>
-                  </span>
-                </>
+                <span className="review-numbers">
+                  <strong>{calories(option.kcal)}</strong> · {money(option.price)}
+                </span>
               ) : (
-                <span className="skipped-label">{status}</span>
+                <span className="review-status">{status}</span>
+              )}
+              {option && (
+                <span className="review-menu">
+                  {option.kind === 'custom' ? <CustomItems option={option} /> : <SetMenuItems option={option} />}
+                  {option.custom?.overLimit && <span className="over-limit-note">Kereten felül, engedélyezve</span>}
+                  {issue && <span className="selection-issue">{issue}</span>}
+                </span>
               )}
             </>
           );
           return (
             <li key={day}>
               {available ? (
-                <button type="button" className="review-row" onClick={() => onViewDay(day)}>
+                <button type="button" className={option ? 'review-row' : 'review-row empty'} onClick={() => onViewDay(day)}>
                   {contents}
                   <ChevronRight className="review-open" size={16} aria-hidden="true" />
                 </button>
               ) : (
-                <div className="review-row unavailable">{contents}</div>
+                <div className={option ? 'review-row unavailable' : 'review-row empty unavailable'}>{contents}</div>
               )}
             </li>
           );

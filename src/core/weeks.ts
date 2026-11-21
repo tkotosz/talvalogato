@@ -75,6 +75,11 @@ export function weekLabel(key: WeekKey): string {
   return shortDate.formatRange(monday, addDays(monday, 6));
 }
 
+/** The day's date in short form, such as "nov. 25." */
+export function shortDayLabel(week: WeekKey, day: Day): string {
+  return shortDate.format(dateForSlot(week, day));
+}
+
 export function dayLabel(week: WeekKey, day: Day): string {
   return longDate.format(dateForSlot(week, day));
 }
