@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { menuCatalog, nutritionFor, teletal } from '../src/worker/teletal.ts';
+import { menuCatalog, nutritionFor, teletal } from '../src/scraper/teletal.ts';
 
 test('catalog entries follow the website order and preserve names for all menu codes', async t => {
   const row = (code: string, label: string, day = 4) => `<table><tr>
