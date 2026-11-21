@@ -49,9 +49,9 @@ function readStorage(key) {
 }
 
 function savedPlanner() {
-  const saved = readStorage(storageKey) ?? readStorage('talvalogato.plan.v1') ?? readStorage('meal-deck.plan.v1');
-  const plan = saved?.id && mondayOfWeek(saved.week ?? saved.settings?.week) ? restorePlan(saved) : null;
-  return { plan, preferences: restorePreferences(readStorage(preferencesKey), saved?.settings) };
+  const saved = readStorage(storageKey);
+  const plan = saved?.id && mondayOfWeek(saved.week) ? restorePlan(saved) : null;
+  return { plan, preferences: restorePreferences(readStorage(preferencesKey)) };
 }
 
 function Modal({ name, onClose, children, className }) {
@@ -303,66 +303,23 @@ function MealPhotos({ courses, coverPhoto, children }) {
   </div>;
 }
 
-function MealCard({ option, target, week }) {
-  const { kind, title, components, dishes, kcal, price } = option;
-  const customCombo = dishes.length > 1;
-  const merchantMenu = kind.startsWith('menu');
-  const hasCourses = kind !== 'single' && components?.length > 0;
-  const codes = kind === 'single' ? [] : dishes.map(dish => dish.code);
-  const hasCodes = codes.length > 0 && codes.every(Boolean);
-  const [refreshedCourses, setRefreshedCourses] = useState(null);
-  const [labeledDishes, setLabeledDishes] = useState(null);
-  const [dish] = dishes;
-  const refreshPhotos = merchantMenu && components?.length > 0 && !components.some(course => Object.hasOwn(course, 'photo'));
-  const refreshLabels = dishes.some(item => !Object.hasOwn(item, 'groupId'));
-
-  useEffect(() => {
-    if (!refreshPhotos) return;
-    const aborter = new AbortController();
-    const { signal } = aborter;
-    // Saved menus from earlier versions have only the first photo.
-    loadDayDishes(week, dish.day, [dish], signal, () => {}).then(({ dishes: [refreshed] }) => {
-      if (!signal.aborted && refreshed?.components?.length) setRefreshedCourses(refreshed.components);
-    }).catch(() => {});
-    return () => aborter.abort();
-  }, [week, dish, refreshPhotos]);
-
-  useEffect(() => {
-    if (!refreshLabels) return;
-    const aborter = new AbortController();
-    const { signal } = aborter;
-    // Use the current catalog labels for choices saved before they were available.
-    loadMenuCatalog(week, signal).then(catalog => {
-      if (!signal.aborted) setLabeledDishes(dishes.map(item => catalog.find(entry => entry.id === item.id) ?? item));
-    }).catch(() => {});
-    return () => aborter.abort();
-  }, [week, dishes, refreshLabels]);
-
-  const menuDishes = labeledDishes ?? dishes;
-  const { menuName, category, section } = menuDishes[0];
-  const showGroup = category && category !== menuName && menuDishes.every(item => item.category === category);
-  const fallbackHeading = hasCodes ? `Menü ${codes.join(' + ')}` : hasCourses ? 'Menü' : title;
-  const showMenuName = !customCombo && menuName && dish.code;
-  const heading = showMenuName ? (menuName === dish.code ? dish.code : `${dish.code} ${menuName}`) : fallbackHeading;
-  const courses = refreshedCourses ?? components;
-  const coverage = merchantMenu ? menuCoverage.get(dish.code) : null;
-  const coverCourses = !customCombo && hasCourses ? courses : dishes;
+function MealCard({ option, target }) {
+  const { title, components = [], dishes, kcal, price } = option;
+  const [{ code, menuName, category, section }] = dishes;
+  const heading = menuName === code ? code : `${code} ${menuName}`;
+  const showGroup = category && category !== menuName;
+  const coverage = menuCoverage.get(code);
   return <article className="meal-card">
-    <MealPhotos courses={coverCourses} coverPhoto={option.photo}>
-      {(!merchantMenu || showGroup) && <div className="meal-tags">
-        {!merchantMenu && <span className={`meal-tag${customCombo ? ' tag-generated' : ''}`}>
-          {customCombo ? <Soup size={16} /> : <Utensils size={15} />} {customCombo ? 'Generált menü' : 'Önálló étel'}
-        </span>}
-        {showGroup && <span className="meal-tag tag-group">{normalizeGroupTitle(category, section)}</span>}
+    <MealPhotos courses={components.length ? components : dishes} coverPhoto={option.photo}>
+      {showGroup && <div className="meal-tags">
+        <span className="meal-tag tag-group">{normalizeGroupTitle(category, section)}</span>
       </div>}
     </MealPhotos>
     <div className="meal-content">
-      <h2 lang="hu">{showMenuName ? <>
-        <span className="meal-code">{dish.code}</span>{menuName !== dish.code ? ` ${menuName}` : null}
-      </> : heading}</h2>
+      <h2 lang="hu"><span className="meal-code">{code}</span>{menuName !== code ? ` ${menuName}` : null}</h2>
       {coverage && <p className="meal-dish">{coverage}</p>}
-      {showMenuName && !hasCourses && title !== heading && <p className="meal-dish" lang="hu">{title}</p>}
-      {hasCourses && <ul className="course-list" aria-label="A menü fogásai">
+      {!components.length && title !== heading && <p className="meal-dish" lang="hu">{title}</p>}
+      {components.length > 0 && <ul className="course-list" aria-label="A menü fogásai">
         {components.map((part, index) => <li key={index}>
           <span lang="hu">{part.name}</span><span>{calories(part.kcal)}</span>
         </li>)}
@@ -441,7 +398,7 @@ function DayDeck({ plan, catalog, deck, preferences, budget, onAction }) {
       </div> : <>
         {queue.length > 1 && <div className="card-backing" aria-hidden="true" />}
         <SwipeCard key={top.id + ':' + animation} ref={card} actions={actions} onAction={act}>
-          <MealCard option={top} target={budget} week={week} />
+          <MealCard option={top} target={budget} />
         </SwipeCard>
       </>}
     </div>
@@ -486,7 +443,7 @@ function Picker({ plan, eligible, catalog, preferences, editing, done, onDay, on
     {editing && picked && <p className="editing-note">Jelenlegi választás · {picked.dishes.map(dish => dish.menuName || dish.name).join(' + ')}</p>}
     {done ? <>
       <div className="deck">
-        {picked ? <MealCard option={picked} target={budget} week={week} />
+        {picked ? <MealCard option={picked} target={budget} />
           : <div className="placeholder-card"><h2>Kihagytad ezt a napot</h2></div>}
       </div>
       {issue && <p className="selection-issue completed-day-issue">{issue}</p>}
@@ -523,7 +480,6 @@ function CartInstructions({ plan, lines }) {
       <li>
         <strong>Mentsd el a kosárkönyvjelzőt</strong>
         <p>Hozz létre egy <b>Teletál-kosár</b> nevű könyvjelzőt, és cseréld le a címét a kimásolt parancsikonra. Számítógépen a hivatkozást a könyvjelzősávra is húzhatod.</p>
-        {(lines.length > 14 || lines.some(line => line.day > 5)) && <p>Ha korábban mentetted el a könyvjelzőt, egyszer frissítsd, hogy a hétvégi menüket és a 14-nél több különböző tételt is a kosárba tehesse.</p>}
         <a ref={link => link?.setAttribute('href', shortcut)} className="drag-bookmark" onClick={event => {
           event.preventDefault();
           copyText(shortcut).then(ok => setCopyStatus(ok ? 'Parancsikon másolva' : 'Húzd a hivatkozást a könyvjelzősávra.'));

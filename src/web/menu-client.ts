@@ -1,8 +1,6 @@
 import type { CatalogDish, Day, Dish, DishDetails, WeekKey } from '../core/types.ts';
 
 const batchSize = 8;
-// Distinguish responses cached before individual courses included photos.
-const courseDataQuery = 'courses=3';
 const catalogs = new Map<WeekKey, { items: CatalogDish[]; expires: number }>();
 const versions = new Map<string, Map<string, DishDetails>>();
 
@@ -25,7 +23,7 @@ export async function loadJson<T>(path: string, signal?: AbortSignal): Promise<T
 export async function loadMenuCatalog(week: WeekKey, signal?: AbortSignal, refresh = false): Promise<CatalogDish[]> {
   const cached = catalogs.get(week);
   if (!refresh && cached && cached.expires > Date.now()) return cached.items;
-  const items = await loadJson<CatalogDish[]>(`/api/menu?week=${week}&catalog=10${refresh ? '&recheck=1' : ''}`, signal);
+  const items = await loadJson<CatalogDish[]>(`/api/menu?week=${week}${refresh ? '&recheck=1' : ''}`, signal);
   if (!signal?.aborted) catalogs.set(week, { items, expires: Date.now() + 300_000 });
   return items;
 }
@@ -58,7 +56,7 @@ export async function loadDayDishes(week: WeekKey, day: Day, dishes: (CatalogDis
       signal.throwIfAborted();
       try {
         const query = new URLSearchParams({ week, items: batch.join(',') });
-        const details = await loadJson<DishDetails[]>(`/api/nutrition?${query}&${courseDataQuery}`, signal);
+        const details = await loadJson<DishDetails[]>(`/api/nutrition?${query}`, signal);
         for (const detail of details) {
           if (detail.retryable) failures.add(detail.id);
           else received.set(detail.id, detail);

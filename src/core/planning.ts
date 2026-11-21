@@ -44,8 +44,7 @@ function normalizeDays(selection: unknown): Day[] {
   return Array.isArray(selection) ? allDays.filter(day => selection.includes(day)) : allDays;
 }
 
-export function restorePreferences(saved: PreferenceInput | null, legacy?: PreferenceInput): Preferences {
-  const values = saved ?? legacy;
+export function restorePreferences(values: PreferenceInput | null): Preferences {
   if (!values) return newPreferences;
   const validBudget = validCalorieBudget(values);
   const excludedCodes = Array.isArray(values.excludedCodes)
@@ -53,10 +52,10 @@ export function restorePreferences(saved: PreferenceInput | null, legacy?: Prefe
       .map(code => code.toUpperCase()))]
     : [];
   return {
-    limitCalories: validBudget && (saved ? saved.limitCalories === true : true),
+    limitCalories: validBudget && values.limitCalories === true,
     calories: validBudget ? values.calories as number : newPreferences.calories,
     tolerance: validBudget ? values.tolerance as number : newPreferences.tolerance,
-    filterCodes: saved ? saved.filterCodes === true : excludedCodes.length > 0,
+    filterCodes: values.filterCodes === true,
     excludedCodes,
     defaultDays: normalizeDays(values.defaultDays),
   };
@@ -66,22 +65,16 @@ export function startPlan(week: WeekKey, day: Day | null, selectedDays: Day[] = 
   return { id: crypto.randomUUID(), week, day, selectedDays: normalizeDays(selectedDays), slots: {}, drafts: {} };
 }
 
+/** A plan as read back from storage, before validation. */
 export interface StoredPlan extends Partial<Omit<Plan, 'day'>> {
   id: string;
+  week: WeekKey;
   day?: unknown;
-  settings?: PreferenceInput & { week?: WeekKey };
-  excluded?: string[];
-  deferred?: string[];
 }
 
-export function restorePlan({ id, week, settings, day, selectedDays, slots, drafts, excluded, deferred }: StoredPlan): Plan {
+export function restorePlan({ id, week, day, selectedDays, slots, drafts }: StoredPlan): Plan {
   const activeDay = typeof day === 'number' && Number.isInteger(day) && day >= 1 && day <= days.length ? day : null;
-  return {
-    id, week: (week ?? settings?.week)!, day: activeDay, selectedDays: normalizeDays(selectedDays), slots: slots ?? {},
-    drafts: drafts ?? (activeDay && (excluded || deferred) ? {
-      [activeDay]: { excluded: excluded ?? [], deferred: deferred ?? [] },
-    } : {}),
-  };
+  return { id, week, day: activeDay, selectedDays: normalizeDays(selectedDays), slots: slots ?? {}, drafts: drafts ?? {} };
 }
 
 // Teletál delivers weekend meals on Friday. A weekend day offers the lines Teletál publishes for that day,
