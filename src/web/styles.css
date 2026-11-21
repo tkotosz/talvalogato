@@ -1884,3 +1884,20 @@ button.code-group-title:hover {
   color: #754c16;
   font-weight: 650;
 }
+.info-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px solid #ecd29b;
+  border-radius: 12px;
+  background: #fff6df;
+  color: #6a4512;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+.info-note svg {
+  flex: none;
+  margin-top: 1px;
+}
