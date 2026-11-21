@@ -1,27 +1,25 @@
-import { mealCourses, sideCourses } from './courses.ts';
+import { allCourses, normalizeCourses } from './courses.ts';
 import { calorieLimit } from './planning.ts';
-import type { CustomChoice, CustomCourse, CustomDraft, CustomStage, Dish, MenuOption, Preferences } from './types.ts';
-
-const allCourses = [...mealCourses, ...sideCourses];
+import type { CustomChoice, CustomCourse, CustomDraft, Dish, MenuOption, Preferences } from './types.ts';
 
 export function startCustom(preferences: Preferences): CustomDraft {
-  const courses = preferences.mealCourses;
-  return { mealCourses: courses, sideCourses: null, stage: 'meals', picks: {}, overLimit: [], editing: false };
+  return { courses: preferences.customCourses, stage: 'select', picks: {}, overLimit: [] };
 }
 
-/** The courses of the day in the order they are swiped; side courses join once they are chosen. */
-export function chosenCourses(draft: Pick<CustomDraft, 'mealCourses' | 'sideCourses'>): CustomCourse[] {
-  return [...draft.mealCourses, ...(draft.sideCourses ?? [])];
+/** The draft with a new component selection; dishes of components no longer chosen are dropped. */
+export function withCourses(draft: CustomDraft, selection: CustomCourse[]): CustomDraft {
+  const courses = normalizeCourses(selection);
+  const picks: CustomDraft['picks'] = {};
+  for (const course of courses) if (draft.picks[course]) picks[course] = draft.picks[course];
+  return { ...draft, courses, picks, overLimit: draft.overLimit.filter(course => courses.includes(course)), stage: 'overview' };
 }
 
-/** The dishes picked for the chosen courses, in eating order. */
-export function pickedDishes(draft: Pick<CustomDraft, 'mealCourses' | 'sideCourses' | 'picks'>): Dish[] {
-  return chosenCourses(draft)
-    .map(course => draft.picks[course])
-    .filter(dish => dish !== undefined && dish !== null);
+/** The picked dishes in menu order. */
+export function pickedDishes(draft: Pick<CustomDraft, 'courses' | 'picks'>): Dish[] {
+  return draft.courses.map(course => draft.picks[course]).filter(dish => dish !== undefined);
 }
 
-/** Calories of the picked dishes, or null when any of them has no calorie data. */
+/** Calories of the dishes, or null when any of them has no calorie data. */
 export function totalCalories(dishes: Dish[]): number | null {
   let total = 0;
   for (const dish of dishes) {
@@ -31,17 +29,11 @@ export function totalCalories(dishes: Dish[]): number | null {
   return Math.round(total * 10) / 10;
 }
 
-/** What is left of the day's calorie limit for `course`, after the dishes picked for the other courses; null without a limit. */
+/** What is left of the day's calorie limit for `course`, after the dishes of the other components; null without a limit. */
 export function remainingCalories(draft: CustomDraft, preferences: Preferences, course: CustomCourse): number | null {
   if (!preferences.limitCalories) return null;
-  const others = pickedDishes({ ...draft, picks: { ...draft.picks, [course]: undefined } });
+  const others = pickedDishes({ courses: draft.courses.filter(other => other !== course), picks: draft.picks });
   return Math.round((calorieLimit(preferences) - (totalCalories(others) ?? 0)) * 10) / 10;
-}
-
-/** What is left of the day's calorie limit after every picked dish; null without a limit. */
-export function caloriesLeft(draft: CustomDraft, preferences: Preferences): number | null {
-  if (!preferences.limitCalories) return null;
-  return Math.round((calorieLimit(preferences) - (totalCalories(pickedDishes(draft)) ?? 0)) * 10) / 10;
 }
 
 export function dishOption(dish: Dish): MenuOption {
@@ -60,14 +52,14 @@ export function dishOption(dish: Dish): MenuOption {
 export interface CourseDeck {
   /** Cards in Teletál's order, dishes that fit the remaining limit first, then any shown beyond it by calories. */
   options: MenuOption[];
-  /** Calories left for this course under the limit, or null without a limit. */
+  /** Calories left for this component under the limit, or null without a limit. */
   remaining: number | null;
-  /** Dishes of the course that exceed the remaining limit; the user can choose to see them. */
+  /** Dishes of the component that exceed the remaining limit; the user can choose to see them. */
   overLimitCount: number;
 }
 
 /**
- * The cards for one course. Code exclusions apply as in the set-menu decks. With a calorie limit only dishes with known
+ * The cards for one component. Code exclusions apply as in the set-menu decks. With a calorie limit only dishes with known
  * calories are offered, and those over the remaining limit only after the user asks for them.
  */
 export function courseDeck(dishes: Dish[], course: CustomCourse, draft: CustomDraft, preferences: Preferences): CourseDeck {
@@ -84,29 +76,13 @@ export function courseDeck(dishes: Dish[], course: CustomCourse, draft: CustomDr
   return { options: shown.map(dishOption), remaining, overLimitCount: over.length };
 }
 
-/** The stage after deciding `course`, or null when the day is complete. */
-export function nextStage(draft: CustomDraft, course: CustomCourse): CustomStage | null {
-  if (draft.editing) return 'summary';
-  const order = chosenCourses(draft);
-  const next = order[order.indexOf(course) + 1];
-  if (next) return next;
-  if (mealCourses.includes(course) && draft.sideCourses === null) return 'sides';
-  return null;
-}
-
-/** The first stage after the meal checklist. */
-export function firstMealStage(draft: CustomDraft): CustomStage {
-  return draft.mealCourses[0] ?? (draft.sideCourses === null ? 'sides' : (draft.sideCourses[0] ?? 'sides'));
-}
-
-/** The saved day: a custom option, or null when no course got a dish. */
+/** The saved day, or null while no component has a dish. */
 export function customOption(draft: CustomDraft, preferences: Preferences): MenuOption | null {
   const dishes = pickedDishes(draft);
   if (!dishes.length) return null;
   const kcal = totalCalories(dishes);
   const custom: CustomChoice = {
-    mealCourses: draft.mealCourses,
-    sideCourses: draft.sideCourses ?? [],
+    courses: draft.courses,
     overLimit: preferences.limitCalories && kcal !== null && kcal > calorieLimit(preferences),
   };
   return {
@@ -121,18 +97,10 @@ export function customOption(draft: CustomDraft, preferences: Preferences): Menu
   };
 }
 
-/** A draft that edits a saved custom day, opened on its summary. */
+/** A draft that edits a saved custom day, opened on its overview. */
 export function editCustom(option: MenuOption): CustomDraft {
-  const choice = option.custom ?? { mealCourses: [], sideCourses: [], overLimit: false };
   const picks: CustomDraft['picks'] = {};
-  for (const course of [...choice.mealCourses, ...choice.sideCourses]) picks[course] = null;
   for (const dish of option.dishes) if (dish.course) picks[dish.course] = dish;
-  return {
-    mealCourses: choice.mealCourses,
-    sideCourses: choice.sideCourses,
-    stage: 'summary',
-    picks,
-    overLimit: choice.overLimit ? [...allCourses] : [],
-    editing: true,
-  };
+  const courses = normalizeCourses([...(option.custom?.courses ?? []), ...Object.keys(picks)]);
+  return { courses, stage: 'overview', picks, overLimit: option.custom?.overLimit ? [...allCourses] : [] };
 }

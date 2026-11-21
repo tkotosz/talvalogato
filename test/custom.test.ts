@@ -45,7 +45,9 @@ const pickle = dish('W1', 'pickle', 30, 3, 350);
 const dessert = dish('S1', 'dessert', 400);
 const lightDessert = dish('S2', 'dessert', 60);
 const drink = dish('NF1', 'drink', null, 3, 199);
+const salad = dish('D1', 'cold', 350, 3, 1500);
 const catalog = [
+  salad,
   soup,
   bigSoup,
   main,
@@ -66,79 +68,76 @@ function customDay(preferences: Preferences = newPreferences): PlannerState {
   return run(initialPlanner(null, preferences), { type: 'navigate', step: 'meals' }, { type: 'startCustom', day: 3 });
 }
 const draft = (state: PlannerState) => state.plan!.custom[3]!;
+const pick = (dish: Dish): PlannerAction[] => [
+  { type: 'openStage', day: 3, stage: dish.course! },
+  { type: 'pickCourse', day: 3, dish },
+];
 
-test('a custom day starts with soup and main ticked, then moves through the courses to the side-course step', () => {
+test('a custom day starts with the component selection, soup and main ticked, then shows the menu overview', () => {
   let state = customDay();
-  assert.deepEqual(draft(state).mealCourses, ['soup', 'main']);
-  assert.equal(draft(state).stage, 'meals');
+  assert.deepEqual(draft(state).courses, ['soup', 'main']);
+  assert.equal(draft(state).stage, 'select');
 
-  state = run(state, { type: 'setMealCourses', day: 3, courses: ['main', 'soup'] });
-  assert.equal(draft(state).stage, 'soup');
-  state = run(state, { type: 'pickCourse', day: 3, dish: soup });
+  state = run(state, { type: 'setCourses', day: 3, courses: ['dessert', 'main', 'soup', 'cold'] });
+  assert.deepEqual(draft(state).courses, ['soup', 'main', 'cold', 'dessert']);
+  assert.equal(draft(state).stage, 'overview');
+  assert.deepEqual(state.preferences.customCourses, ['soup', 'main', 'cold', 'dessert']);
+  assert.deepEqual(restorePreferences(JSON.parse(JSON.stringify(state.preferences))).customCourses, [
+    'soup',
+    'main',
+    'cold',
+    'dessert',
+  ]);
+});
+
+test('picking a dish for a component returns to the overview, and the day is only saved with Mentés', () => {
+  let state = run(customDay(), { type: 'setCourses', day: 3, courses: ['soup', 'main', 'cold'] });
+  state = run(state, { type: 'openStage', day: 3, stage: 'main' });
   assert.equal(draft(state).stage, 'main');
   state = run(state, { type: 'pickCourse', day: 3, dish: main });
-  assert.equal(draft(state).stage, 'sides');
+  assert.equal(draft(state).stage, 'overview');
+  state = run(state, ...pick(soup), ...pick(salad));
+  assert.ok(!Object.hasOwn(state.plan!.slots, 3), 'nothing is saved before Mentés');
 
-  state = run(state, { type: 'setSideCourses', day: 3, courses: ['dessert', 'pickle'] });
-  assert.equal(draft(state).stage, 'pickle');
-  state = run(state, { type: 'pickCourse', day: 3, dish: pickle }, { type: 'pickCourse', day: 3, dish: dessert });
-
+  state = run(state, { type: 'saveCustom', day: 3 });
   const saved = state.plan!.slots[3]!;
   assert.equal(saved.kind, 'custom');
   assert.deepEqual(
     saved.dishes.map(item => item.code),
-    ['A1', 'I1', 'W1', 'S1'],
+    ['A1', 'I1', 'D1'],
   );
-  assert.equal(saved.price, 800 + 2000 + 350 + 1000);
-  assert.equal(saved.kcal, 1430);
+  assert.equal(saved.price, 800 + 2000 + 1500);
+  assert.equal(saved.kcal, 1350);
   assert.equal(state.plan!.custom[3], undefined);
-  assert.equal(plannerView(state, context).day, 4);
+  assert.equal(plannerView(state, context).day, 3, 'the saved day stays open');
+  assert.equal(plannerView(state, context).dayDone, true);
 });
 
-test('the meal checklist is remembered, and no side courses saves the day straight away', () => {
-  let state = customDay();
-  state = run(state, { type: 'setMealCourses', day: 3, courses: ['breakfast', 'main'] });
-  assert.deepEqual(state.preferences.mealCourses, ['breakfast', 'main']);
-  assert.deepEqual(restorePreferences(JSON.parse(JSON.stringify(state.preferences))).mealCourses, ['breakfast', 'main']);
-  state = run(
-    state,
-    { type: 'skipCourse', day: 3 },
-    { type: 'pickCourse', day: 3, dish: main },
-    { type: 'setSideCourses', day: 3, courses: [] },
-  );
-  assert.deepEqual(state.plan!.slots[3]!.dishes, [main]);
-  assert.deepEqual(state.plan!.slots[3]!.custom, { mealCourses: ['breakfast', 'main'], sideCourses: [], overLimit: false });
+test('Nem kérek clears a component, and a menu without any dish cannot be saved', () => {
+  let state = run(customDay(), { type: 'setCourses', day: 3, courses: ['soup'] }, ...pick(soup));
+  state = run(state, { type: 'openStage', day: 3, stage: 'soup' }, { type: 'clearCourse', day: 3 });
+  assert.deepEqual(draft(state).picks, {});
+  assert.equal(draft(state).stage, 'overview');
+  assert.equal(run(state, { type: 'saveCustom', day: 3 }), state);
 });
 
-test('skipping every course skips the day, and the side-course step still appears', () => {
-  let state = run(customDay(), { type: 'setMealCourses', day: 3, courses: ['soup'] }, { type: 'skipCourse', day: 3 });
-  assert.equal(draft(state).stage, 'sides');
-  state = run(state, { type: 'setSideCourses', day: 3, courses: ['drink'] }, { type: 'skipCourse', day: 3 });
-  assert.equal(state.plan!.slots[3], null);
-  assert.equal(state.plan!.custom[3], undefined);
-});
-
-test('reopening an earlier course replaces its dish and continues from there; the draft survives other days', () => {
-  let state = run(
-    customDay(),
-    { type: 'setMealCourses', day: 3, courses: ['soup', 'main'] },
-    { type: 'pickCourse', day: 3, dish: soup },
-  );
-  state = run(state, { type: 'openStage', day: 3, stage: 'soup' }, { type: 'pickCourse', day: 3, dish: bigSoup });
-  assert.equal(draft(state).picks.soup, bigSoup);
-  assert.equal(draft(state).stage, 'main');
+test('changing the components keeps the dishes of the ones still chosen; only chosen components can be opened', () => {
+  let state = run(customDay(), { type: 'setCourses', day: 3, courses: ['soup', 'main'] }, ...pick(soup), ...pick(main));
+  state = run(state, { type: 'openStage', day: 3, stage: 'select' }, { type: 'setCourses', day: 3, courses: ['main', 'pickle'] });
+  assert.deepEqual(draft(state).picks, { main });
+  assert.equal(run(state, { type: 'openStage', day: 3, stage: 'drink' }), state);
 
   state = run(state, { type: 'openDay', day: 4 }, { type: 'navigate', step: 'overview' }, { type: 'openDay', day: 3 });
-  assert.equal(plannerView(state, context).custom?.picks.soup, bigSoup);
-  assert.equal(run(state, { type: 'openStage', day: 3, stage: 'drink' }), state, 'a course that was not chosen cannot be opened');
+  assert.deepEqual(plannerView(state, context).custom?.picks, { main }, 'the draft survives other days');
 });
 
 test('a calorie limit offers only dishes that fit what is left, hides unknown calories, and lets the user go over', () => {
   let state = run(
     customDay(limited),
-    { type: 'setMealCourses', day: 3, courses: ['soup', 'main'] },
-    { type: 'pickCourse', day: 3, dish: bigSoup },
+    { type: 'setCourses', day: 3, courses: ['soup', 'main', 'dessert', 'drink'] },
+    ...pick(bigSoup),
   );
+  state = run(state, { type: 'openStage', day: 3, stage: 'main' });
   const mains = courseDeck(catalog, 'main', draft(state), limited);
   assert.equal(mains.remaining, 600);
   assert.deepEqual(mains.options, []);
@@ -150,14 +149,10 @@ test('a calorie limit offers only dishes that fit what is left, hides unknown ca
     courseDeck(catalog, 'main', draft(state), limited).options.map(option => option.id),
     [main.id, bigMain.id],
   );
-  state = run(
-    state,
-    { type: 'pickCourse', day: 3, dish: main },
-    { type: 'setSideCourses', day: 3, courses: ['dessert', 'drink'] },
-  );
+  state = run(state, { type: 'pickCourse', day: 3, dish: main });
   assert.deepEqual(courseDeck(catalog, 'dessert', draft(state), limited).options, []);
   assert.deepEqual(courseDeck(catalog, 'drink', draft(state), limited).options, [], 'drinks without calorie data are hidden');
-  state = run(state, { type: 'skipCourse', day: 3 }, { type: 'skipCourse', day: 3 });
+  state = run(state, { type: 'saveCustom', day: 3 });
 
   const saved = state.plan!.slots[3]!;
   assert.equal(saved.kcal, 1200);
@@ -170,10 +165,9 @@ test('a calorie limit offers only dishes that fit what is left, hides unknown ca
   );
 });
 
-test('dishes that fit come first in Teletál order, and code exclusions apply to every course', () => {
-  const state = run(customDay(limited), { type: 'setMealCourses', day: 3, courses: ['soup'] });
-  const withOver = { ...draft(state), overLimit: ['dessert' as const] };
-  const picked = { ...withOver, picks: { soup: dish('A9', 'soup', 800) } };
+test('dishes that fit come first, smallest overshoot next, and code exclusions apply to every component', () => {
+  const state = run(customDay(limited), { type: 'setCourses', day: 3, courses: ['soup', 'dessert'] });
+  const picked = { ...draft(state), overLimit: ['dessert' as const], picks: { soup: dish('A9', 'soup', 800) } };
   assert.deepEqual(
     courseDeck(catalog, 'dessert', picked, limited).options.map(option => option.dishes[0]!.code),
     ['S2', 'S1'],
@@ -189,26 +183,23 @@ test('dishes that fit come first in Teletál order, and code exclusions apply to
   );
 });
 
-test('editing a custom day restores its courses, and the saved day stays until the edit is saved', () => {
+test('editing a custom day restores its components on the overview, and the saved day stays until the edit is saved', () => {
   let state = run(
     customDay(),
-    { type: 'setMealCourses', day: 3, courses: ['soup', 'main'] },
-    { type: 'pickCourse', day: 3, dish: soup },
-    { type: 'skipCourse', day: 3 },
-    { type: 'setSideCourses', day: 3, courses: ['pickle'] },
-    { type: 'pickCourse', day: 3, dish: pickle },
+    { type: 'setCourses', day: 3, courses: ['soup', 'main', 'pickle'] },
+    ...pick(soup),
+    ...pick(pickle),
   );
+  state = run(state, { type: 'saveCustom', day: 3 });
   const saved = state.plan!.slots[3]!;
 
   state = run(state, { type: 'navigate', step: 'overview' }, { type: 'openDay', day: 3, edit: true });
-  const editing = draft(state);
-  assert.equal(editing.stage, 'summary');
-  assert.deepEqual(editing.picks, { soup, main: null, pickle });
+  assert.equal(draft(state).stage, 'overview');
+  assert.deepEqual(draft(state).courses, ['soup', 'main', 'pickle']);
+  assert.deepEqual(draft(state).picks, { soup, pickle });
 
-  state = run(state, { type: 'openStage', day: 3, stage: 'main' }, { type: 'pickCourse', day: 3, dish: main });
-  assert.equal(draft(state).stage, 'summary');
+  state = run(state, ...pick(main));
   assert.equal(state.plan!.slots[3], saved);
-
   state = run(state, { type: 'saveCustom', day: 3 });
   assert.deepEqual(
     state.plan!.slots[3]!.dishes.map(item => item.code),
@@ -220,7 +211,7 @@ test('editing a custom day restores its courses, and the saved day stays until t
 
 test('custom days send each dish as its own cart line, and totals stay unknown when a dish lacks calories', () => {
   const option = customOption(
-    { mealCourses: ['soup'], sideCourses: ['drink'], stage: 'drink', picks: { soup, drink }, overLimit: [], editing: false },
+    { courses: ['soup', 'drink'], stage: 'overview', picks: { soup, drink }, overLimit: [] },
     newPreferences,
   )!;
   assert.equal(option.kcal, null);
@@ -235,11 +226,7 @@ test('custom days send each dish as its own cart line, and totals stay unknown w
 });
 
 test('skipping the whole day ends a custom day in progress', () => {
-  const state = run(
-    customDay(),
-    { type: 'setMealCourses', day: 3, courses: ['soup'] },
-    { type: 'decide', day: 3, action: 'skip' },
-  );
+  const state = run(customDay(), { type: 'setCourses', day: 3, courses: ['soup'] }, { type: 'decide', day: 3, action: 'skip' });
   assert.equal(state.plan!.slots[3], null);
   assert.equal(state.plan!.custom[3], undefined);
 });

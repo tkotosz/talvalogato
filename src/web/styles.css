@@ -663,6 +663,7 @@ main {
 }
 .day-steps ol {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 4px;
   list-style: none;
@@ -1750,47 +1751,20 @@ button.code-group-title:hover {
 }
 
 /* Custom days */
-.course-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0 0 10px;
-  padding: 0;
-  list-style: none;
-}
-.course-strip button {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 36px;
-  padding: 0 11px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--paper);
-  color: var(--muted);
-  font-size: 0.84rem;
-  font-weight: 660;
-}
-.course-strip .picked {
-  background: #e8f5c6;
-  border-color: #e3efc6;
+.custom-total {
+  display: grid;
+  grid-template-columns: 6.5em minmax(0, 1fr) auto;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0 12px;
   color: var(--ink);
 }
-.course-strip .skipped {
-  background: #fff1d5;
-  border-color: #dfbf86;
-  border-style: dashed;
-  color: #754c16;
+.custom-total strong:first-of-type {
+  justify-self: end;
 }
-.course-strip button[aria-current] {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: #fff;
-}
-.custom-total {
-  margin: 0 0 12px;
+.custom-empty {
   color: var(--muted);
-  font-size: 0.88rem;
+  font-style: italic;
 }
 .custom-step {
   padding: 18px;
@@ -1804,6 +1778,10 @@ button.code-group-title:hover {
 }
 .custom-step .button.wide {
   margin-top: 16px;
+}
+.custom-change {
+  display: block;
+  margin: 8px auto 0;
 }
 .custom-hint {
   margin-top: 10px;
@@ -1832,7 +1810,6 @@ button.code-group-title:hover {
   border-color: #dbe9ba;
   color: var(--ink);
 }
-.custom-picks,
 .custom-summary {
   display: grid;
   gap: 6px;
@@ -1840,7 +1817,6 @@ button.code-group-title:hover {
   padding: 0;
   list-style: none;
 }
-.custom-picks span,
 .course-label {
   color: var(--muted);
   font-size: 0.82rem;
@@ -1862,13 +1838,6 @@ button.code-group-title:hover {
 .custom-summary button span:last-child {
   color: var(--muted);
   font-size: 0.86rem;
-}
-.custom-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
 }
 .course-details strong {
   color: var(--ink);

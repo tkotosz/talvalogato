@@ -104,6 +104,7 @@ function courseOf(section: string, kind: DishKind): CustomCourse | null {
   const key = plain(section);
   if (kind === 'menu') return null;
   if (/^(reggeli|zzabkasa)/.test(key)) return 'breakfast';
+  if (/^hidegkonyha/.test(key)) return 'cold';
   if (/^savanyusag/.test(key)) return 'pickle';
   if (/^(cipo|diacipo)/.test(key)) return 'bread';
   if (/^(xixo|ital|hell|vitamin|frissit)/.test(key)) return 'drink';

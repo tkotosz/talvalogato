@@ -39,8 +39,16 @@ export function MealsScreen({
   const picked = plan.slots[day];
   const budget = preferences.limitCalories ? calorieLimit(preferences) : null;
   const issue = done && picked && selectionIssue(picked, day, eligible, catalog, preferences);
-  const chosen = custom ? 'Saját menü' : deck?.label;
   const toMenuTypes = () => (custom ? dispatch({ type: 'leaveCustom', day }) : setDeck(null));
+  const open = (stage: CustomDraft['stage']) => dispatch({ type: 'openStage', day, stage });
+  // The breadcrumb: the menu type, then either the set-menu deck or the custom-day steps.
+  const crumbs: { label: string; onClick?: () => void }[] = [{ label: 'Menütípus', onClick: toMenuTypes }];
+  if (custom) {
+    crumbs.push({ label: 'Összetevők', onClick: () => open('select') });
+    if (custom.stage !== 'select') crumbs.push({ label: 'Saját menü', onClick: () => open('overview') });
+  } else if (deck) {
+    crumbs.push({ label: deck.label });
+  }
 
   return (
     <main className="picker" aria-label={`Napi válogatás · ${days[day - 1]}`}>
@@ -48,21 +56,22 @@ export function MealsScreen({
       {!done && (
         <nav className="day-steps" aria-label="A napi válogatás lépései">
           <ol>
-            <li aria-current={!chosen ? 'step' : undefined}>
-              {chosen ? (
-                <button type="button" onClick={toMenuTypes}>
-                  Menütípus
-                </button>
-              ) : (
-                <span>Menütípus</span>
-              )}
-            </li>
-            <li aria-current={chosen ? 'step' : undefined}>
-              <ChevronRight size={15} aria-hidden="true" />
-              <span>{custom ? 'Fogások' : 'Menük'}</span>
-            </li>
+            {crumbs.map(({ label, onClick }, index) => {
+              const current = index === crumbs.length - 1;
+              return (
+                <li key={label} aria-current={current ? 'step' : undefined}>
+                  {index > 0 && <ChevronRight size={15} aria-hidden="true" />}
+                  {current || !onClick ? (
+                    <span>{label}</span>
+                  ) : (
+                    <button type="button" onClick={onClick}>
+                      {label}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
           </ol>
-          {chosen && <p>{chosen}</p>}
         </nav>
       )}
       {(day > 5 || (budget !== null && !custom)) && (

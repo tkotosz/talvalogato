@@ -1,5 +1,5 @@
-import { mealCourses, normalizeCourses, sideCourses } from './courses.ts';
-import { customOption, editCustom, firstMealStage, nextStage, remainingCalories, startCustom } from './custom.ts';
+import { normalizeCourses } from './courses.ts';
+import { customOption, editCustom, remainingCalories, startCustom, withCourses } from './custom.ts';
 import {
   choose,
   dayCandidates,
@@ -54,11 +54,10 @@ export type PlannerAction =
   // Custom days
   | { type: 'startCustom'; day: Day }
   | { type: 'leaveCustom'; day: Day }
-  | { type: 'setMealCourses'; day: Day; courses: CustomCourse[] }
-  | { type: 'setSideCourses'; day: Day; courses: CustomCourse[] }
+  | { type: 'setCourses'; day: Day; courses: CustomCourse[] }
   | { type: 'openStage'; day: Day; stage: CustomStage }
   | { type: 'pickCourse'; day: Day; dish: Dish }
-  | { type: 'skipCourse'; day: Day }
+  | { type: 'clearCourse'; day: Day }
   | { type: 'showOverLimit'; day: Day }
   | { type: 'saveCustom'; day: Day };
 
@@ -166,30 +165,16 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
     return { ...state, plan: { ...plan, custom: { ...plan.custom, [day]: next } } };
   }
 
-  /** Saves the day's custom draft as its pick, or as skipped when no course got a dish, then moves on like a deck pick. */
-  function saveCustom(current: PlannerState, day: Day): PlannerState {
-    const draft = current.plan?.custom[day];
-    if (!current.plan || !draft) return current;
-    const option = customOption(draft, current.preferences);
-    const chosen = choose({ ...current.plan, day }, option ? 'right' : 'skip', option, eligible);
-    const custom = { ...chosen.custom };
+  /** Saves the day's custom draft as its pick and shows the finished day. */
+  function saveCustom(day: Day): PlannerState {
+    const plan = state.plan;
+    const draft = plan?.custom[day];
+    if (!plan || !draft || day !== view.day || !eligible.includes(day)) return state;
+    const option = customOption(draft, state.preferences);
+    if (!option) return state;
+    const custom = { ...plan.custom };
     delete custom[day];
-    const plan = { ...chosen, custom };
-    return { ...current, plan, editingDay: null, step: plan.day === null ? 'overview' : current.step };
-  }
-
-  /** Records a course decision and moves to the next stage, saving the day after its last course. */
-  function decideCourse(day: Day, dish: Dish | null): PlannerState {
-    let complete = false;
-    const next = withDraft(day, draft => {
-      const course = draft.stage;
-      if (course === 'meals' || course === 'sides' || course === 'summary') return null;
-      const picks = { ...draft.picks, [course]: dish };
-      const stage = nextStage({ ...draft, picks }, course);
-      complete = stage === null;
-      return { ...draft, picks, stage: stage ?? course };
-    });
-    return complete ? saveCustom(next, day) : next;
+    return { ...state, plan: { ...plan, day, slots: { ...plan.slots, [day]: option }, custom }, editingDay: null };
   }
 
   /** Whether `dish` may fill the current course: still on the menu, not excluded, and within the limit unless the user allowed more. */
@@ -276,55 +261,41 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
       return { ...state, plan: { ...state.plan, custom } };
     }
 
-    case 'setMealCourses': {
-      const courses = normalizeCourses(action.courses, mealCourses);
-      const next = withDraft(action.day, draft => {
-        const updated = { ...draft, mealCourses: courses };
-        return { ...updated, stage: draft.editing ? 'summary' : firstMealStage(updated) };
-      });
-      return next === state ? state : { ...next, preferences: { ...next.preferences, mealCourses: courses } };
-    }
-
-    case 'setSideCourses': {
-      const courses = normalizeCourses(action.courses, sideCourses);
-      let complete = false;
-      const next = withDraft(action.day, draft => {
-        const stage = draft.editing ? 'summary' : courses[0];
-        complete = stage === undefined;
-        return { ...draft, sideCourses: courses, stage: stage ?? 'sides' };
-      });
-      return complete ? saveCustom(next, action.day) : next;
+    case 'setCourses': {
+      const next = withDraft(action.day, draft => withCourses(draft, action.courses));
+      if (next === state) return next;
+      return { ...next, preferences: { ...next.preferences, customCourses: normalizeCourses(action.courses) } };
     }
 
     case 'openStage':
       return withDraft(action.day, draft => {
         const { stage } = action;
-        const open = stage === 'meals' || stage === 'sides' || (stage === 'summary' && draft.editing);
-        return open || draft.mealCourses.includes(stage as CustomCourse) || draft.sideCourses?.includes(stage as CustomCourse)
-          ? { ...draft, stage }
-          : null;
+        return stage === 'select' || stage === 'overview' || draft.courses.includes(stage) ? { ...draft, stage } : null;
       });
 
-    case 'pickCourse': {
-      const draft = state.plan?.custom[action.day];
-      if (!draft || !canPick(draft, action.dish)) return state;
-      return decideCourse(action.day, action.dish);
-    }
+    case 'pickCourse':
+      return withDraft(action.day, draft => {
+        if (!canPick(draft, action.dish)) return null;
+        return { ...draft, picks: { ...draft.picks, [action.dish.course!]: action.dish }, stage: 'overview' };
+      });
 
-    case 'skipCourse':
-      return decideCourse(action.day, null);
+    case 'clearCourse':
+      return withDraft(action.day, draft => {
+        const course = draft.stage;
+        if (course === 'select' || course === 'overview') return null;
+        const picks = { ...draft.picks };
+        delete picks[course];
+        return { ...draft, picks, stage: 'overview' };
+      });
 
     case 'showOverLimit':
       return withDraft(action.day, draft => {
         const course = draft.stage;
-        if (course === 'meals' || course === 'sides' || course === 'summary' || draft.overLimit.includes(course)) return null;
+        if (course === 'select' || course === 'overview' || draft.overLimit.includes(course)) return null;
         return { ...draft, overLimit: [...draft.overLimit, course] };
       });
 
-    case 'saveCustom': {
-      const draft = state.plan?.custom[action.day];
-      if (!draft || action.day !== view.day || !eligible.includes(action.day)) return state;
-      return saveCustom(state, action.day);
-    }
+    case 'saveCustom':
+      return saveCustom(action.day);
   }
 }

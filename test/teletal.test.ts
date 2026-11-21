@@ -130,7 +130,7 @@ test('catalog entries follow the website order and preserve names for all menu c
   });
 });
 
-test('drink names ignore the style block inside them, and mains, bread and drinks get their courses', async t => {
+test('drink names ignore the style block inside them, and mains, cold dishes, bread and drinks get their courses', async t => {
   // The drink card markup as Teletál serves it, including the unclosed tag before the name.
   const drink = `<table><tr kod="NF1"><td class="menu-cell-code-sub2"><h2>XIXO COLA</h2></td><td>
     <div class="menu-card"><div class="menu-cell-text-row uk-text-break"><style>.loc_kep_110632748 {mix-blend-mode: multiply;}</style>
@@ -144,8 +144,14 @@ test('drink names ignore the style block inside them, and mains, bread and drink
     .replace('Kenyércipó (burgonyás)', 'Sült kolbász, petrezselymes burgonya')
     .replace('kod="X"', 'kod="I"')
     .replace('ar="345"', 'ar="1990"');
+  const cold = bread
+    .replace('Cipó', 'Hidegkonyha')
+    .replace('Kenyércipó (burgonyás)', 'Norvég saláta')
+    .replace('kod="X"', 'kod="D"')
+    .replace('ar="345"', 'ar="1590"');
   const page = `<form id="etlap_form" ev="2026" het="48">
     <section section="Főételek"><h2>Főételek</h2>${main}</section>
+    <section section="Hidegkonyha"><h2>Hidegkonyhai készítmények</h2>${cold}</section>
     <section section="Cipó"><h2>Cipó</h2>${bread}</section>
     <section section="Xixo" ewid="1"><span class="title-xixo">NAPI FRISSÍTŐK</span><div class="dummy"></div></section>
   </form>`;
@@ -156,6 +162,7 @@ test('drink names ignore the style block inside them, and mains, bread and drink
     catalog.map(({ code, name, course, price }) => [code, name, course, price]),
     [
       ['I', 'Sült kolbász, petrezselymes burgonya', 'main', 1990],
+      ['D', 'Norvég saláta', 'cold', 1590],
       ['X', 'Kenyércipó (burgonyás)', 'bread', 345],
       ['NF1', 'XIXO Cola, cukorral és édesítőszerrel', 'drink', 199],
     ],
