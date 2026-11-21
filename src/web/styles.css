@@ -1901,3 +1901,8 @@ button.code-group-title:hover {
   flex: none;
   margin-top: 1px;
 }
+.menu-updated {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+}

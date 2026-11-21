@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ChevronRight, Flame, ListChecks, Sun, Truck, Utensils } from 'lucide-react';
 import type { PlannerAction } from '../../core/planner.ts';
 import { calorieLimit, dayCandidates, days, mealOptions, menuDeck, menuDecks, selectionIssue } from '../../core/planning.ts';
-import type { CatalogDish, CustomDraft, Day, Plan, Preferences } from '../../core/types.ts';
+import type { Dish, CustomDraft, Day, Plan, Preferences } from '../../core/types.ts';
 import { CustomMenuCard } from '../components/CustomMenuCard.tsx';
 import { MealCard } from '../components/MealCard.tsx';
 import { SwipeDeck } from '../components/SwipeDeck.tsx';
@@ -10,7 +10,7 @@ import { WeekProgress } from '../components/WeekProgress.tsx';
 import { calories, daysOn } from '../format.ts';
 import { CustomDay } from './CustomDay.tsx';
 
-const menuNouns = { checked: 'menü', missing: 'menühöz', again: 'Menük újranézése' };
+const menuNouns = { missing: 'menühöz', again: 'Menük újranézése' };
 
 /** Step 2: one day at a time, first the menu type, then its swipe deck or the custom-day flow. A finished day shows its decision. */
 export function MealsScreen({
@@ -27,7 +27,7 @@ export function MealsScreen({
   plan: Plan;
   day: Day;
   eligible: Day[];
-  catalog: CatalogDish[];
+  catalog: Dish[];
   preferences: Preferences;
   editing: boolean;
   done: boolean;
@@ -114,7 +114,6 @@ export function MealsScreen({
         <SwipeDeck
           plan={plan}
           day={day}
-          deckKey={deck.id}
           candidates={dayCandidates(catalog, day).filter(dish => menuDeck(dish) === deck.id)}
           buildOptions={dishes => mealOptions(dishes, preferences, deck.id)}
           target={budget}
