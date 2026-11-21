@@ -113,6 +113,12 @@ test('a whole week across both decks reaches the overview and the cart link', as
     if (['Z10', 'Z11', 'IRN'].includes(code)) assert.ok(day >= 6, `${code} on a weekend uses the weekend line`);
   }
   await page.screenshot({ path: `${screenshots}cart.png`, fullPage: true });
+  // Desktop Chrome on Linux has no share sheet, so the link is copied instead.
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base });
+  await page.getByRole('button', { name: 'Link küldése' }).click();
+  await page.locator('dialog[open] [role=status]', { hasText: 'Link kimásolva' }).waitFor();
+  await page.screenshot({ path: `${screenshots}cart-share.png` });
+  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), await link.getAttribute('href'));
   assert.deepEqual(errors, []);
 });
 

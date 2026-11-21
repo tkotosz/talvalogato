@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { Bookmark, ShoppingBasket } from 'lucide-react';
+import { Bookmark, Share2, ShoppingBasket } from 'lucide-react';
 import { deliveryDays } from '../../core/planner.ts';
 import { orderSummary } from '../../core/planning.ts';
 import type { CartLine, Dish, Plan, Preferences } from '../../core/types.ts';
 import { eligibleDays } from '../../core/weeks.ts';
 import { maxCartLines, shortcutUrl, teletalWeekUrl } from '../cart-shortcut.ts';
-import { copyText } from '../format.ts';
+import { appName, copyText, shareLink } from '../format.ts';
 
 function CartInstructions({ plan, lines }: { plan: Plan; lines: CartLine[] }) {
   const url = teletalWeekUrl(plan, lines);
   const shortcut = shortcutUrl();
   const [copyStatus, setCopyStatus] = useState('');
+  const [shareStatus, setShareStatus] = useState('');
   return (
     <>
       <p>A választásaidat egy könyvjelző teszi a Teletál-kosárba. A könyvjelzőt csak egyszer kell elmentened.</p>
@@ -73,9 +74,37 @@ function CartInstructions({ plan, lines }: { plan: Plan; lines: CartLine[] }) {
       <a className="button primary wide" href={url} target="_blank" rel="noreferrer">
         <ShoppingBasket size={19} /> Heti étlap megnyitása a Teletálon
       </a>
+
+      <h3 className="instructions-heading">Rendelés másik eszközön</h3>
+      <p>
+        Küldd el magadnak a heti étlap linkjét, például Messengeren. A link a választásaidat is viszi: nyisd meg ott, ahol a
+        „Teletál-kosár” könyvjelződ van, például számítógépen, és kattints a könyvjelzőre. Ha később módosítod a választásaidat,
+        küldd el újra.
+      </p>
+      <button
+        type="button"
+        className="button secondary wide"
+        onClick={() =>
+          shareLink(`${appName}: ${weekNumber(plan.week)}. heti rendelés`, url).then(result =>
+            setShareStatus(shareMessages[result]),
+          )
+        }
+      >
+        <Share2 size={19} aria-hidden="true" /> Link küldése
+      </button>
+      {shareStatus && <p role="status">{shareStatus}</p>}
     </>
   );
 }
+
+const shareMessages = {
+  shared: '',
+  cancelled: '',
+  copied: 'Link kimásolva. Illeszd be egy üzenetbe, és nyisd meg a másik eszközön.',
+  failed: 'A link küldése nem sikerült. Nyisd meg a heti étlapot, és a címsorból másold ki a linket.',
+};
+
+const weekNumber = (week: string) => Number(week.split('-W')[1]);
 
 /** Explains how to send the week's orderable picks to the Teletál cart. */
 export function CartDialogContent({

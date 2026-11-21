@@ -19,6 +19,20 @@ export async function copyText(value: string): Promise<boolean> {
   }
 }
 
+/** Opens the device's share sheet for a link, or copies the link where sharing is not available. */
+export async function shareLink(title: string, url: string): Promise<'shared' | 'cancelled' | 'copied' | 'failed'> {
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, url });
+      return 'shared';
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return 'cancelled';
+      // Any other refusal falls back to copying.
+    }
+  }
+  return (await copyText(url)) ? 'copied' : 'failed';
+}
+
 const budapestTime = new Intl.DateTimeFormat('hu-HU', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Budapest' });
 const budapestDate = new Intl.DateTimeFormat('hu-HU', { month: 'short', day: 'numeric', timeZone: 'Europe/Budapest' });
 
