@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, Flame, ListChecks, Sun, Utensils } from 'lucide-react';
+import { ChevronRight, Flame, ListChecks, Sun, Truck, Utensils } from 'lucide-react';
 import type { PlannerAction } from '../../core/planner.ts';
 import { calorieLimit, dayCandidates, days, mealOptions, menuDeck, menuDecks, selectionIssue } from '../../core/planning.ts';
 import type { CatalogDish, CustomDraft, Day, Plan, Preferences } from '../../core/types.ts';
@@ -39,6 +39,14 @@ export function MealsScreen({
   const picked = plan.slots[day];
   const budget = preferences.limitCalories ? calorieLimit(preferences) : null;
   const issue = done && picked && selectionIssue(picked, day, eligible, catalog, preferences);
+  const choosing = !done && !custom && !deck;
+  // Teletál delivers weekend meals with Friday's delivery.
+  const weekendNote = day > 5 && (
+    <p className="info-note" role="note">
+      <Truck size={18} aria-hidden="true" />
+      <span>A {day === 6 ? 'szombati' : 'vasárnapi'} ételek pénteken érkeznek, mert a Teletál hétvégén nem szállít.</span>
+    </p>
+  );
   const toMenuTypes = () => (custom ? dispatch({ type: 'leaveCustom', day }) : setDeck(null));
   const open = (stage: CustomDraft['stage']) => dispatch({ type: 'openStage', day, stage });
   // The breadcrumb: the menu type, then either the set-menu deck or the custom-day steps.
@@ -74,14 +82,12 @@ export function MealsScreen({
           </ol>
         </nav>
       )}
-      {(day > 5 || (budget !== null && !custom)) && (
+      {!choosing && weekendNote}
+      {budget !== null && !custom && (
         <div className="picker-details">
-          {day > 5 && <span>Pénteki kiszállítás</span>}
-          {budget !== null && !custom && (
-            <span className="day-budget">
-              <Flame size={18} aria-hidden="true" /> Max. {calories(budget)}
-            </span>
-          )}
+          <span className="day-budget">
+            <Flame size={18} aria-hidden="true" /> Max. {calories(budget)}
+          </span>
         </div>
       )}
       {editing && picked && !custom && (
@@ -127,6 +133,7 @@ export function MealsScreen({
       ) : (
         <section className="menu-choices" aria-labelledby="menu-choices-title">
           <h2 id="menu-choices-title">Mit eszel {daysOn[day - 1]}?</h2>
+          {weekendNote}
           <ul>
             {[
               {
