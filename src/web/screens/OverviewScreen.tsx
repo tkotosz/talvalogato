@@ -5,23 +5,34 @@ import type { Day, MenuOption } from '../../core/types.ts';
 import { shortDayLabel, weekLabel } from '../../core/weeks.ts';
 import { appName, calories, copyText, money } from '../format.ts';
 
-/** A custom day's dishes with their Teletál codes. */
-function CustomItems({ option }: { option: MenuOption }) {
+/** A menu in the overview: a title row with its code, then one row per item, all aligned on one grid. */
+function MenuItems({
+  code,
+  title,
+  items,
+}: {
+  code: string;
+  title: string;
+  items: { key: string; code?: string; text: string }[];
+}) {
   return (
-    <>
-      <span className="review-menu-title">
-        <span className="meal-code">SM</span> Saját menü
-      </span>
-      <span className="review-items" lang="hu">
-        {option.dishes.map(dish => (
-          <span key={dish.id} className="review-item">
-            <span className="meal-code">{dish.code}</span>
-            <span>{dish.name}</span>
-          </span>
-        ))}
-      </span>
-    </>
+    <span className="review-items" lang="hu">
+      <span className="meal-code">{code}</span>
+      <span className="review-menu-title">{title}</span>
+      {items.map(item => (
+        <span key={item.key} className="review-item">
+          <span>{item.code && <span className="meal-code">{item.code}</span>}</span>
+          <span>{item.text}</span>
+        </span>
+      ))}
+    </span>
   );
+}
+
+/** A custom day: its dishes with their Teletál codes. */
+function CustomItems({ option }: { option: MenuOption }) {
+  const items = option.dishes.map(dish => ({ key: dish.id, code: dish.code, text: dish.name }));
+  return <MenuItems code="SM" title="Saját menü" items={items} />;
 }
 
 /** A Teletál set menu: its code and name, then its courses. */
@@ -32,20 +43,7 @@ function SetMenuItems({ option }: { option: MenuOption }) {
   const courses = (option.components?.length ? option.components.map(course => course.name) : [dish.name]).filter(
     course => course && course !== name,
   );
-  return (
-    <>
-      <span className="review-menu-title">
-        <span className="meal-code">{dish.code}</span> {name}
-      </span>
-      {courses.length > 0 && (
-        <span className="review-courses" lang="hu">
-          {courses.map((course, index) => (
-            <span key={index}>{course}</span>
-          ))}
-        </span>
-      )}
-    </>
-  );
+  return <MenuItems code={dish.code} title={name} items={courses.map((text, index) => ({ key: String(index), text }))} />;
 }
 
 /** Step 3: the week's decisions and what will reach the cart. */

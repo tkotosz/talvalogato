@@ -1223,32 +1223,6 @@ button.review-row:hover {
   gap: 6px;
   overflow-wrap: anywhere;
 }
-.review-menu-title {
-  font-weight: 700;
-  font-size: 0.95rem;
-}
-.review-courses {
-  display: grid;
-  gap: 2px;
-  color: var(--muted);
-  font-size: 0.88rem;
-}
-.review-items {
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: 3px 10px;
-  color: var(--muted);
-  font-size: 0.88rem;
-}
-.review-items .meal-code {
-  color: var(--ink);
-}
-.review-item {
-  display: contents;
-}
-.review-item .meal-code {
-  justify-self: start;
-}
 .custom-dish {
   display: grid;
   grid-template-columns: 3.4em minmax(0, 1fr);
@@ -1256,6 +1230,26 @@ button.review-row:hover {
 }
 .custom-dish .meal-code {
   justify-self: start;
+}
+.review-items {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: start;
+  gap: 3px 10px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+.review-items .meal-code {
+  justify-self: start;
+  color: var(--ink);
+}
+.review-menu-title {
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.review-item {
+  display: contents;
 }
 .review-total {
   display: flex;
