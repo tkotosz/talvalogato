@@ -1,4 +1,4 @@
-import { ChevronRight, ClipboardList, Copy } from 'lucide-react';
+import { ChevronRight, ClipboardList, Copy, ListChecks } from 'lucide-react';
 import type { PlannerView } from '../../core/planner.ts';
 import { days, type OrderSummary } from '../../core/planning.ts';
 import type { Day } from '../../core/types.ts';
@@ -88,6 +88,9 @@ export function OverviewScreen({
                   <span className="review-meals">
                     {option.kind === 'custom' ? (
                       <span className="review-menu">
+                        <span className="meal-code" aria-hidden="true">
+                          <ListChecks size={13} />
+                        </span>
                         <span lang="hu">Saját menü</span>
                         <span className="review-courses" lang="hu">
                           {option.dishes.map(dish => (

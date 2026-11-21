@@ -1850,3 +1850,11 @@ button.code-group-title:hover {
   font-size: 0.84rem;
   font-weight: 680;
 }
+.review-menu .over-limit-note {
+  grid-column: 2;
+  margin-top: 2px;
+}
+.review-menu .meal-code svg {
+  display: block;
+  margin-block: 2px;
+}
