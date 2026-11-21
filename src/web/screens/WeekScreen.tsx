@@ -34,7 +34,10 @@ export function WeekScreen({
         <section className="welcome">
           <div className="welcome-copy">
             <h1>Tervezd meg a heti menüdet!</h1>
-            <p>Válassz hetet, majd válogass a Teletál ebédmenüi és egész napos menüi közül.</p>
+            <p>
+              Napról napra válassz egy Teletál-menüt, vagy állítsd össze a sajátodat fogásonként – a végén egyben a kosárba
+              teheted.
+            </p>
           </div>
           <div className="deck-art" aria-hidden="true">
             <div className="art-card art-card-left">
