@@ -21,17 +21,38 @@ export async function importOnTeletal(): Promise<void> {
 
   class CartError extends Error {}
   try {
-    const [id, year, week, lines] = JSON.parse(decodeURIComponent(location.hash.slice(fragment.length))) as [unknown, unknown, unknown, unknown];
+    const [id, year, week, lines] = JSON.parse(decodeURIComponent(location.hash.slice(fragment.length))) as [
+      unknown,
+      unknown,
+      unknown,
+      unknown,
+    ];
     const form = document.getElementById('etlap_form');
-    const validLine = (line: unknown): line is Line => Array.isArray(line) && line.length === 3
-      && Number.isInteger(line[0]) && line[0] >= 1 && line[0] <= 7
-      && /^[A-Z0-9][A-Z0-9-]{0,15}$/.test(line[1])
-      && Number.isInteger(line[2]) && line[2] >= 1 && line[2] <= 3;
-    if (typeof id !== 'string' || typeof year !== 'string' || typeof week !== 'string'
-      || !/^[a-f0-9-]{36}$/i.test(id) || !/^20\d{2}$/.test(year) || !/^\d{1,2}$/.test(week)
-      || !Array.isArray(lines) || !lines.length || lines.length > 21 || !lines.every(validLine)
-      || form?.getAttribute('ev') !== year || form?.getAttribute('het') !== week
-      || new Set(lines.map(([day, code]) => day + ':' + code)).size !== lines.length) {
+    const validLine = (line: unknown): line is Line =>
+      Array.isArray(line) &&
+      line.length === 3 &&
+      Number.isInteger(line[0]) &&
+      line[0] >= 1 &&
+      line[0] <= 7 &&
+      /^[A-Z0-9][A-Z0-9-]{0,15}$/.test(line[1]) &&
+      Number.isInteger(line[2]) &&
+      line[2] >= 1 &&
+      line[2] <= 3;
+    if (
+      typeof id !== 'string' ||
+      typeof year !== 'string' ||
+      typeof week !== 'string' ||
+      !/^[a-f0-9-]{36}$/i.test(id) ||
+      !/^20\d{2}$/.test(year) ||
+      !/^\d{1,2}$/.test(week) ||
+      !Array.isArray(lines) ||
+      !lines.length ||
+      lines.length > 21 ||
+      !lines.every(validLine) ||
+      form?.getAttribute('ev') !== year ||
+      form?.getAttribute('het') !== week ||
+      new Set(lines.map(([day, code]) => day + ':' + code)).size !== lines.length
+    ) {
       throw new CartError('A kiválasztott hét vagy étellista érvénytelen. Nyisd meg újra az étlapot a Tálválogatóból.');
     }
 
@@ -45,12 +66,19 @@ export async function importOnTeletal(): Promise<void> {
     };
     if (previous?.done) return goToCart();
     if (previous && previous.address !== address) {
-      throw new CartError('Az előző próbálkozás óta megváltozott a szállítási cím. A további ételek hozzáadása előtt ellenőrizd a Teletál-kosaradat.');
+      throw new CartError(
+        'Az előző próbálkozás óta megváltozott a szállítási cím. A további ételek hozzáadása előtt ellenőrizd a Teletál-kosaradat.',
+      );
     }
 
     const days = ['', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
     const items = lines.map(([day, code, quantity]) => `${days[day]} ${code} × ${quantity}`);
-    if (!confirm(`Hozzáadod ezeket az adagokat a Teletál-kosaradhoz?\n\n${items.join('\n')}\n\nRendelés előtt még ellenőrizheted a kosár tartalmát.`)) return;
+    if (
+      !confirm(
+        `Hozzáadod ezeket az adagokat a Teletál-kosaradhoz?\n\n${items.join('\n')}\n\nRendelés előtt még ellenőrizheted a kosár tartalmát.`,
+      )
+    )
+      return;
 
     const getCart = async () => {
       const response = await fetch('/kosar', { cache: 'no-store', signal: AbortSignal.timeout?.(12_000) });
@@ -67,10 +95,14 @@ export async function importOnTeletal(): Promise<void> {
     };
 
     const current = await getCart();
-    const targets = previous?.targets ?? Object.fromEntries(lines.map(([day, code, quantity]) => {
-      const key = day + ':' + code;
-      return [key, (current[key] || 0) + quantity];
-    }));
+    const targets =
+      previous?.targets ??
+      Object.fromEntries(
+        lines.map(([day, code, quantity]) => {
+          const key = day + ':' + code;
+          return [key, (current[key] || 0) + quantity];
+        }),
+      );
     localStorage.setItem(storageKey, JSON.stringify({ id, address, targets }));
 
     const changes: Record<string, Record<number, string>> = {};
@@ -80,7 +112,9 @@ export async function importOnTeletal(): Promise<void> {
       const actual = current[key] || 0;
       if (actual === target) continue;
       if (actual !== target - quantity) {
-        throw new CartError('A kosár tartalma megváltozott az előző próbálkozás óta. A további ételek hozzáadása előtt ellenőrizd a Teletál-kosaradat.');
+        throw new CartError(
+          'A kosár tartalma megváltozott az előző próbálkozás óta. A további ételek hozzáadása előtt ellenőrizd a Teletál-kosaradat.',
+        );
       }
       (changes[code] ??= {})[day] = String(target);
     }
@@ -106,7 +140,11 @@ export async function importOnTeletal(): Promise<void> {
     }
     goToCart();
   } catch (error) {
-    alert(error instanceof CartError ? error.message : 'Nem sikerült hozzáadni a kiválasztott ételeket. Ellenőrizd a Teletál-kosaradat, majd próbáld újra.');
+    alert(
+      error instanceof CartError
+        ? error.message
+        : 'Nem sikerült hozzáadni a kiválasztott ételeket. Ellenőrizd a Teletál-kosaradat, majd próbáld újra.',
+    );
   }
 }
 

@@ -78,7 +78,7 @@ export function activeWeek(state: PlannerState, weeks: PublishedWeek[], now: Dat
 export function plannerView(state: PlannerState, { weeks, catalog, now }: PlannerContext): PlannerView {
   const { plan, preferences, step } = state;
   const week = activeWeek(state, weeks, now);
-  const selectedDays = plan?.week === week ? plan.selectedDays : state.weekDays[week] ?? preferences.defaultDays;
+  const selectedDays = plan?.week === week ? plan.selectedDays : (state.weekDays[week] ?? preferences.defaultDays);
   const activePlan = plan?.week === week ? plan : { id: '', week, day: null, selectedDays, slots: {}, drafts: {} };
   const availableDays = eligibleDays(week, now, catalog ? deliveryDays(catalog) : undefined);
   const eligible = availableDays.filter(day => selectedDays.includes(day));

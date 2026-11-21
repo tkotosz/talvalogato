@@ -6,12 +6,14 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil((async () => {
-    for (const key of await caches.keys()) {
-      if (key.startsWith('talvalogato-') && key !== cacheName) await caches.delete(key);
-    }
-    await self.clients.claim();
-  })());
+  event.waitUntil(
+    (async () => {
+      for (const key of await caches.keys()) {
+        if (key.startsWith('talvalogato-') && key !== cacheName) await caches.delete(key);
+      }
+      await self.clients.claim();
+    })(),
+  );
 });
 
 self.addEventListener('fetch', event => {

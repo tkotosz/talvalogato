@@ -11,7 +11,7 @@ export async function loadJson<T>(path: string, signal?: AbortSignal): Promise<T
     throw new Error(loadingError, { cause: error });
   });
   if (!response.ok) {
-    const problem = await response.json().catch(() => null) as { error?: string } | null;
+    const problem = (await response.json().catch(() => null)) as { error?: string } | null;
     throw new Error(problem?.error ?? loadingError);
   }
   return response.json().catch(error => {
@@ -37,8 +37,13 @@ export interface DayDishes {
 }
 
 /** Adds nutrition and course details to the dishes of one day, loading only what this session has not received yet. */
-export async function loadDayDishes(week: WeekKey, day: Day, dishes: (CatalogDish & Partial<Dish>)[], signal: AbortSignal,
-  onProgress: (completed: number, total: number) => void): Promise<DayDishes> {
+export async function loadDayDishes(
+  week: WeekKey,
+  day: Day,
+  dishes: (CatalogDish & Partial<Dish>)[],
+  signal: AbortSignal,
+  onProgress: (completed: number, total: number) => void,
+): Promise<DayDishes> {
   const key = `${week}:${day}`;
   const received = versions.get(key) ?? new Map<string, DishDetails>();
   versions.set(key, received);
@@ -75,8 +80,12 @@ export async function loadDayDishes(week: WeekKey, day: Day, dishes: (CatalogDis
     const details = received.get(dish.id);
     if (!details || !Number.isFinite(details.kcal)) return { ...dish, kcal: null };
     const components = details.components ?? [];
-    return { ...dish, ...details, kind: components.length > 1 ? 'menu' : dish.kind,
-      name: components.length === 1 ? components[0]!.name : dish.name };
+    return {
+      ...dish,
+      ...details,
+      kind: components.length > 1 ? 'menu' : dish.kind,
+      name: components.length === 1 ? components[0]!.name : dish.name,
+    };
   });
   return { dishes: enriched, unavailable: enriched.filter(dish => dish.kcal === null).length, failures: failures.size };
 }

@@ -21,8 +21,14 @@ async function buildAssets() {
 
   const client = await build({
     entryPoints: { app: 'src/web/main.tsx' },
-    bundle: true, write: false, outdir: 'client', entryNames: '[name]-[hash]',
-    minify: true, charset: 'utf8', jsx: 'automatic', target: ['safari16.4', 'chrome110'],
+    bundle: true,
+    write: false,
+    outdir: 'client',
+    entryNames: '[name]-[hash]',
+    minify: true,
+    charset: 'utf8',
+    jsx: 'automatic',
+    target: ['safari16.4', 'chrome110'],
     define: { 'process.env.NODE_ENV': JSON.stringify('production') },
   });
 
@@ -54,24 +60,33 @@ async function buildAssets() {
 function buildWorker(assets, options) {
   return build({
     entryPoints: ['src/worker/index.ts'],
-    bundle: true, platform: 'browser', format: 'esm', target: 'es2022',
-    minify: true, charset: 'utf8', ...options,
-    plugins: [{
-      name: 'embedded-assets',
-      setup(context) {
-        context.onResolve({ filter: /^talvalogato-assets$/ }, () => ({ path: 'assets', namespace: 'embedded' }));
-        context.onLoad({ filter: /.*/, namespace: 'embedded' }, () => ({
-          contents: `export default ${JSON.stringify(assets)}`,
-          loader: 'js',
-        }));
+    bundle: true,
+    platform: 'browser',
+    format: 'esm',
+    target: 'es2022',
+    minify: true,
+    charset: 'utf8',
+    ...options,
+    plugins: [
+      {
+        name: 'embedded-assets',
+        setup(context) {
+          context.onResolve({ filter: /^talvalogato-assets$/ }, () => ({ path: 'assets', namespace: 'embedded' }));
+          context.onLoad({ filter: /.*/, namespace: 'embedded' }, () => ({
+            contents: `export default ${JSON.stringify(assets)}`,
+            loader: 'js',
+          }));
+        },
       },
-    }],
+    ],
   });
 }
 
 export async function buildDevWorker() {
   const assets = await buildAssets();
-  const { outputFiles: [worker] } = await buildWorker(assets, { format: 'cjs', write: false });
+  const {
+    outputFiles: [worker],
+  } = await buildWorker(assets, { format: 'cjs', write: false });
   const module = { exports: {} };
   compileFunction(worker.text, ['module', 'exports'], { filename: 'talvalogato-dev-worker.cjs' })(module, module.exports);
   return module.exports.default;

@@ -1,6 +1,4 @@
-import type {
-  CartLine, CatalogDish, Day, DayDraft, Dish, MenuDeckId, MenuOption, Plan, Preferences, WeekKey,
-} from './types.ts';
+import type { CartLine, CatalogDish, Day, DayDraft, Dish, MenuDeckId, MenuOption, Plan, Preferences, WeekKey } from './types.ts';
 
 export const days = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
 export const allDays: Day[] = days.map((_, index) => index + 1);
@@ -9,10 +7,18 @@ export const menuDecks: { id: MenuDeckId; label: string }[] = [
   { id: 'fullDay', label: 'Teletál egész napos menük' },
 ];
 const fullDayCodes = new Set(['Z10', 'Z11', 'IRN']);
-const groupNames = new Map([['CzanikBalazs', 'Czanik Balázs'], ['KlimaAnita', 'Somogyi Kovács Anita']]);
+const groupNames = new Map([
+  ['CzanikBalazs', 'Czanik Balázs'],
+  ['KlimaAnita', 'Somogyi Kovács Anita'],
+]);
 const emptyDraft: DayDraft = { excluded: [], deferred: [] };
 export const newPreferences: Preferences = {
-  limitCalories: false, calories: 2000, tolerance: 10, filterCodes: false, excludedCodes: [], defaultDays: allDays,
+  limitCalories: false,
+  calories: 2000,
+  tolerance: 10,
+  filterCodes: false,
+  excludedCodes: [],
+  defaultDays: allDays,
 };
 export const dishCodePattern = /^[A-Z0-9][A-Z0-9-]{0,15}$/i;
 
@@ -35,9 +41,16 @@ export function calorieLimit({ calories, tolerance }: Pick<Preferences, 'calorie
 }
 
 export function validCalorieBudget({ calories, tolerance }: PreferenceInput): boolean {
-  return typeof calories === 'number' && Number.isInteger(calories) && calories >= 1
-    && typeof tolerance === 'number' && Number.isFinite(tolerance) && tolerance >= 0 && tolerance <= 100
-    && Number.isFinite(calorieLimit({ calories, tolerance }));
+  return (
+    typeof calories === 'number' &&
+    Number.isInteger(calories) &&
+    calories >= 1 &&
+    typeof tolerance === 'number' &&
+    Number.isFinite(tolerance) &&
+    tolerance >= 0 &&
+    tolerance <= 100 &&
+    Number.isFinite(calorieLimit({ calories, tolerance }))
+  );
 }
 
 function normalizeDays(selection: unknown): Day[] {
@@ -48,13 +61,18 @@ export function restorePreferences(values: PreferenceInput | null): Preferences 
   if (!values) return newPreferences;
   const validBudget = validCalorieBudget(values);
   const excludedCodes = Array.isArray(values.excludedCodes)
-    ? [...new Set(values.excludedCodes.filter((code): code is string => typeof code === 'string' && dishCodePattern.test(code))
-      .map(code => code.toUpperCase()))]
+    ? [
+        ...new Set(
+          values.excludedCodes
+            .filter((code): code is string => typeof code === 'string' && dishCodePattern.test(code))
+            .map(code => code.toUpperCase()),
+        ),
+      ]
     : [];
   return {
     limitCalories: validBudget && values.limitCalories === true,
-    calories: validBudget ? values.calories as number : newPreferences.calories,
-    tolerance: validBudget ? values.tolerance as number : newPreferences.tolerance,
+    calories: validBudget ? (values.calories as number) : newPreferences.calories,
+    tolerance: validBudget ? (values.tolerance as number) : newPreferences.tolerance,
     filterCodes: values.filterCodes === true,
     excludedCodes,
     defaultDays: normalizeDays(values.defaultDays),
@@ -99,23 +117,43 @@ export function matchesCalorieLimit(kcal: number | null, preferences: Preference
 
 export function mealOptions(dishes: Dish[], preferences: Preferences, deck: MenuDeckId): MenuOption[] {
   const excluded = new Set(preferences.filterCodes ? preferences.excludedCodes : []);
-  const options: MenuOption[] = dishes.filter(dish => menuDeck(dish) === deck && !excluded.has(dish.code)
-    && matchesCalorieLimit(dish.kcal, preferences)).map(dish => ({
-    id: dish.id, kind: 'menu', dishes: [dish], kcal: dish.kcal ?? null, price: dish.price,
-    title: dish.name, photo: dish.photo, components: dish.components,
-  }));
-  if (preferences.limitCalories) options.sort((a, b) =>
-    Math.abs(a.kcal! - preferences.calories) - Math.abs(b.kcal! - preferences.calories) || a.price - b.price);
+  const options: MenuOption[] = dishes
+    .filter(dish => menuDeck(dish) === deck && !excluded.has(dish.code) && matchesCalorieLimit(dish.kcal, preferences))
+    .map(dish => ({
+      id: dish.id,
+      kind: 'menu',
+      dishes: [dish],
+      kcal: dish.kcal ?? null,
+      price: dish.price,
+      title: dish.name,
+      photo: dish.photo,
+      components: dish.components,
+    }));
+  if (preferences.limitCalories)
+    options.sort(
+      (a, b) => Math.abs(a.kcal! - preferences.calories) - Math.abs(b.kcal! - preferences.calories) || a.price - b.price,
+    );
   return options;
 }
 
-export function selectionIssue(option: MenuOption, day: Day, eligible: Day[], catalog: CatalogDish[], preferences: Preferences): string | null {
+export function selectionIssue(
+  option: MenuOption,
+  day: Day,
+  eligible: Day[],
+  catalog: CatalogDish[],
+  preferences: Preferences,
+): string | null {
   const candidates = dayCandidates(catalog, day);
-  if (!eligible.includes(day) || option.dishes.some(dish => !candidates.some(item => item.day === dish.day && item.code === dish.code))) {
+  if (
+    !eligible.includes(day) ||
+    option.dishes.some(dish => !candidates.some(item => item.day === dish.day && item.code === dish.code))
+  ) {
     return 'Már nem rendelhető';
   }
-  if (preferences.filterCodes && option.dishes.some(dish => preferences.excludedCodes.includes(dish.code))) return 'Kizárt Teletál-kód';
-  if (!matchesCalorieLimit(option.kcal, preferences)) return Number.isFinite(option.kcal) ? 'Kalóriakereten felül' : 'Nincs kalóriaadat';
+  if (preferences.filterCodes && option.dishes.some(dish => preferences.excludedCodes.includes(dish.code)))
+    return 'Kizárt Teletál-kód';
+  if (!matchesCalorieLimit(option.kcal, preferences))
+    return Number.isFinite(option.kcal) ? 'Kalóriakereten felül' : 'Nincs kalóriaadat';
   return null;
 }
 
@@ -141,7 +179,7 @@ export function choose(plan: Plan, action: DeckAction, option: MenuOption | null
     return { ...plan, drafts };
   }
   if (action === 'skip' || action === 'right') {
-    const slots = { ...plan.slots, [day]: action === 'skip' ? null : option ?? null };
+    const slots = { ...plan.slots, [day]: action === 'skip' ? null : (option ?? null) };
     delete drafts[day];
     const pending = eligible.filter(candidate => !Object.hasOwn(slots, candidate));
     const next = pending.find(candidate => candidate > day) ?? pending[0] ?? null;
@@ -150,9 +188,8 @@ export function choose(plan: Plan, action: DeckAction, option: MenuOption | null
   if (!option) return plan;
   const draft = drafts[day] ?? emptyDraft;
   const deferred = draft.deferred.filter(id => id !== option.id);
-  drafts[day] = action === 'up'
-    ? { ...draft, deferred: [...deferred, option.id] }
-    : { deferred, excluded: [...draft.excluded, option.id] };
+  drafts[day] =
+    action === 'up' ? { ...draft, deferred: [...deferred, option.id] } : { deferred, excluded: [...draft.excluded, option.id] };
   return { ...plan, drafts };
 }
 

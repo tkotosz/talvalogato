@@ -17,8 +17,12 @@ const seconds = { weeks: 300, menu: 3_600, nutrition: 21_600 };
 const detailsPattern = /^[1-7]:[1-9]:[A-Z0-9][A-Z0-9-]{0,15}$/;
 const decodingBytes = (encoded: string) => Uint8Array.from(atob(encoded), char => char.charCodeAt(0));
 
-async function cachedJson(request: Request, ctx: ExecutionContext | undefined, maxAge: number,
-  getValue: () => Promise<object[]>): Promise<Response> {
+async function cachedJson(
+  request: Request,
+  ctx: ExecutionContext | undefined,
+  maxAge: number,
+  getValue: () => Promise<object[]>,
+): Promise<Response> {
   const existing = await edgeCache?.match(request);
   if (existing) return existing;
   const payload = await getValue();
@@ -71,9 +75,13 @@ async function serveApi(request: Request, url: URL, ctx?: ExecutionContext): Pro
     return new Response('Az oldal nem található.', { status: 404 });
   } catch (error) {
     console.warn(`Teletál data unavailable for ${url.pathname}`, error instanceof Error ? error.message : error);
-    return Response.json({ error: 'A Teletál étlapja átmenetileg nem érhető el. Próbáld újra egy kis idő múlva.' }, {
-      status: 502, headers: { 'Cache-Control': 'no-store' },
-    });
+    return Response.json(
+      { error: 'A Teletál étlapja átmenetileg nem érhető el. Próbáld újra egy kis idő múlva.' },
+      {
+        status: 502,
+        headers: { 'Cache-Control': 'no-store' },
+      },
+    );
   }
 }
 

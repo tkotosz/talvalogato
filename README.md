@@ -8,7 +8,8 @@ Install dependencies with `npm ci`, then run `npm run dev` and open the printed 
 
 | Command | What it does |
 | --- | --- |
-| `npm run lint` | ESLint |
+| `npm run format` | Formats the code with Prettier |
+| `npm run lint` | Checks formatting, then runs ESLint |
 | `npm run typecheck` | TypeScript, for the app and the tests |
 | `npm test` | Unit tests for the planning rules and the Teletál scraper |
 | `npm run test:e2e` | Plans a week in Chrome against the live Teletál menu; screenshots go to `test/e2e/screenshots/` |
@@ -22,7 +23,7 @@ The cart dialog walks through saving a reusable browser bookmark. Run it on the 
 
 ## Deploy on Cloudflare Pages
 
-Pull requests to `main` run the linter, the type check and the unit tests, build the Pages bundle, and run CodeQL and dependency review. A successful CI run for a push to `main` deploys that commit to the Pages `preview` branch. The **Deploy** workflow can also be run manually on `main` to refresh the preview.
+Pull requests to `main` check formatting and lint, run the type check and the unit tests, build the Pages bundle, and run CodeQL and dependency review. A successful CI run for a push to `main` deploys that commit to the Pages `preview` branch. The **Deploy** workflow can also be run manually on `main` to refresh the preview.
 
 Publishing a GitHub Release runs CI on the tag's commit and deploys it to the Pages production branch, `main`.
 

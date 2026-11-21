@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-export type Loadable<T> =
-  | { phase: 'loading' }
-  | { phase: 'ready'; value: T }
-  | { phase: 'error'; message: string };
+export type Loadable<T> = { phase: 'loading' } | { phase: 'ready'; value: T } | { phase: 'error'; message: string };
 
 export interface Load<T> {
   state: Loadable<T>;
@@ -27,11 +24,13 @@ export function useLoad<T>(key: string | null, load: (signal: AbortSignal) => Pr
     if (key === null) return;
     const aborter = new AbortController();
     const { signal } = aborter;
-    load(signal).then(value => {
-      if (!signal.aborted) setResult({ request, state: { phase: 'ready', value } });
-    }).catch((error: Error) => {
-      if (!signal.aborted) setResult({ request, state: { phase: 'error', message: error.message } });
-    });
+    load(signal)
+      .then(value => {
+        if (!signal.aborted) setResult({ request, state: { phase: 'ready', value } });
+      })
+      .catch((error: Error) => {
+        if (!signal.aborted) setResult({ request, state: { phase: 'error', message: error.message } });
+      });
     return () => aborter.abort();
     // The key identifies what `load` loads.
     // eslint-disable-next-line react-hooks/exhaustive-deps

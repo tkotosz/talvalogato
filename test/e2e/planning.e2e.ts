@@ -13,7 +13,10 @@ let server: ChildProcess;
 let browser: Browser;
 
 before(async () => {
-  server = spawn(process.execPath, ['scripts/dev.mjs'], { env: { ...process.env, TALVALOGATO_PORT: String(port) }, stdio: 'ignore' });
+  server = spawn(process.execPath, ['scripts/dev.mjs'], {
+    env: { ...process.env, TALVALOGATO_PORT: String(port) },
+    stdio: 'ignore',
+  });
   for (let attempt = 0; attempt < 100; attempt++) {
     const response = await fetch(base).catch(() => null);
     if (response?.ok) break;
@@ -30,18 +33,26 @@ after(async () => {
 });
 
 async function openPlanner(): Promise<{ page: Page; errors: string[] }> {
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'hu-HU', timezoneId: 'Europe/Budapest' });
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    locale: 'hu-HU',
+    timezoneId: 'Europe/Budapest',
+  });
   const page = await context.newPage();
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
-  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  page.on('console', message => {
+    if (message.type() === 'error') errors.push(message.text());
+  });
   await page.goto(base);
   await waitForWeek(page);
   return { page, errors };
 }
 
-const waitForWeek = (page: Page) => page.waitForFunction(() =>
-  !document.querySelector<HTMLButtonElement>('.step-bar button.primary')?.disabled, null, { timeout: 30_000 });
+const waitForWeek = (page: Page) =>
+  page.waitForFunction(() => !document.querySelector<HTMLButtonElement>('.step-bar button.primary')?.disabled, null, {
+    timeout: 30_000,
+  });
 const waitForDeck = (page: Page) => page.waitForFunction(() => !document.querySelector('.spinner'), null, { timeout: 60_000 });
 const currentDay = (page: Page) => page.locator('.week-progress [aria-current="step"]').getAttribute('aria-label');
 
@@ -57,7 +68,10 @@ async function decide(page: Page, deck: string, decision: 'Kiválasztom' | 'Nap 
   }
   // The overview opens by itself after the last day's decision.
   const expected = `${day}, ${decision === 'Kiválasztom' ? 'étel kiválasztva' : 'kihagyva'}`;
-  await page.locator(`.week-progress button[aria-label="${expected}"], .review`).first().waitFor({ timeout: 5_000 })
+  await page
+    .locator(`.week-progress button[aria-label="${expected}"], .review`)
+    .first()
+    .waitFor({ timeout: 5_000 })
     .catch(() => assert.fail(`The day strip never showed "${expected}"`));
 }
 
@@ -120,7 +134,9 @@ test('settings, editing from the overview, resuming and switching weeks', async 
   assert.match((await currentDay(page)) ?? '', /étel kiválasztva/);
 
   await page.getByRole('button', { name: 'Hét', exact: true }).click();
-  const weeks = await page.locator('#week option').evaluateAll(options => options.map(option => (option as HTMLOptionElement).value));
+  const weeks = await page
+    .locator('#week option')
+    .evaluateAll(options => options.map(option => (option as HTMLOptionElement).value));
   if (weeks.length > 1) {
     await page.locator('#week').selectOption(weeks[1]!);
     await waitForWeek(page);

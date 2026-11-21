@@ -5,6 +5,7 @@ A Teletál weekly meal planner: a React app and a Cloudflare Worker that reads t
 ## Commands
 
 - `npm run dev`: local server with live reload on http://127.0.0.1:4173 (`TALVALOGATO_PORT` changes the port)
+- `npm run format`: Prettier; `npm run lint` fails on unformatted files
 - `npm run lint`, `npm run typecheck`, `npm test`: run all three before committing; CI runs them on every pull request
 - `npm run test:e2e`: browser walkthrough against the live Teletál menu, run after UI or flow changes; it needs Chrome (or `TALVALOGATO_CHROME`) and network access
 - `npm run build:pages`: the bundle CI deploys
