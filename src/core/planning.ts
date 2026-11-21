@@ -1,4 +1,4 @@
-import { defaultMealCourses, mealCourses, normalizeCourses } from './courses.ts';
+import { defaultCourses, normalizeCourses } from './courses.ts';
 import type { CartLine, CatalogDish, Day, DayDraft, Dish, MenuDeckId, MenuOption, Plan, Preferences, WeekKey } from './types.ts';
 
 export const days = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
@@ -20,7 +20,7 @@ export const newPreferences: Preferences = {
   filterCodes: false,
   excludedCodes: [],
   defaultDays: allDays,
-  mealCourses: defaultMealCourses,
+  customCourses: defaultCourses,
 };
 export const dishCodePattern = /^[A-Z0-9][A-Z0-9-]{0,15}$/i;
 
@@ -78,7 +78,7 @@ export function restorePreferences(values: PreferenceInput | null): Preferences 
     filterCodes: values.filterCodes === true,
     excludedCodes,
     defaultDays: normalizeDays(values.defaultDays),
-    mealCourses: Array.isArray(values.mealCourses) ? normalizeCourses(values.mealCourses, mealCourses) : defaultMealCourses,
+    customCourses: Array.isArray(values.customCourses) ? normalizeCourses(values.customCourses) : defaultCourses,
   };
 }
 

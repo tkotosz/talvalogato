@@ -10,8 +10,8 @@ export interface PublishedWeek {
 
 export type DishKind = 'menu' | 'soup' | 'main' | 'dessert';
 
-/** A course of a custom day, in eating order: meal courses first, then side courses. */
-export type CustomCourse = 'breakfast' | 'soup' | 'main' | 'pickle' | 'bread' | 'dessert' | 'drink';
+/** A component of a custom day: a main course or an add-on. */
+export type CustomCourse = 'breakfast' | 'soup' | 'main' | 'cold' | 'pickle' | 'bread' | 'dessert' | 'drink';
 export type CourseKind = 'soup' | 'main' | 'dessert' | 'side';
 
 /** One orderable line of the Teletál weekly menu, as read from the menu page. */
@@ -74,29 +74,24 @@ export interface MenuOption {
   custom?: CustomChoice;
 }
 
-/** The courses a custom day was built from, including the ones the user skipped. */
+/** The components a custom day was built from, including ones left without a dish. */
 export interface CustomChoice {
-  mealCourses: CustomCourse[];
-  sideCourses: CustomCourse[];
+  courses: CustomCourse[];
   /** The user chose to go over the calorie limit for this day. */
   overLimit: boolean;
 }
 
-/** Where the custom-day flow is: a checklist, a course deck, or the summary of a day being edited. */
-export type CustomStage = 'meals' | 'sides' | 'summary' | CustomCourse;
+/** Where the custom-day flow is: the component selection, the menu overview, or a component's deck. */
+export type CustomStage = 'select' | 'overview' | CustomCourse;
 
 /** A custom day in progress. */
 export interface CustomDraft {
-  mealCourses: CustomCourse[];
-  /** The ticked side courses, or null until the side-course step has been answered. */
-  sideCourses: CustomCourse[] | null;
+  courses: CustomCourse[];
   stage: CustomStage;
-  /** Each decided course: the picked dish, or null when the user skipped it. */
-  picks: Partial<Record<CustomCourse, Dish | null>>;
-  /** Courses whose deck shows dishes beyond the calorie limit. */
+  /** The dish picked for each component that has one. */
+  picks: Partial<Record<CustomCourse, Dish>>;
+  /** Components whose deck shows dishes beyond the calorie limit. */
   overLimit: CustomCourse[];
-  /** The draft edits a saved day, so course picks return to the summary instead of moving on. */
-  editing: boolean;
 }
 
 export interface DayDraft {
@@ -125,8 +120,8 @@ export interface Preferences {
   filterCodes: boolean;
   excludedCodes: string[];
   defaultDays: Day[];
-  /** The meal courses ticked on the last custom day. */
-  mealCourses: CustomCourse[];
+  /** The components ticked on the last custom day. */
+  customCourses: CustomCourse[];
 }
 
 export type MenuDeckId = 'lunch' | 'fullDay';

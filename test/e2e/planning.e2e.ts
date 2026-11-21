@@ -147,43 +147,47 @@ test('settings, editing from the overview, resuming and switching weeks', async 
   assert.deepEqual(errors, []);
 });
 
-/** Swipes the open course's top card and waits until the flow has moved on. */
-async function pickCourse(page: Page) {
+/** Opens a component from the custom menu overview, picks its top dish, and waits for the overview again. */
+async function pickFromOverview(page: Page, component: string) {
+  await page.locator('.custom-summary button', { hasText: component }).click();
   await waitForDeck(page);
-  const before = await page.locator('.course-strip [aria-current]').innerText();
   await page.getByRole('button', { name: 'Kiválasztom' }).click();
-  await page.waitForFunction(label => document.querySelector('.course-strip [aria-current]')?.textContent !== label, before);
+  await page.locator('.custom-summary').waitFor();
 }
 
-test('a week mixing set menus and custom days, with side courses, skips and an edit', async () => {
+test('a week mixing set menus and custom days, with add-ons, a cleared component and an edit', async () => {
   const { page, errors } = await openPlanner();
   await page.getByRole('button', { name: 'Tovább' }).click();
   await decide(page, 'Teletál ebéd menük', 'Kiválasztom');
 
-  // A custom day: soup and main, then a skipped pickle and a dessert.
+  // The custom day: components first, then the overview where each component gets its dish.
   await page.getByRole('button', { name: 'Saját menük' }).click();
-  await page.locator('.custom-step').getByRole('button', { name: 'Tovább' }).click();
-  await pickCourse(page);
-  await page.screenshot({ path: `${screenshots}custom-course.png`, fullPage: true });
-  await pickCourse(page);
-  assert.equal(await page.locator('.custom-step h2').innerText(), 'Kérsz még valamit mellé?');
-  await page.screenshot({ path: `${screenshots}custom-sides.png`, fullPage: true });
   await page.locator('.course-choices-grid').getByRole('button', { name: 'Savanyúság' }).click();
   await page.locator('.course-choices-grid').getByRole('button', { name: 'Desszert' }).click();
-  await page.locator('.custom-actions').getByRole('button', { name: 'Tovább' }).click();
-  await waitForDeck(page);
-  await page.getByRole('button', { name: 'Kihagyom' }).click();
-  await waitForDeck(page);
-  await page.getByRole('button', { name: 'Kiválasztom' }).click();
-  await page.locator('.week-progress button[aria-label$="étel kiválasztva"]').nth(1).waitFor();
-
-  // A custom day where every course is skipped counts as skipped.
-  await page.getByRole('button', { name: 'Saját menük' }).click();
-  await page.locator('.course-choices-grid').getByRole('button', { name: 'Leves' }).click();
-  await page.locator('.course-choices-grid').getByRole('button', { name: 'Főétel' }).click();
+  await page.screenshot({ path: `${screenshots}custom-select.png`, fullPage: true });
   await page.locator('.custom-step').getByRole('button', { name: 'Tovább' }).click();
-  await page.getByRole('button', { name: 'Nem, köszönöm' }).click();
-  await page.locator('.week-progress button[aria-label$="kihagyva"]').waitFor();
+  assert.equal(await page.locator('.custom-summary .custom-empty').count(), 4);
+  assert.equal(await page.getByRole('button', { name: 'Mentés', exact: true }).isDisabled(), true);
+
+  await pickFromOverview(page, 'Leves');
+  await page.locator('.custom-summary button', { hasText: 'Főétel' }).click();
+  await waitForDeck(page);
+  await page.screenshot({ path: `${screenshots}custom-course.png`, fullPage: true });
+  await page.getByRole('button', { name: 'Kiválasztom' }).click();
+  await page.locator('.custom-summary').waitFor();
+  await pickFromOverview(page, 'Desszert');
+  await page.locator('.custom-summary button', { hasText: 'Savanyúság' }).click();
+  await waitForDeck(page);
+  await page.getByRole('button', { name: 'Nem kérek' }).click();
+  await page.locator('.custom-summary').waitFor();
+  assert.equal(await page.locator('.custom-summary .custom-empty').count(), 1);
+  await page.screenshot({ path: `${screenshots}custom-overview.png`, fullPage: true });
+
+  // Mentés saves and stays on the day.
+  const day = (await currentDay(page))?.split(',')[0] ?? '';
+  await page.getByRole('button', { name: 'Mentés', exact: true }).click();
+  await page.getByRole('button', { name: 'Nap szerkesztése' }).waitFor();
+  assert.ok((await currentDay(page))?.startsWith(`${day}, étel kiválasztva`));
 
   await page.getByRole('button', { name: 'Áttekintés' }).click();
   await page.locator('.review').waitFor();
@@ -191,19 +195,20 @@ test('a week mixing set menus and custom days, with side courses, skips and an e
   assert.equal(await custom.count(), 1);
   assert.equal(await custom.locator('.review-courses > span').count(), 3);
 
-  // Editing replaces one course and saves.
+  // Editing replaces one dish and saves.
   await custom.click();
   await page.getByRole('button', { name: 'Nap szerkesztése' }).click();
-  await page.screenshot({ path: `${screenshots}custom-edit.png`, fullPage: true });
-  const soupBefore = await page.locator('.custom-summary button').first().innerText();
-  await page.locator('.custom-summary button').first().click();
+  const soupBefore = await page.locator('.custom-summary button', { hasText: 'Leves' }).innerText();
+  await page.locator('.custom-summary button', { hasText: 'Leves' }).click();
   await waitForDeck(page);
   await page.getByRole('button', { name: 'Passz' }).click();
   await page.waitForTimeout(400);
   await page.getByRole('button', { name: 'Kiválasztom' }).click();
   await page.locator('.custom-summary').waitFor();
-  assert.notEqual(await page.locator('.custom-summary button').first().innerText(), soupBefore);
-  await page.getByRole('button', { name: 'Mentés' }).click();
+  assert.notEqual(await page.locator('.custom-summary button', { hasText: 'Leves' }).innerText(), soupBefore);
+  await page.getByRole('button', { name: 'Változások mentése' }).click();
+  await page.getByRole('button', { name: 'Nap szerkesztése' }).waitFor();
+  await page.screenshot({ path: `${screenshots}custom-saved.png`, fullPage: true });
 
   await page.getByRole('button', { name: 'Áttekintés' }).click();
   await page.getByRole('button', { name: 'Kosárhoz adás' }).click();
@@ -214,7 +219,7 @@ test('a week mixing set menus and custom days, with side courses, skips and an e
   assert.deepEqual(errors, []);
 });
 
-test('a calorie limit hides what does not fit and lets the user go over for a course', async () => {
+test('a calorie limit hides what does not fit and lets the user go over for a component', async () => {
   const { page, errors } = await openPlanner();
   await page.getByRole('button', { name: 'Beállítások' }).click();
   await page.getByLabel('Napi kalóriakeret').check();
@@ -225,20 +230,24 @@ test('a calorie limit hides what does not fit and lets the user go over for a co
   await page.getByRole('button', { name: 'Tovább' }).click();
   await page.getByRole('button', { name: 'Saját menük' }).click();
   await page.locator('.custom-step').getByRole('button', { name: 'Tovább' }).click();
-  await pickCourse(page);
-  await waitForDeck(page);
+  await pickFromOverview(page, 'Leves');
 
+  await page.locator('.custom-summary button', { hasText: 'Főétel' }).click();
+  await waitForDeck(page);
   const showOver = page.getByRole('button', { name: 'Mutasd a kereten felülieket is' });
-  if (await showOver.count()) {
+  const nothingFits = (await showOver.count()) > 0;
+  if (nothingFits) {
     await page.screenshot({ path: `${screenshots}custom-nothing-fits.png`, fullPage: true });
     await showOver.click();
+    await waitForDeck(page);
   }
-  await pickCourse(page);
-  await page.getByRole('button', { name: 'Nem, köszönöm' }).click();
+  await page.getByRole('button', { name: 'Kiválasztom' }).click();
+  await page.locator('.custom-summary').waitFor();
+  await page.getByRole('button', { name: 'Mentés', exact: true }).click();
   await page.getByRole('button', { name: 'Áttekintés' }).click();
   const row = page.locator('.review-row', { hasText: 'Saját menü' });
   await row.waitFor();
-  if (await showOver.count()) assert.match(await row.innerText(), /Kereten felül, engedélyezve/);
+  if (nothingFits) assert.match(await row.innerText(), /Kereten felül, engedélyezve/);
   assert.equal(await page.getByRole('button', { name: 'Kosárhoz adás' }).isDisabled(), false);
   assert.deepEqual(errors, []);
 });

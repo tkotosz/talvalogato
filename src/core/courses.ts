@@ -1,22 +1,24 @@
 import type { CustomCourse } from './types.ts';
 
-/** Courses the user ticks before swiping, in eating order. */
-export const mealCourses: CustomCourse[] = ['breakfast', 'soup', 'main'];
-/** Courses offered once the meal is known, in eating order. */
-export const sideCourses: CustomCourse[] = ['pickle', 'bread', 'dessert', 'drink'];
-export const defaultMealCourses: CustomCourse[] = ['soup', 'main'];
+/** Main courses, in eating order. */
+export const mainCourses: CustomCourse[] = ['breakfast', 'soup', 'main'];
+/** Add-ons, in the order the menu lists them. */
+export const extraCourses: CustomCourse[] = ['cold', 'pickle', 'bread', 'dessert', 'drink'];
+export const allCourses: CustomCourse[] = [...mainCourses, ...extraCourses];
+export const defaultCourses: CustomCourse[] = ['soup', 'main'];
 
 export const courseNames: Record<CustomCourse, string> = {
   breakfast: 'Reggeli',
   soup: 'Leves',
   main: 'Főétel',
+  cold: 'Hidegkonyha',
   pickle: 'Savanyúság',
   bread: 'Cipó',
   dessert: 'Desszert',
   drink: 'Ital',
 };
 
-/** Keeps the courses of `selection` that belong to `from`, in eating order. */
-export function normalizeCourses(selection: unknown, from: CustomCourse[]): CustomCourse[] {
-  return Array.isArray(selection) ? from.filter(course => selection.includes(course)) : [];
+/** Keeps the known components of `selection`, in menu order. */
+export function normalizeCourses(selection: unknown): CustomCourse[] {
+  return Array.isArray(selection) ? allCourses.filter(course => selection.includes(course)) : [];
 }

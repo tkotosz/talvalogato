@@ -85,16 +85,23 @@ export function App() {
     window.scrollTo(0, 0);
   }, [step, week, pickerDay]);
 
-  const customStage = !view.dayDone ? view.custom?.stage : undefined;
+  const customStage = showPicker && !view.dayDone ? view.custom?.stage : undefined;
+  const inCourseDeck = customStage !== undefined && customStage !== 'select' && customStage !== 'overview';
   const dayAction: DayAction | null = !showPicker
     ? null
     : view.dayDone
       ? { label: 'Nap szerkesztése', onClick: () => dispatch({ type: 'openDay', day, edit: true }) }
-      : customStage === 'summary'
-        ? { label: 'Mentés', onClick: () => dispatch({ type: 'saveCustom', day }) }
-        : customStage && customStage !== 'meals' && customStage !== 'sides'
-          ? { label: 'Kihagyom', onClick: () => dispatch({ type: 'skipCourse', day }) }
-          : { label: 'Nap kihagyása', onClick: () => dispatch({ type: 'decide', day, action: 'skip' }) };
+      : inCourseDeck
+        ? { label: 'Nem kérek', onClick: () => dispatch({ type: 'clearCourse', day }) }
+        : { label: 'Nap kihagyása', onClick: () => dispatch({ type: 'decide', day, action: 'skip' }) };
+
+  // Inside a custom day, Vissza steps back through its own steps before leaving the meal picker.
+  function goBack() {
+    if (customStage === undefined) return dispatch({ type: 'navigate', step: step === 'meals' ? 'week' : 'meals' });
+    if (inCourseDeck) return dispatch({ type: 'openStage', day: day!, stage: 'overview' });
+    if (customStage === 'overview') return dispatch({ type: 'openStage', day: day!, stage: 'select' });
+    dispatch({ type: 'leaveCustom', day: day! });
+  }
 
   return (
     <>
@@ -156,7 +163,7 @@ export function App() {
       <StepBar
         step={step}
         dayAction={dayAction}
-        onBack={() => dispatch({ type: 'navigate', step: step === 'meals' ? 'week' : 'meals' })}
+        onBack={goBack}
         onNext={() => (step === 'overview' ? setDialog('cart') : dispatch({ type: 'navigate', step: 'overview' }))}
         disabled={step === 'week' ? catalogItems === null || !eligible.length : step === 'overview' && !order?.lines.length}
       />
