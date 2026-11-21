@@ -13,7 +13,6 @@ export function WeekScreen({
   catalog,
   savedWeek,
   dispatch,
-  onReset,
   onRetryWeeks,
   onRetryCatalog,
 }: {
@@ -24,8 +23,6 @@ export function WeekScreen({
   /** The saved plan's week, if any. */
   savedWeek: WeekKey | undefined;
   dispatch(action: PlannerAction): void;
-  /** Present when the active week has progress that can be reset. */
-  onReset?: () => void;
   onRetryWeeks(): void;
   onRetryCatalog(): void;
 }) {
@@ -88,11 +85,6 @@ export function WeekScreen({
             </select>
             <ChevronDown size={18} aria-hidden="true" />
           </div>
-          {onReset && (
-            <button type="button" className="text-button week-plan-link" onClick={onReset}>
-              Heti válogatás újrakezdése
-            </button>
-          )}
           {week && (
             <DayChoices
               label="Rendelési napok"

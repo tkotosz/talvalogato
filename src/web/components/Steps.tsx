@@ -42,19 +42,22 @@ export function StepBar({
   disabled,
   onBack,
   dayAction,
+  nextLabel,
   onNext,
 }: {
   step: Step;
   disabled: boolean;
   onBack(): void;
   dayAction: DayAction | null;
+  /** The main button's text, when it is not Tovább or Kosárhoz adás. */
+  nextLabel?: string;
   onNext(): void;
 }) {
   const selectingWeek = step === 'week';
   const overview = step === 'overview';
   return (
     <footer className="step-bar" data-step={step}>
-      <div className={dayAction ? 'step-bar-inner has-day-action' : 'step-bar-inner'}>
+      <div className={dayAction && !selectingWeek ? 'step-bar-inner has-day-action' : 'step-bar-inner'}>
         {!selectingWeek && (
           <button type="button" className="button secondary" onClick={onBack}>
             Vissza
@@ -73,7 +76,7 @@ export function StepBar({
           onClick={selectingWeek ? undefined : onNext}
         >
           {overview && <ShoppingBasket size={19} aria-hidden="true" />}
-          {overview ? 'Kosárhoz adás' : 'Tovább'}
+          {nextLabel ?? (overview ? 'Kosárhoz adás' : 'Tovább')}
         </button>
       </div>
     </footer>

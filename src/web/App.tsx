@@ -89,7 +89,7 @@ export function App() {
   const inCourseDeck = customStage !== undefined && customStage !== 'select' && customStage !== 'overview';
   const canReset = view.hasSavedProgress && planner.plan?.week === week;
   const dayAction: DayAction | null = !showPicker
-    ? step === 'overview' && canReset
+    ? step !== 'meals' && canReset
       ? { label: 'Újrakezdés', onClick: () => setDialog('resetPlan') }
       : null
     : view.dayDone
@@ -134,7 +134,6 @@ export function App() {
           catalog={catalog.state}
           savedWeek={planner.plan?.week}
           dispatch={dispatch}
-          onReset={canReset ? () => setDialog('resetPlan') : undefined}
           onRetryWeeks={published.retry}
           onRetryCatalog={catalog.retry}
         />
@@ -164,6 +163,7 @@ export function App() {
         />
       )}
       <StepBar
+        nextLabel={step === 'week' ? (canReset ? 'Folytatás' : 'Válogatás indítása') : undefined}
         step={step}
         dayAction={dayAction}
         onBack={goBack}
