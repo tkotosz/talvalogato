@@ -126,6 +126,39 @@ export function dayCandidates<T extends CatalogDish>(catalog: T[], day: Day): T[
 }
 
 /**
+ * Splits a Teletál dish name such as "Mikulás puttonya (diós, töltött csirkemell), jázmin rizs" into a title without the
+ * parenthesized parts, "Mikulás puttonya, jázmin rizs", and those parts as a description. A name without parentheses, or
+ * made only of them, stays whole.
+ */
+export function splitDishName(name: string): { title: string; description: string | null } {
+  let title = '';
+  const parts: string[] = [];
+  let depth = 0;
+  let part = '';
+  for (const char of name) {
+    if (char === '(') {
+      if (depth > 0) part += char;
+      depth += 1;
+    } else if (char === ')' && depth > 0) {
+      depth -= 1;
+      if (depth > 0) part += char;
+      else {
+        parts.push(part.trim());
+        part = '';
+      }
+    } else if (depth > 0) part += char;
+    else title += char;
+  }
+  title = title
+    .replace(/\s+([,.])/g, '$1')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  const description = parts.filter(Boolean).join(' · ');
+  if (depth > 0 || !title || !description) return { title: name, description: null };
+  return { title, description };
+}
+
+/**
  * A catalog line with its details from Teletál's dish page. Teletál's menu page names dishes briefly, its dish page at
  * length; the brief names are kept: the dish keeps its catalog name, and its courses take the parts of that name when
  * they match the courses one to one. Calories and photos come from the details.
