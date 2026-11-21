@@ -23,6 +23,7 @@ type DeckState =
   | { phase: 'loading'; progress: [number, number] }
   | ({ phase: 'ready' } & DayDishes)
   | { phase: 'error'; message: string };
+const startedLoading: DeckState = { phase: 'loading', progress: [0, 0] };
 
 /** The swipe deck of one menu type for the plan's current day. */
 function DayDeck({ plan, day, catalog, deck, preferences, budget, onAction }: {
@@ -37,24 +38,24 @@ function DayDeck({ plan, day, catalog, deck, preferences, budget, onAction }: {
   const card = useRef<SwipeCardHandle>(null);
   const [attempt, setAttempt] = useState(0);
   const [animation, setAnimation] = useState(0);
-  const [state, setState] = useState<DeckState>({ phase: 'loading', progress: [0, 0] });
   const { week } = plan;
+  // Each update remembers the request it belongs to, so an outdated one reads as loading.
+  const request = `${week}:${day}:${deck}:${attempt}`;
+  const [loaded, setLoaded] = useState<{ request: string; state: DeckState } | null>(null);
+  const state = loaded?.request === request ? loaded.state : startedLoading;
 
   useEffect(() => {
     const aborter = new AbortController();
     const { signal } = aborter;
+    const update = (next: DeckState) => { if (!signal.aborted) setLoaded({ request, state: next }); };
     const candidates = new Map(dayCandidates(catalog, day).filter(dish => menuDeck(dish) === deck)
       .map(dish => [dish.id, dish]));
-    setState({ phase: 'loading', progress: [0, 0] });
     loadDayDishes(week, day, [...candidates.values()], signal, (current, total) => {
-      if (!signal.aborted) setState({ phase: 'loading', progress: [current, total] });
-    }).then(result => {
-      if (!signal.aborted) setState({ phase: 'ready', ...result });
-    }).catch((error: Error) => {
-      if (!signal.aborted) setState({ phase: 'error', message: error.message });
-    });
+      update({ phase: 'loading', progress: [current, total] });
+    }).then(result => update({ phase: 'ready', ...result }))
+      .catch((error: Error) => update({ phase: 'error', message: error.message }));
     return () => aborter.abort();
-  }, [week, day, catalog, attempt, deck]);
+  }, [request, week, day, catalog, deck]);
 
   const options = useMemo(() => state.phase === 'ready' ? mealOptions(state.dishes, preferences, deck) : [],
     [state, preferences, deck]);
