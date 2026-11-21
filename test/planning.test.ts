@@ -34,6 +34,7 @@ function dish(fields: Partial<Dish> & Pick<Dish, 'id' | 'code' | 'name' | 'price
     weekend: false,
     pickerEligible: true,
     ...fields,
+    course: fields.course !== undefined ? fields.course : fields.kind === 'menu' ? null : (fields.kind ?? 'main'),
   };
 }
 const course = (kind: CourseKind | undefined, name: string, kcal: number): Course => ({ kind, name, kcal, photo: null });

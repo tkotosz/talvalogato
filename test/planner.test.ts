@@ -31,6 +31,7 @@ function menu(day: Day, code: string): Dish {
     menuName: `Menü ${code}`,
     weekend: false,
     pickerEligible: true,
+    course: null,
     kcal: 900,
   };
 }

@@ -9,6 +9,9 @@ export interface PublishedWeek {
 }
 
 export type DishKind = 'menu' | 'soup' | 'main' | 'dessert';
+
+/** A course of a custom day, in eating order: meal courses first, then side courses. */
+export type CustomCourse = 'breakfast' | 'soup' | 'main' | 'pickle' | 'bread' | 'dessert' | 'drink';
 export type CourseKind = 'soup' | 'main' | 'dessert' | 'side';
 
 /** One orderable line of the Teletál weekly menu, as read from the menu page. */
@@ -28,6 +31,8 @@ export interface CatalogDish {
   menuName: string;
   weekend: boolean;
   pickerEligible: boolean;
+  /** The custom-day course this dish can fill, or null for set menus and dishes outside the courses. */
+  course: CustomCourse | null;
 }
 
 export interface Course {

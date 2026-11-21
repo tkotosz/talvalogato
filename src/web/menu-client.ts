@@ -1,6 +1,8 @@
 import type { CatalogDish, Day, Dish, DishDetails, WeekKey } from '../core/types.ts';
 
 const batchSize = 8;
+// Part of the catalog URL, so caches never return a catalog in an older shape. Raise it when CatalogDish changes.
+const catalogFormat = 2;
 const catalogs = new Map<WeekKey, { items: CatalogDish[]; expires: number }>();
 const versions = new Map<string, Map<string, DishDetails>>();
 
@@ -23,7 +25,10 @@ export async function loadJson<T>(path: string, signal?: AbortSignal): Promise<T
 export async function loadMenuCatalog(week: WeekKey, signal?: AbortSignal, refresh = false): Promise<CatalogDish[]> {
   const cached = catalogs.get(week);
   if (!refresh && cached && cached.expires > Date.now()) return cached.items;
-  const items = await loadJson<CatalogDish[]>(`/api/menu?week=${week}${refresh ? '&recheck=1' : ''}`, signal);
+  const items = await loadJson<CatalogDish[]>(
+    `/api/menu?week=${week}&format=${catalogFormat}${refresh ? '&recheck=1' : ''}`,
+    signal,
+  );
   if (!signal?.aborted) catalogs.set(week, { items, expires: Date.now() + 300_000 });
   return items;
 }
