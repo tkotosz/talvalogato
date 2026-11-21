@@ -7,7 +7,7 @@ import { CustomMenuCard } from '../components/CustomMenuCard.tsx';
 import { MealCard } from '../components/MealCard.tsx';
 import { SwipeDeck } from '../components/SwipeDeck.tsx';
 import { WeekProgress } from '../components/WeekProgress.tsx';
-import { calories } from '../format.ts';
+import { calories, daysOn } from '../format.ts';
 import { CustomDay } from './CustomDay.tsx';
 
 const menuNouns = { checked: 'menü', missing: 'menühöz', again: 'Menük újranézése' };
@@ -42,7 +42,7 @@ export function MealsScreen({
   const toMenuTypes = () => (custom ? dispatch({ type: 'leaveCustom', day }) : setDeck(null));
   const open = (stage: CustomDraft['stage']) => dispatch({ type: 'openStage', day, stage });
   // The breadcrumb: the menu type, then either the set-menu deck or the custom-day steps.
-  const crumbs: { label: string; onClick?: () => void }[] = [{ label: 'Menütípus', onClick: toMenuTypes }];
+  const crumbs: { label: string; onClick?: () => void }[] = [{ label: 'Mit eszel?', onClick: toMenuTypes }];
   if (custom) {
     crumbs.push({ label: 'Összetevők', onClick: () => open('select') });
     if (custom.stage !== 'select') crumbs.push({ label: 'Saját menü', onClick: () => open('overview') });
@@ -53,7 +53,7 @@ export function MealsScreen({
   return (
     <main className="picker" aria-label={`Napi válogatás · ${days[day - 1]}`}>
       <WeekProgress plan={{ ...plan, day }} eligible={eligible} onSelect={value => dispatch({ type: 'openDay', day: value })} />
-      {!done && (
+      {!done && crumbs.length > 1 && (
         <nav className="day-steps" aria-label="A napi válogatás lépései">
           <ol>
             {crumbs.map(({ label, onClick }, index) => {
@@ -125,23 +125,44 @@ export function MealsScreen({
           onAction={(action, option) => dispatch({ type: 'decide', day, action, option })}
         />
       ) : (
-        <div className="menu-type-picker">
-          <div className="menu-type-options" role="group" aria-label="Válassz menütípust">
-            {menuDecks.map(type => {
-              const Icon = type.id === 'lunch' ? Utensils : Sun;
-              return (
-                <button key={type.id} type="button" className="button secondary" onClick={() => setDeck(type)}>
-                  <Icon size={24} aria-hidden="true" />
-                  <span>{type.label}</span>
+        <section className="menu-choices" aria-labelledby="menu-choices-title">
+          <h2 id="menu-choices-title">Mit eszel {daysOn[day - 1]}?</h2>
+          <ul>
+            {[
+              {
+                Icon: Utensils,
+                title: 'Teletál ebédmenü választása',
+                hint: 'Leves és főétel egy menüben',
+                onClick: () => setDeck(menuDecks[0]!),
+              },
+              {
+                Icon: Sun,
+                title: 'Teletál egész napos menü választása',
+                hint: 'Több étkezés egy csomagban, reggeltől estig',
+                onClick: () => setDeck(menuDecks[1]!),
+              },
+              {
+                Icon: ListChecks,
+                title: 'Saját menü összeállítása',
+                hint: 'Válogass fogásonként: leves, főétel, kiegészítők',
+                onClick: () => dispatch({ type: 'startCustom', day }),
+              },
+            ].map(({ Icon, title, hint, onClick }) => (
+              <li key={title}>
+                <button type="button" className="menu-choice" onClick={onClick}>
+                  <span className="menu-choice-icon">
+                    <Icon size={22} aria-hidden="true" />
+                  </span>
+                  <span className="menu-choice-text">
+                    <strong>{title}</strong>
+                    <span>{hint}</span>
+                  </span>
+                  <ChevronRight size={18} aria-hidden="true" />
                 </button>
-              );
-            })}
-            <button type="button" className="button secondary" onClick={() => dispatch({ type: 'startCustom', day })}>
-              <ListChecks size={24} aria-hidden="true" />
-              <span>Saját menük</span>
-            </button>
-          </div>
-        </div>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </main>
   );
