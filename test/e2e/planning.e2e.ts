@@ -78,7 +78,7 @@ async function decide(page: Page, deck: string, decision: 'Kiválasztom' | 'Nap 
 test('a whole week across both decks reaches the overview and the cart link', async () => {
   const { page, errors } = await openPlanner();
   await page.screenshot({ path: `${screenshots}week.png`, fullPage: true });
-  await page.getByRole('button', { name: 'Tovább' }).click();
+  await page.getByRole('button', { name: 'Válogatás indítása' }).click();
   const days = await page.locator('.week-progress button:not(:disabled)').count();
   assert.ok(days > 0, 'the week has orderable days');
   await page.screenshot({ path: `${screenshots}menu-type.png`, fullPage: true });
@@ -109,7 +109,7 @@ test('a whole week across both decks reaches the overview and the cart link', as
 
 test('settings, editing from the overview, resuming and switching weeks', async () => {
   const { page, errors } = await openPlanner();
-  await page.getByRole('button', { name: 'Tovább' }).click();
+  await page.getByRole('button', { name: 'Válogatás indítása' }).click();
   const firstDay = (await currentDay(page))?.split(',')[0] ?? '';
   await decide(page, 'Teletál egész napos menük', 'Kiválasztom');
 
@@ -130,7 +130,8 @@ test('settings, editing from the overview, resuming and switching weeks', async 
 
   await page.reload();
   await waitForWeek(page);
-  await page.getByRole('button', { name: 'Tovább' }).click();
+  assert.equal(await page.locator('.step-bar').getByRole('button', { name: 'Újrakezdés' }).count(), 1);
+  await page.getByRole('button', { name: 'Folytatás' }).click();
   assert.match((await currentDay(page)) ?? '', /étel kiválasztva/);
 
   await page.getByRole('button', { name: 'Hét', exact: true }).click();
@@ -140,7 +141,7 @@ test('settings, editing from the overview, resuming and switching weeks', async 
   if (weeks.length > 1) {
     await page.locator('#week').selectOption(weeks[1]!);
     await waitForWeek(page);
-    await page.getByRole('button', { name: 'Tovább' }).click();
+    await page.getByRole('button', { name: 'Válogatás indítása' }).click();
     assert.equal(await page.locator('dialog[open] h2').innerText(), 'Új heti tervet indítasz?');
     await page.getByRole('button', { name: 'Mégse' }).click();
   }
@@ -157,7 +158,7 @@ async function pickFromOverview(page: Page, component: string) {
 
 test('a week mixing set menus and custom days, with add-ons, a cleared component and an edit', async () => {
   const { page, errors } = await openPlanner();
-  await page.getByRole('button', { name: 'Tovább' }).click();
+  await page.getByRole('button', { name: 'Válogatás indítása' }).click();
   await decide(page, 'Teletál ebéd menük', 'Kiválasztom');
 
   // The custom day: components first, then the overview where each component gets its dish.
@@ -227,7 +228,7 @@ test('a calorie limit hides what does not fit and lets the user go over for a co
   await page.locator('#tolerance').fill('0');
   await page.getByRole('button', { name: 'Mentés' }).click();
   await page.locator('dialog[open]').waitFor({ state: 'detached' });
-  await page.getByRole('button', { name: 'Tovább' }).click();
+  await page.getByRole('button', { name: 'Válogatás indítása' }).click();
   await page.getByRole('button', { name: 'Saját menük' }).click();
   await page.locator('.custom-step').getByRole('button', { name: 'Tovább' }).click();
   await pickFromOverview(page, 'Leves');
