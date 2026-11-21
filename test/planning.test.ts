@@ -132,6 +132,7 @@ test('restoring a saved plan keeps choices and swipe history, and preferences ar
     selectedDays: allDays,
     slots: {},
     drafts: {},
+    custom: {},
   });
 
   assert.deepEqual(restorePreferences(null), newPreferences);

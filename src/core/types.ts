@@ -62,13 +62,41 @@ export interface Dish extends CatalogDish {
 /** A card in a swipe deck, and what a day stores once it is picked. */
 export interface MenuOption {
   id: string;
-  kind: 'menu';
+  /** A Teletál set menu, or a custom day made of single dishes. */
+  kind: 'menu' | 'custom';
   dishes: Dish[];
   kcal: number | null;
   price: number;
   title: string;
   photo?: string | null;
   components?: Course[];
+  /** How a custom day was put together, so editing can restore it. */
+  custom?: CustomChoice;
+}
+
+/** The courses a custom day was built from, including the ones the user skipped. */
+export interface CustomChoice {
+  mealCourses: CustomCourse[];
+  sideCourses: CustomCourse[];
+  /** The user chose to go over the calorie limit for this day. */
+  overLimit: boolean;
+}
+
+/** Where the custom-day flow is: a checklist, a course deck, or the summary of a day being edited. */
+export type CustomStage = 'meals' | 'sides' | 'summary' | CustomCourse;
+
+/** A custom day in progress. */
+export interface CustomDraft {
+  mealCourses: CustomCourse[];
+  /** The ticked side courses, or null until the side-course step has been answered. */
+  sideCourses: CustomCourse[] | null;
+  stage: CustomStage;
+  /** Each decided course: the picked dish, or null when the user skipped it. */
+  picks: Partial<Record<CustomCourse, Dish | null>>;
+  /** Courses whose deck shows dishes beyond the calorie limit. */
+  overLimit: CustomCourse[];
+  /** The draft edits a saved day, so course picks return to the summary instead of moving on. */
+  editing: boolean;
 }
 
 export interface DayDraft {
@@ -84,7 +112,10 @@ export interface Plan {
   selectedDays: Day[];
   /** A picked menu, or null when the day was skipped. Days without a decision have no entry. */
   slots: Record<Day, MenuOption | null>;
+  /** Swipe history per day, shared by the set-menu decks and the course decks. */
   drafts: Record<Day, DayDraft>;
+  /** Custom days in progress. */
+  custom: Record<Day, CustomDraft>;
 }
 
 export interface Preferences {
@@ -94,6 +125,8 @@ export interface Preferences {
   filterCodes: boolean;
   excludedCodes: string[];
   defaultDays: Day[];
+  /** The meal courses ticked on the last custom day. */
+  mealCourses: CustomCourse[];
 }
 
 export type MenuDeckId = 'lunch' | 'fullDay';
