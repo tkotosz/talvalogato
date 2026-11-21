@@ -1,4 +1,5 @@
 import { defaultCourses, normalizeCourses } from './courses.ts';
+import { addDays, mondayOfWeek, todayInBudapest } from './weeks.ts';
 import type {
   CartLine,
   CatalogDish,
@@ -116,6 +117,21 @@ export function restorePlan({ id, week, day, selectedDays, slots, drafts, custom
     drafts: drafts ?? {},
     custom: custom ?? {},
   };
+}
+
+/**
+ * The saved plans, one per week, without the weeks that have already ended. Unreadable entries are left out, and a single
+ * plan saved before plans were kept per week becomes its week's plan.
+ */
+export function restorePlans(stored: unknown, previous: unknown, now = new Date()): Record<WeekKey, Plan> {
+  const today = todayInBudapest(now);
+  const entries = stored && typeof stored === 'object' ? Object.values(stored) : previous ? [previous] : [];
+  const plans: Record<WeekKey, Plan> = {};
+  for (const entry of entries as Partial<StoredPlan>[]) {
+    const monday = entry?.id && entry.week ? mondayOfWeek(entry.week) : null;
+    if (monday && addDays(monday, 6) >= today) plans[entry.week!] = restorePlan(entry as StoredPlan);
+  }
+  return plans;
 }
 
 // Teletál delivers weekend meals on Friday. A weekend day offers the lines Teletál publishes for that day,

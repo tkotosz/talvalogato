@@ -116,7 +116,7 @@ test('a whole week across both decks reaches the overview and the cart link', as
   assert.deepEqual(errors, []);
 });
 
-test('settings, editing from the overview, resuming and switching weeks', async () => {
+test('settings, editing from the overview, resuming, and a second week planned alongside', async () => {
   const { page, errors } = await openPlanner();
   await page.getByRole('button', { name: 'Válogatás indítása' }).click();
   const firstDay = (await currentDay(page))?.split(',')[0] ?? '';
@@ -150,9 +150,15 @@ test('settings, editing from the overview, resuming and switching weeks', async 
   if (weeks.length > 1) {
     await page.locator('#week').selectOption(weeks[1]!);
     await waitForWeek(page);
+    // Another week starts its own plan; the first week keeps its progress.
     await page.getByRole('button', { name: 'Válogatás indítása' }).click();
-    assert.equal(await page.locator('dialog[open] h2').innerText(), 'Új heti tervet indítasz?');
-    await page.getByRole('button', { name: 'Mégse' }).click();
+    assert.equal(await page.locator('dialog[open]').count(), 0);
+    await page.locator('.menu-choices').waitFor();
+    await page.locator('.step-progress').getByRole('button', { name: 'Hét' }).click();
+    await page.locator('#week').selectOption(weeks[0]!);
+    await waitForWeek(page);
+    await page.getByRole('button', { name: 'Folytatás' }).click();
+    assert.match((await currentDay(page)) ?? '', /étel kiválasztva/);
   }
   assert.deepEqual(errors, []);
 });

@@ -10,6 +10,7 @@ import {
   newPreferences,
   orderSummary,
   restorePlan,
+  restorePlans,
   restorePreferences,
   splitDishName,
   startPlan,
@@ -364,4 +365,18 @@ test('dish names split into a title and the parenthesized description', () => {
   assert.deepEqual(splitDishName('Lencseleves'), { title: 'Lencseleves', description: null });
   assert.deepEqual(splitDishName('(csak leírás)'), { title: '(csak leírás)', description: null });
   assert.deepEqual(splitDishName('Félig (nyitott'), { title: 'Félig (nyitott', description: null });
+});
+
+test('saved plans are restored per week, the previous single plan carries over, and ended weeks are dropped', () => {
+  const now = new Date('2026-11-21T10:00:00Z');
+  const current = startPlan('2026-W47', 6);
+  const next = startPlan('2026-W48', 3);
+  const ended = startPlan('2026-W46', 3);
+  const stored = JSON.parse(JSON.stringify({ '2026-W46': ended, '2026-W47': current, '2026-W48': next, broken: { week: 'x' } }));
+  assert.deepEqual(Object.keys(restorePlans(stored, null, now)).sort(), ['2026-W47', '2026-W48']);
+  assert.deepEqual(restorePlans(null, JSON.parse(JSON.stringify(next)), now), {
+    '2026-W48': restorePlan(JSON.parse(JSON.stringify(next))),
+  });
+  assert.deepEqual(restorePlans(stored, JSON.parse(JSON.stringify(ended)), now)['2026-W46'], undefined, 'the saved plans win');
+  assert.deepEqual(restorePlans(null, null, now), {});
 });

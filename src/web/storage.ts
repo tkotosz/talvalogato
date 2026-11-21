@@ -1,8 +1,9 @@
-import { restorePlan, restorePreferences, type PreferenceInput, type StoredPlan } from '../core/planning.ts';
-import type { Plan, Preferences } from '../core/types.ts';
-import { mondayOfWeek } from '../core/weeks.ts';
+import { restorePlans, restorePreferences, type PreferenceInput } from '../core/planning.ts';
+import type { Plan, Preferences, WeekKey } from '../core/types.ts';
 
-const planKey = 'talvalogato.plan.v2';
+const plansKey = 'talvalogato.plans.v3';
+/** The single plan saved before plans were kept per week; read once to carry it over. */
+const previousPlanKey = 'talvalogato.plan.v2';
 const preferencesKey = 'talvalogato.preferences.v1';
 
 function read(key: string): unknown {
@@ -13,17 +14,19 @@ function read(key: string): unknown {
   }
 }
 
-export function loadSaved(): { plan: Plan | null; preferences: Preferences } {
-  const saved = read(planKey) as Partial<StoredPlan> | null;
-  const plan = saved?.id && saved.week && mondayOfWeek(saved.week) ? restorePlan(saved as StoredPlan) : null;
-  return { plan, preferences: restorePreferences(read(preferencesKey) as PreferenceInput | null) };
+export function loadSaved(): { plans: Record<WeekKey, Plan>; preferences: Preferences } {
+  return {
+    plans: restorePlans(read(plansKey), read(previousPlanKey)),
+    preferences: restorePreferences(read(preferencesKey) as PreferenceInput | null),
+  };
 }
 
-/** Saves the plan and preferences; returns false when the browser refuses. */
-export function save(plan: Plan | null, preferences: Preferences): boolean {
+/** Saves the plans and preferences; returns false when the browser refuses. */
+export function save(plans: Record<WeekKey, Plan>, preferences: Preferences): boolean {
   try {
     localStorage.setItem(preferencesKey, JSON.stringify(preferences));
-    if (plan) localStorage.setItem(planKey, JSON.stringify(plan));
+    localStorage.setItem(plansKey, JSON.stringify(plans));
+    localStorage.removeItem(previousPlanKey);
     return true;
   } catch {
     return false;
