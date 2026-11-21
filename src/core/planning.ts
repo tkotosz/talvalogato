@@ -1,5 +1,17 @@
 import { defaultCourses, normalizeCourses } from './courses.ts';
-import type { CartLine, CatalogDish, Day, DayDraft, Dish, MenuDeckId, MenuOption, Plan, Preferences, WeekKey } from './types.ts';
+import type {
+  CartLine,
+  CatalogDish,
+  Day,
+  DayDraft,
+  Dish,
+  DishDetails,
+  MenuDeckId,
+  MenuOption,
+  Plan,
+  Preferences,
+  WeekKey,
+} from './types.ts';
 
 export const days = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
 export const allDays: Day[] = days.map((_, index) => index + 1);
@@ -111,6 +123,25 @@ export function restorePlan({ id, week, day, selectedDays, slots, drafts, custom
 export function dayCandidates<T extends CatalogDish>(catalog: T[], day: Day): T[] {
   const ownCodes = new Set(catalog.filter(dish => dish.day === day).map(dish => dish.code));
   return catalog.filter(dish => dish.day === day || (day > 5 && dish.day === 5 && !ownCodes.has(dish.code)));
+}
+
+/**
+ * A catalog line with its details from Teletál's dish page. Teletál's menu page names dishes briefly, its dish page at
+ * length; the brief names are kept: the dish keeps its catalog name, and its courses take the parts of that name when
+ * they match the courses one to one. Calories and photos come from the details.
+ */
+export function withDetails(dish: CatalogDish & Partial<Dish>, details: DishDetails | undefined): Dish {
+  if (!details || !Number.isFinite(details.kcal)) return { ...dish, kcal: null };
+  const components = details.components ?? [];
+  const parts = dish.name.split(' / ');
+  const named = parts.length === components.length;
+  return {
+    ...dish,
+    ...details,
+    kind: components.length > 1 ? 'menu' : dish.kind,
+    name: dish.name,
+    components: named ? components.map((course, index) => ({ ...course, name: parts[index]! })) : components,
+  };
 }
 
 export function menuDeck(dish: CatalogDish & Partial<Dish>): MenuDeckId | null {

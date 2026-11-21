@@ -12,6 +12,7 @@ import {
   restorePlan,
   restorePreferences,
   startPlan,
+  withDetails,
 } from '../src/core/planning.ts';
 import type { Course, CourseKind, Dish, MenuOption } from '../src/core/types.ts';
 import { dayLabel, defaultWeek, eligibleDays, mondayOfWeek, sourceDay, upcomingWeeks, weekLabel } from '../src/core/weeks.ts';
@@ -289,4 +290,45 @@ test('day and week labels use Hungarian dates, including weeks across two months
   assert.equal(dayLabel(week, 1), 'november 23.');
   assert.equal(weekLabel(week), 'nov. 23–29.');
   assert.equal(weekLabel('2026-W49').replace(/\s+/g, ' '), 'nov. 30. – dec. 6.');
+});
+
+test("dish details keep the brief names of Teletál's menu page, with calories and photos from the dish page", () => {
+  const setMenu = dish({
+    id: '3:1:P',
+    code: 'P',
+    kind: 'menu',
+    name: 'Lencseleves / Eszterházy pulykatokány, jázmin rizs',
+    price: 2470,
+  });
+  const long = [
+    { name: 'Lencseleves', kcal: 401, kind: 'soup' as const, photo: null },
+    {
+      name: 'Eszterházy pulykatokány (mustáros, tejfölös, sárgarépás, fehérrépás ragu), jázminrizs',
+      kcal: 762,
+      kind: 'main' as const,
+      photo: '/p.jpg',
+    },
+  ];
+  const detailed = withDetails(setMenu, { id: setMenu.id, kcal: 1163, components: long, photo: '/p.jpg' });
+  assert.deepEqual(
+    detailed.components?.map(course => [course.name, course.kcal, course.photo]),
+    [
+      ['Lencseleves', 401, null],
+      ['Eszterházy pulykatokány, jázmin rizs', 762, '/p.jpg'],
+    ],
+  );
+  assert.equal(detailed.kcal, 1163);
+
+  const threeCourses = [...long, { name: 'Somlói galuska', kcal: 300, kind: 'dessert' as const, photo: null }];
+  assert.deepEqual(
+    withDetails(setMenu, { id: setMenu.id, kcal: 1463, components: threeCourses }).components?.map(course => course.name),
+    threeCourses.map(course => course.name),
+    "names that do not match the courses one to one stay as Teletál's dish page has them",
+  );
+
+  const single = dish({ id: '3:1:Z8', code: 'Z8', name: 'Eszterházy pulykatokány, jázmin rizs', price: 2200 });
+  const singleDetails = withDetails(single, { id: single.id, kcal: 762, components: [long[1]!] });
+  assert.equal(singleDetails.name, 'Eszterházy pulykatokány, jázmin rizs');
+  assert.equal(singleDetails.components?.[0]?.name, 'Eszterházy pulykatokány, jázmin rizs');
+  assert.equal(withDetails(single, undefined).kcal, null);
 });
