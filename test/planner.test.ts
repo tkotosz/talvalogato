@@ -213,3 +213,22 @@ test("the previous and next days are the orderable days around the picker's day"
   assert.equal(plannerView(state, context).previousDay, 6);
   assert.equal(plannerView(state, context).nextDay, undefined);
 });
+
+test('clearing a day removes its choice and any custom draft, and keeps the day open', () => {
+  let state = run(
+    initialPlanner(null, newPreferences),
+    { type: 'navigate', step: 'meals' },
+    { type: 'decide', day: 3, action: 'right', option: pick(3) },
+    { type: 'openDay', day: 3, edit: true },
+    { type: 'clearDay', day: 3 },
+  );
+  assert.equal(Object.hasOwn(state.plan!.slots, 3), false);
+  assert.equal(state.editingDay, null);
+  const view = plannerView(state, context);
+  assert.equal(view.day, 3);
+  assert.equal(view.dayDone, false);
+
+  state = run(state, { type: 'startCustom', day: 3 }, { type: 'clearDay', day: 3 });
+  assert.equal(state.plan!.custom[3], undefined);
+  assert.equal(run(state, { type: 'clearDay', day: 5 }), state, 'only the open day can be cleared');
+});

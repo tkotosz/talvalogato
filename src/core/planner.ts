@@ -49,6 +49,7 @@ export type PlannerAction =
   | { type: 'cancelNewPlan' }
   | { type: 'resetWeek' }
   | { type: 'openDay'; day: Day; edit?: boolean }
+  | { type: 'clearDay'; day: Day }
   | { type: 'decide'; day: Day; action: DeckAction; option?: MenuOption | null }
   | { type: 'savePreferences'; preferences: Preferences }
   // Custom days
@@ -240,6 +241,19 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
 
     case 'openDay':
       return openDay(action.day, action.edit === true);
+
+    case 'clearDay': {
+      // Removes the day's choice and any work in progress, so the day has no decision again.
+      const { day } = action;
+      if (state.plan?.week !== week || day !== view.day || !eligible.includes(day)) return state;
+      const slots = { ...state.plan.slots };
+      const drafts = { ...state.plan.drafts };
+      const custom = { ...state.plan.custom };
+      delete slots[day];
+      delete drafts[day];
+      delete custom[day];
+      return { ...state, plan: { ...state.plan, day, slots, drafts, custom }, editingDay: null };
+    }
 
     case 'decide': {
       const { day, action: decision, option } = action;

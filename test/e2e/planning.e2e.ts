@@ -57,17 +57,22 @@ const waitForDeck = (page: Page) => page.waitForFunction(() => !document.querySe
 const currentDay = (page: Page) => page.locator('.week-progress [aria-current="step"]').getAttribute('aria-label');
 
 /** Decides on the current day and waits until the planner shows the decision. */
-async function decide(page: Page, deck: string, decision: 'Kiválasztom' | 'Nap kihagyása') {
+/** Picks from a deck, or moves on with Következő nap, and waits until the planner shows the result. */
+async function decide(page: Page, deck: string, decision: 'Kiválasztom' | 'Következő nap') {
   const day = (await currentDay(page))?.split(',')[0] ?? '';
-  if (decision === 'Nap kihagyása') {
-    await page.getByRole('button', { name: 'Nap kihagyása' }).click();
-  } else {
-    await page.getByRole('button', { name: deck }).click();
-    await waitForDeck(page);
-    await page.getByRole('button', { name: 'Kiválasztom' }).click();
+  if (decision === 'Következő nap') {
+    await page.getByRole('button', { name: 'Következő nap' }).click();
+    await page.waitForFunction(
+      before => !document.querySelector('.week-progress [aria-current]')?.getAttribute('aria-label')?.startsWith(before),
+      day,
+    );
+    return;
   }
+  await page.getByRole('button', { name: deck }).click();
+  await waitForDeck(page);
+  await page.getByRole('button', { name: 'Kiválasztom' }).click();
   // The overview opens by itself after the last day's decision.
-  const expected = `${day}, ${decision === 'Kiválasztom' ? 'étel kiválasztva' : 'kihagyva'}`;
+  const expected = `${day}, étel kiválasztva`;
   await page
     .locator(`.week-progress button[aria-label="${expected}"], .review`)
     .first()
@@ -86,13 +91,17 @@ test('a whole week across both decks reaches the overview and the cart link', as
   for (let index = 0; index < days; index++) {
     const day = await currentDay(page);
     const weekend = /Szombat|Vasárnap/.test(day ?? '');
-    if (index === 1) await decide(page, '', 'Nap kihagyása');
+    if (index === 1) await decide(page, '', 'Következő nap');
     else await decide(page, weekend ? 'Teletál egész napos menü választása' : 'Teletál ebédmenü választása', 'Kiválasztom');
     if (index === 0) await page.screenshot({ path: `${screenshots}deck.png`, fullPage: true });
   }
 
+  // The day left without a choice keeps the overview from opening by itself.
+  assert.match((await currentDay(page)) ?? '', /^\S+$/, 'the planner returns to the undecided day');
+  await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
   await page.locator('.review').waitFor();
   assert.equal(await page.locator('.review-row').count(), days);
+  assert.equal(await page.locator('.review-row', { hasText: 'Nincs választás' }).count(), 1);
   await page.screenshot({ path: `${screenshots}overview.png`, fullPage: true });
   await page.getByRole('button', { name: 'Kosárhoz adás' }).click();
   const link = page.locator('dialog[open] a.button.primary');
