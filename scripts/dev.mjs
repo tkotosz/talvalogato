@@ -1,9 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { watch } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 import { createServer } from 'node:http';
 import { buildDevWorker } from './build.mjs';
 
 const port = Number(process.env.TALVALOGATO_PORT ?? 4173);
+// A folder written by `npm run refresh-menu`; without it the Worker reads the published data branch.
+const menuDir = process.env.TALVALOGATO_MENU_DIR;
 const clients = new Set();
 let current;
 let timer;
@@ -55,6 +59,12 @@ function withLiveReload(html, revision) {
 
 const server = createServer(async (incoming, outgoing) => {
   const url = new URL(incoming.url, `http://127.0.0.1:${server.address().port}`);
+  if (menuDir && url.pathname.startsWith('/__dev/menu/')) {
+    const file = join(menuDir, basename(url.pathname));
+    const data = await readFile(file).catch(() => null);
+    outgoing.writeHead(data ? 200 : 404, { 'Content-Type': 'application/json; charset=utf-8' }).end(data ?? '');
+    return;
+  }
   if (url.pathname === '/__dev/reload' && incoming.method === 'GET') {
     outgoing.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' });
     outgoing.write('retry: 500\n\n');
@@ -72,7 +82,8 @@ const server = createServer(async (incoming, outgoing) => {
   }
 
   try {
-    const response = await build.worker.fetch(new Request(url, { method: incoming.method, headers: incoming.headers }));
+    const env = menuDir ? { MENU_DATA_URL: `http://127.0.0.1:${server.address().port}/__dev/menu/` } : {};
+    const response = await build.worker.fetch(new Request(url, { method: incoming.method, headers: incoming.headers }), env);
     const headers = Object.fromEntries(response.headers);
     if (incoming.method === 'GET' && headers['content-type']?.startsWith('text/html')) {
       const html = withLiveReload(await response.text(), build.revision);
