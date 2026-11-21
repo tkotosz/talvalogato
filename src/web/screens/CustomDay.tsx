@@ -110,9 +110,6 @@ function MenuOverview({
       <button type="button" className="button primary wide" disabled={!dishes.length} onClick={onSave}>
         {saved ? 'Változások mentése' : 'Mentés'}
       </button>
-      <button type="button" className="text-button custom-change" onClick={() => onOpen('select')}>
-        Összetevők módosítása
-      </button>
     </section>
   );
 }

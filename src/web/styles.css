@@ -1807,10 +1807,6 @@ button.code-group-title:hover {
 .custom-step .button.wide {
   margin-top: 16px;
 }
-.custom-change {
-  display: block;
-  margin: 8px auto 0;
-}
 .custom-hint {
   margin-top: 10px;
   color: var(--muted);
