@@ -19,11 +19,11 @@ import {
   dayLabel,
   defaultWeek,
   eligibleDays,
-  longWeekLabel,
   mondayOfWeek,
   sourceDay,
   upcomingWeeks,
   weekLabel,
+  weekOptionLabel,
 } from '../src/core/weeks.ts';
 
 const week = '2026-W48';
@@ -299,9 +299,10 @@ test('day and week labels use Hungarian dates, including weeks across two months
   assert.equal(dayLabel(week, 1), 'november 23.');
   assert.equal(weekLabel(week), 'nov. 23–29.');
   assert.equal(weekLabel('2026-W49').replace(/\s+/g, ' '), 'nov. 30. – dec. 6.');
-  assert.equal(longWeekLabel(week), 'november 23–29.');
-  assert.equal(longWeekLabel('2026-W49').replace(/\s+/g, ' '), 'november 30. – december 6.');
-  assert.equal(longWeekLabel('2026-W53').replace(/\s+/g, ' '), '2026. december 28. – 2027. január 3.');
+  assert.equal(weekOptionLabel(week, 'long'), '48. hét (november 23–29.)');
+  assert.equal(weekOptionLabel(week, 'short'), '48. hét (nov. 23–29.)');
+  assert.equal(weekOptionLabel('2026-W49', 'long').replace(/\s+/g, ' '), '49. hét (november 30. – december 6.)');
+  assert.equal(weekOptionLabel('2026-W53', 'short').replace(/\s+/g, ' '), '53. hét (dec. 28. – jan. 3.)');
 });
 
 test("dish details keep the brief names of Teletál's menu page, with calories and photos from the dish page", () => {
