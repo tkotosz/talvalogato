@@ -58,9 +58,6 @@ function CartInstructions({ plan, lines }: { plan: Plan; lines: CartLine[] }) {
       <h3 className="instructions-heading">Kosárba helyezés</h3>
       <ol className="instructions">
         <li>
-          <p>Ha még nem vagy bejelentkezve a Teletálon, előbb jelentkezz be.</p>
-        </li>
-        <li>
           <p>Nyisd meg a heti étlapot ezzel a gombbal:</p>
           <a className="button primary wide" href={url} target="_blank" rel="noreferrer">
             <ShoppingBasket size={19} /> Heti étlap megnyitása a Teletálon
