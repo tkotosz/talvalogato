@@ -4,7 +4,7 @@ import { deliveryDays } from '../../core/planner.ts';
 import { orderSummary } from '../../core/planning.ts';
 import type { CartLine, CatalogDish, Plan, Preferences } from '../../core/types.ts';
 import { eligibleDays } from '../../core/weeks.ts';
-import { shortcutUrl, teletalWeekUrl } from '../cart-shortcut.ts';
+import { maxCartLines, shortcutUrl, teletalWeekUrl } from '../cart-shortcut.ts';
 import { copyText } from '../format.ts';
 import { loadMenuCatalog } from '../menu-client.ts';
 import { useLoad } from '../useLoad.ts';
@@ -39,6 +39,7 @@ function CartInstructions({ plan, lines }: { plan: Plan; lines: CartLine[] }) {
           >
             <Bookmark size={16} /> Kosárparancsikon másolása vagy húzása
           </a>
+          <p>Ha a könyvjelző hibát jelez, mentsd el újra innen: a Tálválogató frissítései néha új könyvjelzőt igényelnek.</p>
           {copyStatus && <p role="status">{copyStatus}</p>}
         </li>
         <li>
@@ -94,6 +95,14 @@ export function CartDialogContent({
     );
   const { lines, issues } = state.value;
   if (!lines.length) return <p role="status">A választásaid közül jelenleg egyik sem küldhető a kosárba.</p>;
+  if (lines.length > maxCartLines) {
+    return (
+      <p role="status">
+        Egyszerre legfeljebb {maxCartLines} különböző tétel küldhető a kosárba, ez a terv {lines.length} tételt tartalmaz. Hagyj
+        ki néhány fogást vagy napot.
+      </p>
+    );
+  }
   return (
     <>
       {Object.keys(issues).length > 0 && (
