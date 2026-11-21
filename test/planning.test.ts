@@ -56,19 +56,21 @@ test('code exclusions apply to either deck only while filtering is on', () => {
   assert.equal(mealOptions(dishes, { ...filtered, filterCodes: false }, 'fullDay').length, 3);
 });
 
-test('restoring a legacy plan keeps choices and swipe history, with preferences saved independently', () => {
+test('restoring a saved plan keeps choices and swipe history, and preferences are validated separately', () => {
   const option = mealOptions(dishes, newPreferences, 'lunch')[0];
-  const saved = { id: 'legacy', settings: { week, calories: 1000, tolerance: 5, excludedCodes: ['q'] },
-    day: 2, slots: { 1: option }, excluded: [option.id], deferred: [] };
-  const plan = restorePlan(saved);
-  assert.equal(plan.week, week);
-  assert.deepEqual(plan.slots, { 1: option });
+  const saved = { ...startPlan(week, 2), slots: { 1: option }, drafts: { 2: { excluded: [option.id], deferred: [] } } };
+  const stored = JSON.parse(JSON.stringify(saved));
+  const plan = restorePlan(stored);
+  assert.deepEqual(plan, stored);
   assert.deepEqual(dayQueue([option], plan), []);
   assert.deepEqual(dayQueue([option], { ...plan, day: 3 }), [option]);
-  assert.deepEqual(restorePreferences(null, saved.settings), { ...preferences, filterCodes: true, excludedCodes: ['Q'] });
-  assert.deepEqual(restorePreferences({ ...newPreferences, excludedCodes: ['P'] }, saved.settings),
-    { ...newPreferences, excludedCodes: ['P'] });
   assert.equal(restorePlan({ ...saved, day: 8 }).day, null);
+  assert.deepEqual(restorePlan({ id: 'partial', week }), { id: 'partial', week, day: null, selectedDays: allDays, slots: {}, drafts: {} });
+
+  assert.deepEqual(restorePreferences(null), newPreferences);
+  assert.deepEqual(restorePreferences({ ...preferences, filterCodes: true, excludedCodes: ['q', 'q', 'not a code', 7] }),
+    { ...preferences, filterCodes: true, excludedCodes: ['Q'] });
+  assert.deepEqual(restorePreferences({ ...preferences, calories: 0 }), { ...newPreferences, limitCalories: false });
 });
 
 test('weekly day choices and default days are restored independently in calendar order', () => {

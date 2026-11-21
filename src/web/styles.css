@@ -256,7 +256,6 @@ main { padding-bottom: 24px; }
   font-size: .84rem; font-weight: 760; box-shadow: 0 1px 5px #14261528;
 }
 .meal-tag svg { flex: none; }
-.tag-generated { background: #eafaaf; }
 .tag-group { background: #edf6dd; }
 .meal-content { padding: 15px 20px 17px; }
 .meal-content h2 { font-size: clamp(1.27rem, 4.5vw, 1.8rem); font-weight: 740; letter-spacing: -.045em; line-height: 1.15; overflow-wrap: anywhere; }
