@@ -22,19 +22,25 @@ before(async () => {
   menuDir = await mkdtemp(join(tmpdir(), 'talvalogato-menu-'));
   const { weeks, menus } = demoMenu(new Date());
   await writeMenuFiles(menuDir, { updatedAt: weeks.updatedAt, weeks: weeks.weeks }, menus);
-  server = spawn(process.execPath, ['scripts/dev.mjs'], {
-    env: { ...process.env, TALVALOGATO_PORT: String(port), TALVALOGATO_MENU_DIR: menuDir },
-    stdio: 'ignore',
-  });
-  for (let attempt = 0; attempt < 100; attempt++) {
-    const response = await fetch(base).catch(() => null);
-    if (response?.ok) break;
-    await new Promise(resolve => setTimeout(resolve, 200));
-  }
+  server = await startServer(port);
   await mkdir(screenshots, { recursive: true });
   const executablePath = process.env.TALVALOGATO_CHROME;
   browser = await chromium.launch(executablePath ? { executablePath } : { channel: 'chrome' });
 });
+
+/** Starts the dev server on the demo menu and waits until it answers. */
+async function startServer(serverPort: number): Promise<ChildProcess> {
+  const started = spawn(process.execPath, ['scripts/dev.mjs'], {
+    env: { ...process.env, TALVALOGATO_PORT: String(serverPort), TALVALOGATO_MENU_DIR: menuDir },
+    stdio: 'ignore',
+  });
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const response = await fetch(`http://127.0.0.1:${serverPort}/`).catch(() => null);
+    if (response?.ok) break;
+    await new Promise(resolve => setTimeout(resolve, 200));
+  }
+  return started;
+}
 
 after(async () => {
   await browser?.close();
@@ -445,4 +451,35 @@ test("Telepítés: hidden without an offer, one tap with Chrome's offer, instruc
   await apple.page.getByRole('dialog').getByText('Hozzáadás a Főképernyőhöz').waitFor();
   await apple.page.context().close();
   assert.deepEqual([...errors, ...apple.errors], []);
+});
+
+test('with the server down, the app comes from its current cache, and the first versions’ caches are removed', async () => {
+  // A server of its own, so it can be stopped like a server that went away.
+  const ownPort = port + 1;
+  const ownBase = `http://127.0.0.1:${ownPort}/`;
+  const ownServer = await startServer(ownPort);
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  // Caches made before the service worker installs, so they are older than its own: one named like the first versions'
+  // caches, which activation removes, and one it does not know, which the fallback must not read.
+  await page.goto(`${ownBase}manifest.webmanifest`);
+  await page.evaluate(async () => {
+    const page = (text: string) => new Response(`<p id="old">${text}</p>`, { headers: { 'Content-Type': 'text/html' } });
+    await (await caches.open('meal-deck-old')).put('/', page('First version'));
+    await (await caches.open('unknown-old')).put('/', page('Unknown cache'));
+  });
+  await page.goto(ownBase);
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  for (let attempt = 0; attempt < 50; attempt++) {
+    if (!(await page.evaluate(() => caches.keys())).includes('meal-deck-old')) break;
+    await page.waitForTimeout(100);
+  }
+  assert.ok(!(await page.evaluate(() => caches.keys())).includes('meal-deck-old'), 'the first versions’ cache is removed');
+
+  ownServer.kill();
+  await new Promise(resolve => ownServer.once('exit', resolve));
+  await page.reload();
+  assert.equal(await page.locator('#old').count(), 0, 'the page comes from the current cache');
+  await page.locator('.app-header').waitFor();
+  await context.close();
 });
