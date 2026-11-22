@@ -39,7 +39,6 @@ export const newPreferences: Preferences = {
   diet: 'all',
   filterAllergens: false,
   excludedAllergens: [],
-  allergenNoticeAccepted: false,
   filterDislikes: false,
   dislikes: [],
   ownDislikes: [],
@@ -86,7 +85,6 @@ function normalizeDays(selection: unknown): Day[] {
 export function restorePreferences(values: PreferenceInput | null): Preferences {
   if (!values) return newPreferences;
   const validBudget = validCalorieBudget(values);
-  const allergenNoticeAccepted = values.allergenNoticeAccepted === true;
   const excludedCodes = Array.isArray(values.excludedCodes)
     ? [
         ...new Set(
@@ -105,12 +103,10 @@ export function restorePreferences(values: PreferenceInput | null): Preferences 
     defaultDays: normalizeDays(values.defaultDays),
     customCourses: Array.isArray(values.customCourses) ? normalizeCourses(values.customCourses) : defaultCourses,
     diet: values.diet === 'vegetarian' || values.diet === 'vegan' ? values.diet : 'all',
-    // The allergen filter needs the confirmed notice.
-    filterAllergens: values.filterAllergens === true && allergenNoticeAccepted,
+    filterAllergens: values.filterAllergens === true,
     excludedAllergens: Array.isArray(values.excludedAllergens)
       ? inAllergenOrder(allAllergens.filter(allergen => (values.excludedAllergens as unknown[]).includes(allergen)))
       : [],
-    allergenNoticeAccepted,
     filterDislikes: values.filterDislikes === true,
     dislikes: Array.isArray(values.dislikes)
       ? allDislikes.filter(dislike => (values.dislikes as unknown[]).includes(dislike))

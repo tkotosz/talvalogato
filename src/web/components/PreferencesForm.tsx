@@ -28,8 +28,7 @@ export function PreferencesForm({
   const [draft, setDraft] = useState<Draft>(preferences);
   const change = <Key extends keyof Draft>(key: Key, value: Draft[Key]) => setDraft(current => ({ ...current, [key]: value }));
   const validBudget = validCalorieBudget(draft);
-  // The allergen filter needs the confirmed notice before it can be saved.
-  const canSave = (!draft.limitCalories || validBudget) && (!draft.filterAllergens || draft.allergenNoticeAccepted);
+  const canSave = !draft.limitCalories || validBudget;
   return (
     <form
       className="preferences-form"

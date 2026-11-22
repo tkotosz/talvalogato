@@ -72,7 +72,7 @@ test('the vegetarian diet takes vegetarian and vegan lines, the vegan diet only 
 });
 
 test('the allergen filter leaves out dishes with an excluded allergen and dishes whose allergens are unknown', () => {
-  const filter = preferences({ filterAllergens: true, allergenNoticeAccepted: true, excludedAllergens: ['milk', 'gluten'] });
+  const filter = preferences({ filterAllergens: true, excludedAllergens: ['milk', 'gluten'] });
   assert.equal(allergenIssue(allergens(['egg'], []), filter), null);
   assert.equal(allergenIssue(allergens(['milk'], ['gluten', 'egg']), filter), 'Allergént tartalmaz: glutén, tej');
   assert.equal(allergenIssue(allergens(['egg'], null), filter), 'Nincs allergénadat');
@@ -129,7 +129,7 @@ test('the dish issue names the first filter that leaves the dish out, and the ac
     excludedCodes: ['P'],
     diet: 'vegan',
     filterAllergens: true,
-    allergenNoticeAccepted: true,
+
     excludedAllergens: ['milk'],
     filterDislikes: true,
     dislikes: ['mushroom'],
@@ -147,12 +147,12 @@ test('the dish issue names the first filter that leaves the dish out, and the ac
   assert.deepEqual(activeFilters(newPreferences), []);
 });
 
-test('restored preferences keep known filter values, and the allergen filter needs the confirmed notice', () => {
+test('restored preferences keep known filter values', () => {
   const restored = restorePreferences({
     ...newPreferences,
     diet: 'vegan',
     filterAllergens: true,
-    allergenNoticeAccepted: true,
+
     excludedAllergens: ['milk', 'gluten', 'milk', 'chocolate'],
     filterDislikes: true,
     dislikes: ['pork', 'liver', 'mushroom'],
@@ -164,19 +164,10 @@ test('restored preferences keep known filter values, and the allergen filter nee
   assert.deepEqual(restored.dislikes, ['mushroom', 'pork']);
   assert.equal(restored.ownDislikes.length, maxOwnDislikes);
   assert.deepEqual(restored.ownDislikes.slice(0, 2), ['olíva', 'szó0']);
-  assert.equal(restorePreferences({ ...restored, allergenNoticeAccepted: false }).filterAllergens, false);
   assert.equal(restorePreferences({ ...restored, diet: 'paleo' }).diet, 'all');
   // Preferences saved before these settings existed get the defaults.
   const before: Partial<Preferences> = { ...newPreferences };
-  const added = [
-    'diet',
-    'filterAllergens',
-    'excludedAllergens',
-    'allergenNoticeAccepted',
-    'filterDislikes',
-    'dislikes',
-    'ownDislikes',
-  ];
+  const added = ['diet', 'filterAllergens', 'excludedAllergens', 'filterDislikes', 'dislikes', 'ownDislikes'];
   for (const key of added as (keyof Preferences)[]) delete before[key];
   assert.deepEqual(restorePreferences(before), newPreferences);
 });

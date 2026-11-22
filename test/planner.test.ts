@@ -228,7 +228,6 @@ test('clearing a day removes its choice and any custom draft, and keeps the day 
 const milkFilter = {
   ...newPreferences,
   filterAllergens: true,
-  allergenNoticeAccepted: true,
   excludedAllergens: ['milk' as const],
 };
 const withAllergens = (dish: Dish, allergens: Allergen[] | null): Dish => ({

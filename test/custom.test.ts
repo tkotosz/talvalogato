@@ -237,7 +237,6 @@ test('a component deck leaves out filtered dishes, and a dish the current data m
   const noMilk: Preferences = {
     ...newPreferences,
     filterAllergens: true,
-    allergenNoticeAccepted: true,
     excludedAllergens: ['milk'],
   };
   const labeled = (item: Dish, allergens: Allergen[] | null): Dish => ({

@@ -679,8 +679,7 @@ fieldset.preference-section {
   cursor: pointer;
 }
 .preference-options input,
-.multi-select-list input,
-.allergen-confirm input {
+.multi-select-list input {
   width: 17px;
   height: 17px;
   margin: 0;
@@ -709,18 +708,6 @@ fieldset.preference-section {
   margin-bottom: 3px;
   font-weight: 750;
   color: #6a4512;
-}
-.allergen-confirm {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  margin-top: 10px;
-  font-size: 0.9rem;
-  font-weight: 650;
-  cursor: pointer;
-}
-.allergen-confirm input {
-  margin-top: 2px;
 }
 .multi-select {
   position: relative;
