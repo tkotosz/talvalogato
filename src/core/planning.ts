@@ -357,6 +357,8 @@ export interface OrderSummary {
   issues: Record<Day, string>;
   lines: CartLine[];
   total: number;
+  /** The calories of the days that can be sent, or null when any of them is unknown. */
+  kcal: number | null;
 }
 
 export function orderSummary(plan: Plan, eligible: Day[], catalog: Dish[], preferences: Preferences): OrderSummary {
@@ -373,5 +375,9 @@ export function orderSummary(plan: Plan, eligible: Day[], catalog: Dish[], prefe
     issues,
     lines: cartLines({ slots }),
     total: Object.values(slots).reduce((sum, option) => sum + option.price, 0),
+    kcal: Object.values(slots).reduce<number | null>(
+      (sum, option) => (sum === null || !Number.isFinite(option.kcal) ? null : Math.round((sum + option.kcal!) * 10) / 10),
+      0,
+    ),
   };
 }
