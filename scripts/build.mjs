@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { compileFunction } from 'node:vm';
@@ -11,6 +12,18 @@ const contentTypes = {
   png: 'image/png',
   webp: 'image/webp',
 };
+
+// The label under the logo. Deploys set TALVALOGATO_VERSION (the release tag, or main and the commit for a preview);
+// a local build shows the current branch and commit.
+function versionLabel() {
+  if (process.env.TALVALOGATO_VERSION) return process.env.TALVALOGATO_VERSION;
+  try {
+    const git = (...args) => execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    return `${git('rev-parse', '--abbrev-ref', 'HEAD')} · ${git('rev-parse', '--short', 'HEAD')}`;
+  } catch {
+    return 'local';
+  }
+}
 
 async function buildAssets() {
   const assets = {};
@@ -29,7 +42,7 @@ async function buildAssets() {
     charset: 'utf8',
     jsx: 'automatic',
     target: ['safari16.4', 'chrome110'],
-    define: { 'process.env.NODE_ENV': JSON.stringify('production') },
+    define: { 'process.env.NODE_ENV': JSON.stringify('production'), TALVALOGATO_VERSION: JSON.stringify(versionLabel()) },
   });
 
   const script = client.outputFiles.find(file => file.path.endsWith('.js'));
