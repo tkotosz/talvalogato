@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Eraser, Flame, Minus, Plus, Sparkles, X } from 'lucide-react';
+import { Check, ChevronRight, Eraser, Flame, Minus, Plus, Sparkles, Utensils, X } from 'lucide-react';
 import {
   canGenerate,
   courseDeck,
@@ -25,6 +25,12 @@ const nouns = (course: TrayCourse) =>
 
 /** Names for running text, such as "teletál menü, ital". */
 const lowerNames = (courses: TrayCourse[]) => courses.map(course => trayCourseNames[course].toLocaleLowerCase('hu')).join(', ');
+
+/** A set menu's courses, one per line: from its details, or from the name Teletál joins with " / " until they load. */
+function menuCourseNames(dish: Dish): string[] {
+  if (dish.components?.length) return dish.components.map(course => course.name);
+  return dish.name.split(' / ');
+}
 
 /**
  * The day's tray: its rows of set menus and dishes, the buttons that add empty rows, and what the rows add up to. A row
@@ -79,58 +85,79 @@ function Tray({
           ? 'Koppints egy sorra a választáshoz vagy a cseréhez.'
           : 'Add hozzá, miből álljon a napod: Teletál menüt, levest, főételt vagy bármi mást, akár többet is.'}
       </p>
-      {draft.rows.length > 0 && (
-        <ul className="custom-summary">
-          {draft.rows.map(({ course, dish }, index) => {
-            const label = trayCourseNames[course];
-            return (
-              <li key={index} className="tray-row">
-                <button type="button" onClick={() => onOpen(index)}>
-                  <strong>{label}</strong>
-                  <span className={dish ? undefined : 'custom-empty'} lang="hu">
-                    {!dish ? (
-                      'Nincs kiválasztva'
-                    ) : course === 'menu' ? (
-                      <>
-                        <span className="meal-code">{dish.code}</span> {dish.menuName}
-                        <small className="tray-menu-courses">{dish.name}</small>
-                      </>
-                    ) : (
-                      <>
-                        <span className="meal-code">{dish.code}</span> {dish.name}
-                      </>
-                    )}
-                  </span>
-                  <span>
-                    {dish ? `${calories(dish.kcal)} · ${money(dish.price)}` : <ChevronRight size={16} aria-label="Kiválasztás" />}
-                  </span>
-                </button>
-                {dish ? (
-                  <button
-                    type="button"
-                    className="tray-remove"
-                    aria-label={`${label} ürítése`}
-                    title="Ürítés"
-                    onClick={() => onEmpty(index)}
-                  >
-                    <Eraser size={17} aria-hidden="true" />
+      {/* At least two rows tall, so the tray keeps its shape from empty to the second row. */}
+      <div className="tray-rows">
+        {draft.rows.length === 0 && (
+          <div className="tray-empty">
+            <Utensils size={22} aria-hidden="true" />
+            <span>Még üres a napod</span>
+          </div>
+        )}
+        {draft.rows.length > 0 && (
+          <ul className="custom-summary">
+            {draft.rows.map(({ course, dish }, index) => {
+              const label = trayCourseNames[course];
+              return (
+                <li key={index} className={course === 'menu' ? 'tray-row tray-row-menu' : 'tray-row'}>
+                  <button type="button" onClick={() => onOpen(index)}>
+                    <strong>{label}</strong>
+                    <span className={dish ? undefined : 'custom-empty'} lang="hu">
+                      {!dish ? (
+                        'Nincs kiválasztva'
+                      ) : course === 'menu' ? (
+                        // The code in its own column, so the courses line up under the menu name.
+                        <span className="tray-menu">
+                          <span className="meal-code">{dish.code}</span>
+                          <span>
+                            {dish.menuName}
+                            <small className="tray-menu-courses">
+                              {menuCourseNames(dish).map((name, part) => (
+                                <span key={part}>{name}</span>
+                              ))}
+                            </small>
+                          </span>
+                        </span>
+                      ) : (
+                        <>
+                          <span className="meal-code">{dish.code}</span> {dish.name}
+                        </>
+                      )}
+                    </span>
+                    <span>
+                      {dish ? (
+                        `${calories(dish.kcal)} · ${money(dish.price)}`
+                      ) : (
+                        <ChevronRight size={16} aria-label="Kiválasztás" />
+                      )}
+                    </span>
                   </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="tray-remove"
-                    aria-label={`${label} eltávolítása`}
-                    title="Eltávolítás"
-                    onClick={() => onRemove(index)}
-                  >
-                    <X size={17} aria-hidden="true" />
-                  </button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                  {dish ? (
+                    <button
+                      type="button"
+                      className="tray-remove"
+                      aria-label={`${label} ürítése`}
+                      title="Ürítés"
+                      onClick={() => onEmpty(index)}
+                    >
+                      <Eraser size={17} aria-hidden="true" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="tray-remove"
+                      aria-label={`${label} eltávolítása`}
+                      title="Eltávolítás"
+                      onClick={() => onRemove(index)}
+                    >
+                      <X size={17} aria-hidden="true" />
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
       {canGenerate(draft) && (
         <div className="tray-idea">
           <button type="button" className="button secondary" onClick={onGenerate}>
@@ -158,32 +185,26 @@ function Tray({
         )}
         {missingToday.length > 0 && <p className="custom-hint">Ezen a napon nincs: {lowerNames(missingToday)}.</p>}
       </div>
-      {draft.rows.length > 0 && (
-        <>
-          <p className="custom-total" aria-live="polite">
-            <span>Összesen</span>
-            <strong>
-              {dishes.length ? (total === null ? 'ismeretlen kcal' : calories(total)) : '–'} ·{' '}
-              {money(dishes.reduce((sum, dish) => sum + dish.price, 0))}
-            </strong>
-          </p>
-          {limit !== null && (
-            <p className={overLimit ? 'over-limit-note' : 'custom-hint'}>
-              {overLimit
-                ? `A menü ${calories(total! - limit)} kalóriával a kereted felett van.`
-                : `Napi keret: ${calories(limit)}`}
-            </p>
-          )}
-          <div className="tray-actions">
-            <button type="button" className="button secondary" onClick={onClear}>
-              Törlés
-            </button>
-            <button type="button" className="button primary" disabled={!dishes.length} onClick={onSave}>
-              Kész
-            </button>
-          </div>
-        </>
+      <p className="custom-total" aria-live="polite">
+        <span>Összesen</span>
+        <strong>
+          {dishes.length ? (total === null ? 'ismeretlen kcal' : calories(total)) : '–'} ·{' '}
+          {money(dishes.reduce((sum, dish) => sum + dish.price, 0))}
+        </strong>
+      </p>
+      {limit !== null && (
+        <p className={overLimit ? 'over-limit-note' : 'custom-hint'}>
+          {overLimit ? `A menü ${calories(total! - limit)} kalóriával a kereted felett van.` : `Napi keret: ${calories(limit)}`}
+        </p>
       )}
+      <div className="tray-actions">
+        <button type="button" className="button secondary" disabled={!draft.rows.length} onClick={onClear}>
+          Törlés
+        </button>
+        <button type="button" className="button primary" disabled={!dishes.length} onClick={onSave}>
+          Kész
+        </button>
+      </div>
     </section>
   );
 }

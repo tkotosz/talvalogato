@@ -359,7 +359,6 @@ main {
 }
 /* The unofficial-app notice under the setup cards. */
 .unofficial-notice {
-  max-width: 60ch;
   margin: 18px auto 0;
   color: var(--muted);
   font-size: 0.8rem;
@@ -380,7 +379,7 @@ main {
   margin-bottom: 17px;
 }
 .welcome p {
-  max-width: 34ch;
+  max-width: 42ch;
   color: #e3ede4;
   font-size: 1.02rem;
 }
@@ -2076,7 +2075,8 @@ button.code-group-title:hover {
   color: var(--ink);
   text-align: start;
 }
-.custom-summary button span:last-child {
+.custom-summary button > span:last-child,
+.custom-summary .meal-code {
   color: var(--muted);
   font-size: 0.86rem;
 }
@@ -2143,11 +2143,27 @@ button.code-group-title:hover {
   padding: 0;
   color: var(--muted);
 }
+.tray-menu {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.3em;
+  align-items: baseline;
+}
 .tray-menu-courses {
   display: block;
   margin-top: 2px;
   color: var(--muted);
   font-size: 0.84rem;
+}
+.tray-menu-courses > span {
+  display: block;
+}
+/* A set menu row is two rows tall, like the tray's least height. */
+.tray-row-menu {
+  min-height: 143px;
+}
+.tray-row-menu > button:first-child {
+  align-content: start;
 }
 .tray-add {
   margin-top: 16px;
@@ -2283,8 +2299,8 @@ button.code-group-title:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 22px;
-  padding: 10px 10px 10px 14px;
+  margin-top: 18px;
+  padding: 4px 6px 4px 14px;
   border: 1px solid var(--line);
   border-radius: 11px;
   background: var(--page);
@@ -2313,4 +2329,28 @@ button.code-group-title:hover {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+  margin-top: 16px;
+}
+
+/* An empty tray: the place its rows will take */
+/* Two empty rows and the gap between them, measured. */
+.tray-rows {
+  display: flex;
+  flex-direction: column;
+  min-height: 143px;
+  margin-top: 12px;
+}
+.tray-rows > .custom-summary {
+  margin: 0;
+}
+.tray-empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  border: 1.5px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  font-weight: 650;
 }
