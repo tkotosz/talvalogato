@@ -1,17 +1,9 @@
 import { useState } from 'react';
 import { Plus, TriangleAlert, X } from 'lucide-react';
 import { allAllergens, allergenNames, inAllergenOrder } from '../../core/allergens.ts';
-import {
-  allDislikes,
-  allergenIssue,
-  dietIssue,
-  dislikeIssue,
-  dislikeRules,
-  minDislikeLetters,
-  ownDislikeWord,
-} from '../../core/filters.ts';
+import { allDislikes, dislikeRules, minDislikeLetters, ownDislikeWord } from '../../core/filters.ts';
 import { maxOwnDislikes } from '../../core/planning.ts';
-import type { Dish, Preferences } from '../../core/types.ts';
+import type { Preferences } from '../../core/types.ts';
 
 /** The settings this part of the form edits. */
 export type DietSettings = Pick<
@@ -24,16 +16,6 @@ const dietNames: Record<Preferences['diet'], string> = {
   vegetarian: 'Vegetáriánus',
   vegan: 'Vegán',
 };
-
-/** How many of the week's dishes a filter leaves out, once the week's menu has loaded. */
-function HiddenCount({ catalog, hides }: { catalog: Dish[] | null; hides(dish: Dish): boolean }) {
-  if (!catalog?.length) return null;
-  return (
-    <p className="preference-hint" role="status">
-      Ezen a héten elrejtve: {catalog.filter(hides).length} / {catalog.length} tétel
-    </p>
-  );
-}
 
 /** A grid of checkboxes that edits a list of keys. */
 function Checklist<Key extends string>({
@@ -79,13 +61,10 @@ function Checklist<Key extends string>({
 export function DietFilters({
   value,
   onChange,
-  catalog,
   demo,
 }: {
   value: DietSettings;
   onChange(changes: Partial<DietSettings>): void;
-  /** The active week's dishes, to show how many each filter hides, or null while they load. */
-  catalog: Dish[] | null;
   /** The menu is the invented demo. */
   demo: boolean;
 }) {
@@ -130,7 +109,6 @@ export function DietFilters({
             A Teletál menüi nem vegánok, ezért vegán étrenddel a Saját menü és a Menü generálása kínál választást.
           </p>
         )}
-        {value.diet !== 'all' && <HiddenCount catalog={catalog} hides={dish => dietIssue(dish, value) !== null} />}
       </fieldset>
 
       <label className="preference-toggle">
@@ -179,9 +157,6 @@ export function DietFilters({
             selected={value.excludedAllergens}
             onChange={excludedAllergens => onChange({ excludedAllergens: inAllergenOrder(excludedAllergens) })}
           />
-          {value.excludedAllergens.length > 0 && (
-            <HiddenCount catalog={catalog} hides={dish => allergenIssue(dish, value) !== null} />
-          )}
         </div>
       )}
 
@@ -245,9 +220,6 @@ export function DietFilters({
                 </li>
               ))}
             </ul>
-          )}
-          {(value.dislikes.length > 0 || value.ownDislikes.length > 0) && (
-            <HiddenCount catalog={catalog} hides={dish => dislikeIssue(dish, value) !== null} />
           )}
         </div>
       )}
