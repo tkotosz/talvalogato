@@ -42,11 +42,15 @@ after(async () => {
   if (menuDir) await rm(menuDir, { recursive: true, force: true });
 });
 
-async function openPlanner({ demo = false } = {}): Promise<{ page: Page; errors: string[] }> {
+async function openPlanner({ demo = false, userAgent = undefined as string | undefined } = {}): Promise<{
+  page: Page;
+  errors: string[];
+}> {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
     locale: 'hu-HU',
     timezoneId: 'Europe/Budapest',
+    ...(userAgent ? { userAgent, hasTouch: true } : {}),
   });
   const page = await context.newPage();
   const errors: string[] = [];
@@ -359,4 +363,28 @@ test('the demo says so and leaves out the cart', async () => {
   assert.equal(await page.getByRole('button', { name: 'Kosárhoz adás' }).count(), 0);
   await page.screenshot({ path: `${screenshots}demo-overview.png`, fullPage: true });
   assert.deepEqual(errors, []);
+});
+
+test("Telepítés: hidden without an offer, one tap with Chrome's offer, instructions on an iPhone", async () => {
+  const { page, errors } = await openPlanner();
+  const install = page.getByRole('button', { name: 'Telepítés' });
+  assert.equal(await install.count(), 0, 'no button before the browser offers installing');
+  // Chrome's offer, as Chrome sends it once the site has been used for a while.
+  await page.evaluate(() => {
+    const offer = new Event('beforeinstallprompt', { cancelable: true }) as Event & { prompt(): Promise<void> };
+    offer.prompt = async () => void ((window as Window & { prompted?: boolean }).prompted = true);
+    window.dispatchEvent(offer);
+  });
+  await install.click();
+  assert.equal(await page.evaluate(() => (window as Window & { prompted?: boolean }).prompted), true);
+  await install.waitFor({ state: 'detached' });
+  await page.context().close();
+
+  const iphone =
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
+  const apple = await openPlanner({ userAgent: iphone });
+  await apple.page.getByRole('button', { name: 'Telepítés' }).click();
+  await apple.page.getByRole('dialog').getByText('Hozzáadás a Főképernyőhöz').waitFor();
+  await apple.page.context().close();
+  assert.deepEqual([...errors, ...apple.errors], []);
 });

@@ -139,7 +139,7 @@ export function App() {
               <SlidersHorizontal size={17} />
               <span>Beállítások</span>
             </button>
-            <InstallButton onHelp={() => setDialog('install')} />
+            <InstallButton onAppleHelp={() => setDialog('install')} />
           </div>
         </div>
       </header>
@@ -245,10 +245,6 @@ export function App() {
             <Smartphone size={19} className="inline-icon" /> iPhone-on nyisd meg az oldalt a Safariban, és a Megosztás menüben
             válaszd a <b>Hozzáadás a Főképernyőhöz</b> lehetőséget. Ha megjelenik, kapcsold be a <b>Megnyitás webappként</b>{' '}
             beállítást.
-          </p>
-          <p>
-            Androidon a böngésző menüjében válaszd az <b>Alkalmazás telepítése</b> vagy a <b>Hozzáadás a kezdőképernyőhöz</b>{' '}
-            lehetőséget. Számítógépen keresd a telepítési lehetőséget a böngésző menüjében.
           </p>
         </Modal>
       )}
