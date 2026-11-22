@@ -8,7 +8,8 @@ import {
   type PlannerContext,
   type PlannerState,
 } from '../src/core/planner.ts';
-import { mealOptions, newPreferences } from '../src/core/planning.ts';
+import { dishOption } from '../src/core/custom.ts';
+import { newPreferences } from '../src/core/planning.ts';
 import type { Allergen, Day, Dish } from '../src/core/types.ts';
 
 /** The week the tests plan. */
@@ -40,7 +41,7 @@ function menu(day: Day, code: string): Dish {
 // Teletál already closed Monday and Tuesday, so the orderable days are Wednesday to Sunday.
 const catalog: Dish[] = [3, 4, 5].map(day => menu(day, 'P'));
 const context: PlannerContext = { weeks, catalog, now };
-const pick = (day: Day) => mealOptions([menu(Math.min(day, 5), 'P')], newPreferences, 'lunch')[0];
+const pick = (day: Day) => dishOption(menu(Math.min(day, 5), 'P'));
 
 function run(state: PlannerState, ...actions: PlannerAction[]): PlannerState {
   return actions.reduce((current, action) => reducePlanner(current, action, context), state);
@@ -220,7 +221,7 @@ test('clearing a day removes its choice and any custom draft, and keeps the day 
   assert.equal(view.day, 3);
   assert.equal(view.dayDone, false);
 
-  state = run(state, { type: 'startCustom', day: 3 }, { type: 'clearDay', day: 3 });
+  state = run(state, { type: 'addCourse', day: 3, course: 'soup' }, { type: 'clearDay', day: 3 });
   assert.equal(state.plans[w48]!.custom[3], undefined);
   assert.equal(run(state, { type: 'clearDay', day: 5 }), state, 'only the open day can be cleared');
 });

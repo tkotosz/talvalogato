@@ -1,10 +1,12 @@
 import { allAllergens, inAllergenOrder } from './allergens.ts';
-import { defaultCourses, normalizeCourses } from './courses.ts';
+import { isCourse } from './courses.ts';
 import { allDislikes, dishIssue, ownDislikeWord } from './filters.ts';
 import { addDays, mondayOfWeek, todayInBudapest } from './weeks.ts';
 import type {
   CartLine,
   CatalogDish,
+  CustomCourse,
+  CustomDraft,
   Day,
   DayDraft,
   Dish,
@@ -13,15 +15,12 @@ import type {
   MenuOption,
   Plan,
   Preferences,
+  TrayRow,
   WeekKey,
 } from './types.ts';
 
 export const days = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
 export const allDays: Day[] = days.map((_, index) => index + 1);
-export const menuDecks: { id: MenuDeckId; label: string }[] = [
-  { id: 'lunch', label: 'Teletál ebédmenü' },
-  { id: 'fullDay', label: 'Teletál egész napos menü' },
-];
 const fullDayCodes = new Set(['Z10', 'Z11', 'IRN']);
 const groupNames = new Map([
   ['CzanikBalazs', 'Czanik Balázs'],
@@ -35,7 +34,6 @@ export const newPreferences: Preferences = {
   filterCodes: false,
   excludedCodes: [],
   defaultDays: allDays,
-  customCourses: defaultCourses,
   diet: 'all',
   filterAllergens: false,
   excludedAllergens: [],
@@ -101,7 +99,6 @@ export function restorePreferences(values: PreferenceInput | null): Preferences 
     filterCodes: values.filterCodes === true,
     excludedCodes,
     defaultDays: normalizeDays(values.defaultDays),
-    customCourses: Array.isArray(values.customCourses) ? normalizeCourses(values.customCourses) : defaultCourses,
     diet: values.diet === 'vegetarian' || values.diet === 'vegan' ? values.diet : 'all',
     filterAllergens: values.filterAllergens === true,
     excludedAllergens: Array.isArray(values.excludedAllergens)
@@ -143,8 +140,62 @@ export function restorePlan({ id, week, day, selectedDays, slots, drafts, custom
     selectedDays: normalizeDays(selectedDays),
     slots: slots ?? {},
     drafts: drafts ?? {},
-    custom: custom ?? {},
+    custom: restoreDrafts((custom ?? {}) as Record<Day, StoredDraft>),
   };
+}
+
+/**
+ * A day in progress as saved, possibly in a shape trays had before: one course list with one dish per course, a separate
+ * set-menu row (`menu`, `menuRow`), or a deck open by its course's name.
+ */
+type StoredDraft = Omit<CustomDraft, 'rows' | 'stage' | 'generator'> & {
+  rows?: TrayRow[];
+  stage: CustomDraft['stage'] | 'select' | 'menu' | CustomCourse;
+  courses?: CustomCourse[];
+  picks?: Partial<Record<CustomCourse, Dish>>;
+  menu?: Dish;
+  menuRow?: string;
+  generator?: CustomDraft['generator'] & { menu?: string };
+};
+
+/**
+ * Days in progress as saved, in today's tray shape: older trays keep their dishes as rows, a set menu on a set-menu row
+ * after any breakfast. An idea started in an older shape is dropped; it can be asked for again.
+ */
+function restoreDrafts(custom: Record<Day, StoredDraft>): Record<Day, CustomDraft> {
+  const restored: Record<Day, CustomDraft> = {};
+  for (const [day, stored] of Object.entries(custom)) {
+    if (stored.generator && (!Array.isArray(stored.generator.rows) || stored.generator.menu)) continue;
+    const courseRows: TrayRow[] =
+      stored.rows ??
+      (stored.courses ?? []).map(course => (stored.picks?.[course] ? { course, dish: stored.picks[course] } : { course }));
+    const menuRows: TrayRow[] = stored.menu
+      ? [{ course: 'menu', dish: stored.menu }]
+      : stored.menuRow
+        ? [{ course: 'menu' }]
+        : [];
+    const breakfast = courseRows.filter(row => row.course === 'breakfast');
+    const rows = stored.rows ?? [...breakfast, ...menuRows, ...courseRows.filter(row => row.course !== 'breakfast')];
+    const { stage } = stored;
+    const draft: CustomDraft = {
+      rows,
+      // A deck was once open by its course's name; today it opens by the row's index.
+      stage:
+        typeof stage === 'string' && (stage === 'menu' || isCourse(stage))
+          ? Math.max(
+              rows.findIndex(row => row.course === stage),
+              0,
+            )
+          : stage === 'select'
+            ? 'overview'
+            : stage,
+      overLimit: stored.overLimit ?? [],
+    };
+    if (stored.generator)
+      draft.generator = { seed: stored.generator.seed, shown: stored.generator.shown, rows: stored.generator.rows };
+    restored[Number(day)] = draft;
+  }
+  return restored;
 }
 
 /**
@@ -232,26 +283,6 @@ export function menuDeck(dish: CatalogDish & Partial<Dish>): MenuDeckId | null {
 
 export function matchesCalorieLimit(kcal: number | null, preferences: Preferences): boolean {
   return !preferences.limitCalories || (Number.isFinite(kcal) && kcal! >= 0 && kcal! <= calorieLimit(preferences));
-}
-
-export function mealOptions(dishes: Dish[], preferences: Preferences, deck: MenuDeckId): MenuOption[] {
-  const options: MenuOption[] = dishes
-    .filter(dish => menuDeck(dish) === deck && !dishIssue(dish, preferences) && matchesCalorieLimit(dish.kcal, preferences))
-    .map(dish => ({
-      id: dish.id,
-      kind: 'menu',
-      dishes: [dish],
-      kcal: dish.kcal ?? null,
-      price: dish.price,
-      title: dish.name,
-      photo: dish.photo,
-      components: dish.components,
-    }));
-  if (preferences.limitCalories)
-    options.sort(
-      (a, b) => Math.abs(a.kcal! - preferences.calories) - Math.abs(b.kcal! - preferences.calories) || a.price - b.price,
-    );
-  return options;
 }
 
 export function selectionIssue(

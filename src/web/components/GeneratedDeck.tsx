@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { Check, ListChecks, RefreshCw, Utensils } from 'lucide-react';
-import { courseNames } from '../../core/courses.ts';
-import { customOption } from '../../core/custom.ts';
+import { customOption, pickedDishes, totalCalories, trayCourseNames } from '../../core/custom.ts';
 import { generationProblem } from '../../core/generate.ts';
 import { calorieLimit, dayCandidates } from '../../core/planning.ts';
 import type { CustomDraft, Day, Dish, Preferences } from '../../core/types.ts';
@@ -17,7 +16,7 @@ const actions: { direction: SwipeDirection; label: string; Icon: typeof Check }[
 ];
 const keys: Record<string, SwipeDirection> = { ArrowLeft: 'left', ArrowRight: 'right' };
 
-/** A generated menu as one card: swiping right accepts it for the day, swiping left asks for another one. */
+/** An idea for the tray's empty rows, shown with the rest of the tray: right keeps it, left asks for another one. */
 export function GeneratedDeck({
   day,
   draft,
@@ -25,7 +24,7 @@ export function GeneratedDeck({
   preferences,
   onAccept,
   onReject,
-  onChangeCourses,
+  onLeave,
   onOpenSettings,
 }: {
   day: Day;
@@ -34,16 +33,26 @@ export function GeneratedDeck({
   preferences: Preferences;
   onAccept(): void;
   onReject(): void;
-  onChangeCourses(): void;
+  /** Back to the tray as it was before the idea. */
+  onLeave(): void;
   onOpenSettings(): void;
 }) {
   const card = useRef<SwipeCardHandle>(null);
   const option = customOption(draft, preferences);
+  // The rows the idea fills, by index.
+  const filled = draft.generator?.rows ?? [];
   useSwipeKeys(card, option !== null, keys);
   const limit = preferences.limitCalories ? calorieLimit(preferences) : null;
 
   if (!option) {
-    const problem = generationProblem(dayCandidates(catalog, day), draft.courses, preferences);
+    // Without a menu to show, nothing was filled: everything on the tray was there before the idea.
+    const kept = pickedDishes(draft);
+    const problem = generationProblem(
+      dayCandidates(catalog, day),
+      filled.map(index => draft.rows[index]!.course),
+      preferences,
+      totalCalories(kept) ?? 0,
+    );
     return (
       <div className="deck">
         <div className="placeholder-card" role="status">
@@ -54,19 +63,19 @@ export function GeneratedDeck({
             <>
               <h2>Nincs a keretbe férő menü</h2>
               <p>
-                A kiválasztott fogások legkönnyebb ételei együtt is túllépik a napi keretedet ({calories(limit)}). Válassz
-                kevesebb fogást, vagy emeld a keretet a beállításokban.
+                A legkönnyebb ételek is túllépnék a napi keretedet ({calories(limit)}) a menü többi része mellett. Válassz magad,
+                vagy emeld a keretet a beállításokban.
               </p>
             </>
           ) : (
             <>
               <h2>Nincs választható étel</h2>
-              <p>A kiválasztott fogásokból ma nincs rendelhető étel, vagy a szűrőid mindet kizárják.</p>
+              <p>Ma nincs rendelhető leves vagy főétel, vagy a szűrőid mindet kizárják.</p>
               <ActiveFilters preferences={preferences} onOpenSettings={onOpenSettings} />
             </>
           )}
-          <button type="button" className="button secondary" onClick={onChangeCourses}>
-            <ListChecks size={17} /> Fogások módosítása
+          <button type="button" className="button secondary" onClick={onLeave}>
+            <ListChecks size={17} /> Vissza a menühöz
           </button>
         </div>
       </div>
@@ -74,7 +83,7 @@ export function GeneratedDeck({
   }
 
   // Components without any dish today are left out of the menu.
-  const missing = draft.courses.filter(course => !draft.picks[course]);
+  const missing = filled.flatMap(index => (draft.rows[index]?.dish ? [] : [draft.rows[index]!.course]));
   return (
     <>
       <div className="deck">
@@ -89,7 +98,7 @@ export function GeneratedDeck({
           <CustomMenuCard option={option} target={limit} generated />
         </SwipeCard>
       </div>
-      <div className="deck-actions" aria-label="Generált menü elfogadása vagy cseréje">
+      <div className="deck-actions" aria-label="Ötlet megtartása vagy cseréje">
         {actions.map(({ direction, label, Icon }) => (
           <button
             type="button"
@@ -105,7 +114,7 @@ export function GeneratedDeck({
         ))}
       </div>
       {missing.length > 0 && (
-        <p className="nutrition-note">Ma nincs választható: {missing.map(course => courseNames[course]).join(', ')}.</p>
+        <p className="nutrition-note">Ma nincs választható: {missing.map(course => trayCourseNames[course]).join(', ')}.</p>
       )}
     </>
   );

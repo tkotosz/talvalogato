@@ -2,6 +2,7 @@ import { ChevronRight, ClipboardList, Copy } from 'lucide-react';
 import type { PlannerView } from '../../core/planner.ts';
 import { days, type OrderSummary } from '../../core/planning.ts';
 import type { Day, MenuOption, Preferences } from '../../core/types.ts';
+import { menuCode } from '../components/CustomMenuCard.tsx';
 import { AllergenReminder } from '../components/FilterNotes.tsx';
 import { shortDayLabel, weekLabel } from '../../core/weeks.ts';
 import { appName, calories, copyText, money } from '../format.ts';
@@ -32,8 +33,13 @@ function MenuItems({
 
 /** A custom day: its dishes with their Teletál codes. */
 function CustomItems({ option }: { option: MenuOption }) {
-  const items = option.dishes.map(dish => ({ key: dish.id, code: dish.code, text: dish.name }));
-  return <MenuItems code="SM" title="Saját menü" items={items} />;
+  // A Teletál set menu among the dishes is named, with its courses after it.
+  const items = option.dishes.map(dish => ({
+    key: dish.id,
+    code: dish.code,
+    text: dish.course ? dish.name : `${dish.menuName}: ${dish.name}`,
+  }));
+  return <MenuItems code={menuCode(option)} title={option.title} items={items} />;
 }
 
 /** A Teletál set menu: its code and name, then its courses, each under the menu's code. */
@@ -82,7 +88,8 @@ export function OverviewScreen({
       ...summary.map(({ day, label, option, status, issue }) => {
         if (!option) return label + ' – ' + status;
         const dishes =
-          (option.kind === 'custom' ? 'Saját menü: ' : '') + option.dishes.map(dish => dish.code + ' ' + dish.name).join(' + ');
+          (option.kind === 'custom' ? option.title + ': ' : '') +
+          option.dishes.map(dish => dish.code + ' ' + dish.name).join(' + ');
         return (
           label +
           (day > 5 ? ' (pénteki kiszállítás)' : '') +

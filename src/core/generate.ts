@@ -1,15 +1,16 @@
 import { dishIssue } from './filters.ts';
-import { calorieLimit } from './planning.ts';
-import type { CustomCourse, CustomDraft, Dish, Generator, Preferences } from './types.ts';
+import { fitsRow } from './custom.ts';
+import { calorieLimit, menuDeck } from './planning.ts';
+import type { Dish, Generator, Preferences, TrayCourse } from './types.ts';
 
 /**
- * The order courses are filled in. The main course comes first because it varies most in calories; the courses after it
- * get what the calorie limit leaves.
+ * The order rows are filled in: set menus first, as the largest items, then the main course, which varies most in
+ * calories; the rows after them get what the calorie limit leaves.
  */
-const fillOrder: CustomCourse[] = ['main', 'breakfast', 'soup', 'cold', 'dessert', 'bread', 'pickle', 'drink'];
+const fillOrder: TrayCourse[] = ['menu', 'main', 'breakfast', 'soup', 'cold', 'dessert', 'bread', 'pickle', 'drink'];
 
-export function startGenerator(seed: number): Generator {
-  return { seed: seed >>> 0, shown: {} };
+export function startGenerator(seed: number, rows: number[] = []): Generator {
+  return { seed: seed >>> 0, shown: {}, rows };
 }
 
 /** The next number of a seeded sequence (mulberry32): a float in [0, 1) and the seed that continues the sequence. */
@@ -20,18 +21,26 @@ export function nextRandom(seed: number): { value: number; seed: number } {
   return { value: ((mixed ^ (mixed >>> 14)) >>> 0) / 4_294_967_296, seed: next };
 }
 
-/** The dishes each course may use: the settings' filters apply, and with a calorie limit only dishes with known calories. */
-function coursePools(candidates: Dish[], courses: CustomCourse[], preferences: Preferences): Map<CustomCourse, Dish[]> {
-  const pools = new Map<CustomCourse, Dish[]>();
-  for (const course of fillOrder) {
-    if (!courses.includes(course)) continue;
-    const pool = candidates.filter(
-      dish =>
-        dish.course === course && !dishIssue(dish, preferences) && (!preferences.limitCalories || Number.isFinite(dish.kcal)),
-    );
-    if (pool.length) pools.set(course, pool);
-  }
-  return pools;
+/**
+ * The dishes a row may use: the settings' filters apply, and with a calorie limit only dishes with known calories. A
+ * set-menu row takes a lunch menu, and a full-day menu only on a day without any, since an idea is one meal's worth.
+ */
+function rowPool(candidates: Dish[], course: TrayCourse, preferences: Preferences): Dish[] {
+  const pool = candidates.filter(
+    dish => fitsRow(dish, course) && !dishIssue(dish, preferences) && (!preferences.limitCalories || Number.isFinite(dish.kcal)),
+  );
+  if (course !== 'menu') return pool;
+  const lunch = pool.filter(dish => menuDeck(dish) === 'lunch');
+  return lunch.length ? lunch : pool;
+}
+
+/** What an idea fills, in the order it fills it: the rows of `courses` in fill order, each with the dishes it may use. */
+function fillPlan(candidates: Dish[], courses: TrayCourse[], preferences: Preferences): { row: number; pool: Dish[] }[] {
+  return courses
+    .map((course, row) => ({ course, row }))
+    .sort((a, b) => fillOrder.indexOf(a.course) - fillOrder.indexOf(b.course))
+    .map(({ course, row }) => ({ row, pool: rowPool(candidates, course, preferences) }))
+    .filter(({ pool }) => pool.length > 0);
 }
 
 const lowestCalories = (pool: Dish[]) => Math.min(...pool.map(dish => dish.kcal ?? 0));
@@ -39,49 +48,53 @@ const lowestCalories = (pool: Dish[]) => Math.min(...pool.map(dish => dish.kcal 
 /** Why no menu can be generated: nothing to choose from, or even the lightest dishes go over the calorie limit. */
 export type GenerationProblem = 'empty' | 'limit';
 
+/** Whether an idea can fill rows of `courses`. `used` is the calories already on the day's tray, which it must fit next to. */
 export function generationProblem(
   candidates: Dish[],
-  courses: CustomCourse[],
+  courses: TrayCourse[],
   preferences: Preferences,
+  used = 0,
 ): GenerationProblem | null {
-  const pools = coursePools(candidates, courses, preferences);
-  if (!pools.size) return 'empty';
+  const plan = fillPlan(candidates, courses, preferences);
+  if (!plan.length) return 'empty';
   if (!preferences.limitCalories) return null;
-  const lightest = [...pools.values()].reduce((sum, pool) => sum + lowestCalories(pool), 0);
-  return lightest > calorieLimit(preferences) ? 'limit' : null;
+  const lightest = plan.reduce((sum, { pool }) => sum + lowestCalories(pool), 0);
+  return used + lightest > calorieLimit(preferences) ? 'limit' : null;
 }
 
 /**
- * A menu with one dish for each chosen course that has dishes today. Among the dishes that fit, it takes one of those
- * shown least so far, so a rejected menu is followed by different dishes. With a calorie limit each course keeps room for
- * the lightest dishes of the courses still to fill, so the menu always fits when any menu can. Returns no dishes when
- * `generationProblem` reports a problem.
+ * A dish for each row of `courses` that has dishes today, by position.
+ * Among the dishes that fit, it takes one of those shown least so far, so a rejected idea is followed by different dishes
+ * and two rows of the same course get different dishes while there are any. With a calorie limit each row keeps room for
+ * the lightest dishes of the rows still to fill, so the idea always fits when any can, next to the `used` calories already
+ * on the tray. Fills nothing when `generationProblem` reports a problem.
  */
 export function generateMenu(
   candidates: Dish[],
-  courses: CustomCourse[],
+  courses: TrayCourse[],
   preferences: Preferences,
   generator: Generator,
-): { picks: CustomDraft['picks']; generator: Generator } {
-  if (generationProblem(candidates, courses, preferences)) return { picks: {}, generator };
-  const pools = [...coursePools(candidates, courses, preferences)];
+  used = 0,
+): { dishes: (Dish | undefined)[]; generator: Generator } {
+  const dishes: (Dish | undefined)[] = courses.map(() => undefined);
+  if (generationProblem(candidates, courses, preferences, used)) return { dishes, generator };
+  const plan = fillPlan(candidates, courses, preferences);
   const limit = preferences.limitCalories ? calorieLimit(preferences) : null;
-  const picks: CustomDraft['picks'] = {};
   const shown = { ...generator.shown };
   let seed = generator.seed;
-  let used = 0;
+  let total = used;
 
-  pools.forEach(([course, pool], index) => {
-    const reserved = pools.slice(index + 1).reduce((sum, [, later]) => sum + lowestCalories(later), 0);
-    const fitting = limit === null ? pool : pool.filter(dish => used + dish.kcal! + reserved <= limit);
+  plan.forEach(({ row, pool }, index) => {
+    const reserved = plan.slice(index + 1).reduce((sum, later) => sum + lowestCalories(later.pool), 0);
+    const fitting = limit === null ? pool : pool.filter(dish => total + dish.kcal! + reserved <= limit);
     const fewest = Math.min(...fitting.map(dish => shown[dish.id] ?? 0));
     const freshest = fitting.filter(dish => (shown[dish.id] ?? 0) === fewest);
     const random = nextRandom(seed);
     seed = random.seed;
     const dish = freshest[Math.floor(random.value * freshest.length)]!;
-    picks[course] = dish;
+    dishes[row] = dish;
     shown[dish.id] = fewest + 1;
-    used += dish.kcal ?? 0;
+    total += dish.kcal ?? 0;
   });
-  return { picks, generator: { seed, shown } };
+  return { dishes, generator: { ...generator, seed, shown } };
 }

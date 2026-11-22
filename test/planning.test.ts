@@ -1,12 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  calorieLimit,
   cartLines,
   choose,
   dayCandidates,
   dayQueue,
-  mealOptions,
+  menuDeck,
   newPreferences,
   orderSummary,
   restorePlan,
@@ -16,7 +15,8 @@ import {
   startPlan,
   withDetails,
 } from '../src/core/planning.ts';
-import type { Course, CourseKind, Dish, MenuOption } from '../src/core/types.ts';
+import { dishOption } from '../src/core/custom.ts';
+import type { Course, CourseKind, Dish, MenuDeckId, MenuOption } from '../src/core/types.ts';
 import {
   dayLabel,
   defaultWeek,
@@ -77,13 +77,16 @@ const fullDay = ['Z10', 'Z11', 'IRN'].map(code => ({ ...menu, id: '5:1:' + code,
 const ir = { ...menu, id: '5:1:IR', code: 'IR', kcal: 980, components: twoMeals };
 const dishes = [soup, main, dessert, menu, menuWithDessert, ...fullDay, ir];
 
-test('lunch and full-day decks contain separate Teletál menus', () => {
+/** The cards of a Teletál menu deck, as the tray's set-menu rows offer them. */
+const options = (list: Dish[], deck: MenuDeckId) => list.filter(dish => menuDeck(dish) === deck).map(dishOption);
+
+test('Teletál menus are lunch or full-day menus, and a menu without soup and main is neither', () => {
   assert.deepEqual(
-    mealOptions(dishes, newPreferences, 'lunch').map(option => option.dishes[0].code),
+    options(dishes, 'lunch').map(option => option.dishes[0].code),
     ['P', 'Q', 'IR'],
   );
   assert.deepEqual(
-    mealOptions(dishes, newPreferences, 'fullDay').map(option => option.dishes[0].code),
+    options(dishes, 'fullDay').map(option => option.dishes[0].code),
     ['Z10', 'Z11', 'IRN'],
   );
   const menuWithSide = { ...menu, id: '5:1:R', code: 'R', components: [soupCourse, course('main', 'Main', 600), sideCourse] };
@@ -94,42 +97,13 @@ test('lunch and full-day decks contain separate Teletál menus', () => {
     components: [course('main', 'Main', 600), course('dessert', 'Dessert', 200), sideCourse],
   };
   assert.deepEqual(
-    mealOptions([menuWithSide, menuWithoutSoup], newPreferences, 'lunch').map(option => option.dishes[0].code),
+    options([menuWithSide, menuWithoutSoup], 'lunch').map(option => option.dishes[0].code),
     ['R'],
   );
 });
 
-test('an enabled limit filters whole menus, ranks by the target, and distinguishes zero and unknown calories', () => {
-  const unknown = { ...menu, id: '5:1:PN', code: 'PN', kcal: null, components: undefined };
-  const zero = { ...menu, id: '5:1:R', code: 'R', kcal: 0 };
-  const over = { ...menu, id: '5:1:O', code: 'O', kcal: 1050.1 };
-  assert.equal(calorieLimit(preferences), 1050);
-  assert.deepEqual(
-    mealOptions([...dishes, unknown, zero, over], preferences, 'lunch').map(option => option.kcal),
-    [980, 877, 875, 0],
-  );
-  assert.deepEqual(
-    mealOptions([unknown, zero, over], newPreferences, 'lunch').map(option => option.kcal),
-    [null, 0, 1050.1],
-  );
-  assert.deepEqual(mealOptions(fullDay, preferences, 'fullDay'), []);
-});
-
-test('code exclusions apply to either deck only while filtering is on', () => {
-  const filtered = { ...newPreferences, filterCodes: true, excludedCodes: ['P', 'IRN'] };
-  assert.deepEqual(
-    mealOptions(dishes, filtered, 'lunch').map(option => option.dishes[0].code),
-    ['Q', 'IR'],
-  );
-  assert.deepEqual(
-    mealOptions(dishes, filtered, 'fullDay').map(option => option.dishes[0].code),
-    ['Z10', 'Z11'],
-  );
-  assert.equal(mealOptions(dishes, { ...filtered, filterCodes: false }, 'fullDay').length, 3);
-});
-
 test('restoring a saved plan keeps choices and swipe history, and preferences are validated separately', () => {
-  const option = mealOptions(dishes, newPreferences, 'lunch')[0];
+  const option = options(dishes, 'lunch')[0];
   const saved = { ...startPlan(week, 2), slots: { 1: option }, drafts: { 2: { excluded: [option.id], deferred: [] } } };
   const stored = JSON.parse(JSON.stringify(saved));
   const plan = restorePlan(stored);
@@ -167,36 +141,36 @@ test('weekly day choices and default days are restored independently in calendar
 });
 
 test('swipe history survives deck switches and restarting the deck preserves a saved pick', () => {
-  const options = mealOptions(dishes, newPreferences, 'lunch');
-  const plan = { ...startPlan(week, 1), slots: { 1: options[1] } };
-  const deferred = choose(plan, 'up', options[0], allDays);
-  assert.deepEqual(dayQueue(options, deferred), [...options.slice(1), options[0]]);
-  const passed = choose(deferred, 'left', options[0], allDays);
-  assert.deepEqual(dayQueue(options, passed), options.slice(1));
-  assert.equal(dayQueue(mealOptions(dishes, newPreferences, 'fullDay'), passed).length, 3);
+  const lunch = options(dishes, 'lunch');
+  const plan = { ...startPlan(week, 1), slots: { 1: lunch[1] } };
+  const deferred = choose(plan, 'up', lunch[0], allDays);
+  assert.deepEqual(dayQueue(lunch, deferred), [...lunch.slice(1), lunch[0]]);
+  const passed = choose(deferred, 'left', lunch[0], allDays);
+  assert.deepEqual(dayQueue(lunch, passed), lunch.slice(1));
+  assert.equal(dayQueue(options(dishes, 'fullDay'), passed).length, 3);
   const reset = choose(passed, 'restart', null, allDays);
-  assert.deepEqual(dayQueue(options, reset), options);
-  assert.equal(reset.slots[1], options[1]);
+  assert.deepEqual(dayQueue(lunch, reset), lunch);
+  assert.equal(reset.slots[1], lunch[1]);
   assert.equal(choose(reset, 'skip', null, allDays).slots[1], null);
 });
 
 test('advancing wraps to unfinished eligible days and editing a finished plan returns to review', () => {
   const eligible = [3, 5, 6];
-  const option = mealOptions(dishes, newPreferences, 'lunch')[0];
+  const option = options(dishes, 'lunch')[0];
   let plan = choose(startPlan(week, 5), 'right', option, eligible);
   assert.equal(plan.day, 6);
   plan = choose(plan, 'skip', null, eligible);
   assert.equal(plan.day, 3);
   plan = choose(plan, 'skip', null, eligible);
   assert.equal(plan.day, null);
-  const replacement = mealOptions(fullDay, newPreferences, 'fullDay')[0];
+  const replacement = options(fullDay, 'fullDay')[0];
   const edited = choose({ ...plan, day: 5 }, 'right', replacement, eligible);
   assert.deepEqual(edited.slots, { 3: null, 5: replacement, 6: null });
   assert.equal(edited.day, null);
 });
 
 test('cart quantities use Friday for weekend plans and conflicts preserve picks', () => {
-  const option = mealOptions([menu], newPreferences, 'lunch')[0];
+  const option = options([menu], 'lunch')[0];
   const thursday = [soup, main, dessert].map(dish => ({ ...dish, id: dish.id.replace(/^5/, '4'), day: 4 }));
   const olderCombo: MenuOption = { id: 'combo', kind: 'menu', title: 'Combo', dishes: thursday, kcal: 1047, price: 2850 };
   const plan = { ...startPlan(week, 5), slots: { 4: olderCombo, 5: option, 6: option, 7: option } };
@@ -233,8 +207,8 @@ test('weekend days use the weekend lines Teletál publishes and Friday lines for
   );
   assert.deepEqual(dayCandidates(catalog, 7), dishes);
 
-  const fridayPick = mealOptions([fullDay[0]], newPreferences, 'fullDay')[0];
-  const saturdayPick = mealOptions([saturdayZ10], newPreferences, 'fullDay')[0];
+  const fridayPick = options([fullDay[0]], 'fullDay')[0];
+  const saturdayPick = options([saturdayZ10], 'fullDay')[0];
   const plan = { ...startPlan(week, 5), slots: { 5: fridayPick, 6: saturdayPick, 7: fridayPick } };
   const order = orderSummary(plan, [5, 6, 7], catalog, newPreferences);
   assert.deepEqual(order.issues, {});
@@ -250,7 +224,7 @@ test('weekend days use the weekend lines Teletál publishes and Friday lines for
 });
 
 test('deselected days are omitted from cart quantities without removing their saved meals', () => {
-  const option = mealOptions([menu], newPreferences, 'lunch')[0];
+  const option = options([menu], 'lunch')[0];
   const plan = { ...startPlan(week, 5, [5, 7]), slots: { 5: option, 6: option, 7: option } };
   const order = orderSummary(plan, [5, 6, 7], dishes, newPreferences);
   assert.deepEqual(order.lines, [{ day: 5, code: 'P', name: 'Set menu', quantity: 2 }]);
