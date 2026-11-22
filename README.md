@@ -1,6 +1,6 @@
 # Tálválogató
 
-Tálválogató is an installable planner for Teletál. Choose a delivery week, then put each day together on a tray: Teletál menus, soups, mains, and extras such as bread, dessert or a drink, as many of each as you like. Menus, soups and mains are picked by swiping through them, extras from a list, or an idea fills the empty rows. Review the week and send it to the Teletál cart. The settings dialog saves a calorie limit, menu-code exclusions, a vegetarian or vegan diet, allergens to leave out and disliked ingredients across weeks. Each Teletál menu, and each dish of your own menu, uses one order line.
+Tálválogató is an installable planner for Teletál. Choose a delivery week, then put each day together on a tray: Teletál menus, soups, mains, and extras such as bread, dessert or a drink, as many of each as you like. Menus, soups and mains are picked by swiping through them, extras from a list, or an idea fills the empty rows. Review the week and send it to the Teletál cart. Prices are copied from Teletál too, so the Teletál cart shows the final ones. The settings dialog saves a calorie limit, menu-code exclusions, a vegetarian or vegan diet, allergens to leave out and disliked ingredients across weeks. Each Teletál menu, and each dish of your own menu, uses one order line.
 
 Tálválogató is an unofficial app and is not affiliated with Teletál Ételfutár Kft. The published site is a demo: its menus are invented, and it sends nothing to the Teletál cart.
 

@@ -24,7 +24,6 @@ import {
   mondayOfWeek,
   sourceDay,
   upcomingWeeks,
-  weekLabel,
   weekOptionLabel,
 } from '../src/core/weeks.ts';
 
@@ -276,8 +275,6 @@ test('the current week disappears when its Friday delivery passes the Budapest o
 
 test('day and week labels use Hungarian dates, including weeks across two months', () => {
   assert.equal(dayLabel(week, 1), 'november 23.');
-  assert.equal(weekLabel(week), 'nov. 23–29.');
-  assert.equal(weekLabel('2026-W49').replace(/\s+/g, ' '), 'nov. 30. – dec. 6.');
   assert.equal(weekOptionLabel(week, 'long'), '48. hét (november 23–29.)');
   assert.equal(weekOptionLabel(week, 'short'), '48. hét (nov. 23–29.)');
   assert.equal(weekOptionLabel('2026-W49', 'long').replace(/\s+/g, ' '), '49. hét (november 30. – december 6.)');

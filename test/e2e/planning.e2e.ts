@@ -402,11 +402,11 @@ test('diet and allergen filters: decks follow the filters, and ordering reminds 
   await page.getByRole('button', { name: 'Kiválasztom' }).click();
   await page.locator('.custom-summary').waitFor();
 
-  // Before ordering, the overview and the cart dialog both ask to check the allergens on Teletál.
+  // Before ordering, the overview and the cart dialog both ask to check the allergens and prices on Teletál.
   await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
-  await page.locator('.review .allergen-reminder', { hasText: 'Allergénszűrő: szezámmag.' }).waitFor();
+  await page.locator('.review .order-reminder', { hasText: 'allergénjeit és árait' }).waitFor();
   await page.getByRole('button', { name: 'Kosárhoz adás' }).click();
-  const reminder = page.locator('dialog[open] .allergen-reminder');
+  const reminder = page.locator('dialog[open] .order-reminder');
   await reminder.waitFor({ timeout: 30_000 });
   const openMenu = page.locator('dialog[open] a.button.primary');
   assert.ok((await reminder.boundingBox())!.y < (await openMenu.boundingBox())!.y, 'the reminder sits above the cart button');
