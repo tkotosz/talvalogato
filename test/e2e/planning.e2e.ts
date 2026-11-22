@@ -355,9 +355,7 @@ test('diet and allergen filters: decks follow the filters, and ordering reminds 
   await page.getByLabel('Vegán').check();
   await page.getByLabel('Allergének kizárása').check();
   // The demo has two vegan mains a day, and at most one of them has sesame.
-  await page.getByRole('button', { name: /Kizárt allergének/ }).click();
   await page.getByLabel('Szezámmag').check();
-  await page.keyboard.press('Escape');
   await page.screenshot({ path: `${screenshots}diet-settings.png`, fullPage: true });
   await page.getByRole('button', { name: 'Mentés' }).click();
   await page.locator('dialog[open]').waitFor({ state: 'detached' });
