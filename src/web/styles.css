@@ -2307,3 +2307,10 @@ button.code-group-title:hover {
 .filter-summary .text-button {
   flex: none;
 }
+
+/* The tray's Törlés and Kész, side by side */
+.tray-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}

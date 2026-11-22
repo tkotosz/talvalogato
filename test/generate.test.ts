@@ -3,7 +3,6 @@ import test from 'node:test';
 import { generateMenu, generationProblem, nextRandom, startGenerator } from '../src/core/generate.ts';
 import {
   initialPlanner,
-  plannerView,
   reducePlanner,
   type PlannerAction,
   type PlannerContext,
@@ -169,24 +168,23 @@ test('rejecting an idea brings a different main until every main was offered', (
   assert.equal(state.plans[w48]!.slots[3], undefined, 'rejecting does not decide the day');
 });
 
-test('keeping an idea puts it on the tray, where extras can join before Mentés saves the day', () => {
+test('keeping an idea puts it on the tray, where extras can join before leaving the day saves it', () => {
   let state = generatedDay();
   const { rows } = draft(state);
   state = run(state, { type: 'acceptGenerated', day: 3 });
   assert.deepEqual(draft(state), { rows, stage: 'overview', overLimit: [] });
-  assert.ok(!Object.hasOwn(state.plans[w48]!.slots, 3), 'nothing is saved before Mentés');
+  assert.ok(!Object.hasOwn(state.plans[w48]!.slots, 3), 'nothing is saved while the day is open');
 
   state = run(
     state,
     { type: 'addCourse', day: 3, course: 'dessert' },
     { type: 'openStage', day: 3, stage: 2 },
     { type: 'pickCourse', day: 3, dish: desserts[1]! },
-    { type: 'saveCustom', day: 3 },
+    { type: 'navigate', step: 'overview' },
   );
   const saved = state.plans[w48]!.slots[3]!;
   assert.equal(saved.kind, 'custom');
   assert.deepEqual(saved.custom, { courses: ['soup', 'main', 'dessert'], overLimit: false });
-  assert.equal(plannerView(state, context).day, 3, 'the saved day stays open');
   assert.deepEqual(
     orderSummary(state.plans[w48]!, [3, 4, 5], catalog, newPreferences).lines.map(line => line.code),
     [rows[0]!.dish!.code, rows[1]!.dish!.code, 'S2'].sort(),

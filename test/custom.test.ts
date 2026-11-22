@@ -141,7 +141,7 @@ test('a kind of row can be on the tray any number of times, and the same dish tw
   state = run(state, { type: 'addCourse', day: 3, course: 'main' });
   assert.deepEqual(courses(state), ['soup', 'main', 'main', 'drink', 'drink']);
   state = pickAll(state, main, bigMain, drink, drink);
-  state = run(state, { type: 'saveCustom', day: 3 });
+  state = run(state, { type: 'navigate', step: 'overview' });
   const saved = state.plans[w48]!.slots[3]!;
   assert.deepEqual(saved.custom?.courses, ['soup', 'main', 'main', 'drink', 'drink']);
   assert.deepEqual(
@@ -157,11 +157,11 @@ test('a kind of row can be on the tray any number of times, and the same dish tw
   assert.deepEqual(dishes(state), [null, 'I1', 'I2', 'NF1', 'NF1']);
 });
 
-test('picking dishes returns to the tray, and the day is only saved with Mentés', () => {
+test('picking dishes returns to the tray, and the day is saved when the user leaves it', () => {
   let state = pickAll(customDay(), main, soup, salad);
-  assert.ok(!Object.hasOwn(state.plans[w48]!.slots, 3), 'nothing is saved before Mentés');
+  assert.ok(!Object.hasOwn(state.plans[w48]!.slots, 3), 'nothing is saved while the day is open');
 
-  state = run(state, { type: 'saveCustom', day: 3 });
+  state = run(state, { type: 'navigate', step: 'overview' });
   const saved = state.plans[w48]!.slots[3]!;
   assert.equal(saved.kind, 'custom');
   assert.equal(saved.title, 'Saját menü');
@@ -172,11 +172,49 @@ test('picking dishes returns to the tray, and the day is only saved with Mentés
   assert.equal(saved.price, 800 + 2000 + 1500);
   assert.equal(saved.kcal, 1350);
   assert.equal(state.plans[w48]!.custom[3], undefined);
+  state = run(state, { type: 'openDay', day: 3 });
+  assert.equal(plannerView(state, context).dayDone, true, 'the saved day reopens finished');
+});
+
+test('Kész saves the tray and shows the finished day, and does nothing without dishes', () => {
+  let state = customDay();
+  assert.equal(run(state, { type: 'saveTray', day: 3 }), state, 'a tray of empty rows saves nothing');
+  state = run(pickAll(state, soup), { type: 'saveTray', day: 3 });
+  assert.deepEqual(
+    state.plans[w48]!.slots[3]!.dishes.map(item => item.code),
+    ['A1'],
+  );
   assert.equal(plannerView(state, context).day, 3, 'the saved day stays open');
   assert.equal(plannerView(state, context).dayDone, true);
 });
 
-test('Nem kérek and emptying keep a row, removing takes it off, and a tray without dishes cannot be saved', () => {
+test('moving to another day saves the tray, leaving out empty rows and an idea not kept yet', () => {
+  let state = pickAll(customDay(), soup);
+  state = run(state, { type: 'startGenerated', day: 3, seed: 1 });
+  assert.equal(draft(state).stage, 'generated', 'an idea is waiting to be kept');
+  state = run(state, { type: 'openDay', day: 4 });
+  const saved = state.plans[w48]!.slots[3]!;
+  assert.deepEqual(
+    saved.dishes.map(item => item.code),
+    ['A1'],
+  );
+  assert.deepEqual(saved.custom?.courses, ['soup', 'main']);
+  assert.equal(plannerView(state, context).day, 4);
+});
+
+test('clearing the tray of a saved day leaves the day without a decision', () => {
+  let state = run(pickAll(customDay(), soup), { type: 'navigate', step: 'overview' }, { type: 'openDay', day: 3, edit: true });
+  state = run(state, { type: 'clearDay', day: 3 });
+  assert.equal(plannerView(state, context).custom, null, 'the tray is empty');
+  state = run(state, { type: 'navigate', step: 'overview' });
+  assert.ok(!Object.hasOwn(state.plans[w48]!.slots, 3));
+
+  state = run(state, { type: 'openDay', day: 3 }, { type: 'addCourse', day: 3, course: 'soup' });
+  state = run(state, { type: 'navigate', step: 'overview' }, { type: 'openDay', day: 3 });
+  assert.equal(plannerView(state, context).dayDone, false, 'a tray of empty rows decides nothing');
+});
+
+test('Nem kérek and emptying keep a row, removing takes it off, and a tray without dishes saves nothing', () => {
   let state = pickAll(customDay(), soup, pickle);
   state = run(state, { type: 'openStage', day: 3, stage: 0 }, { type: 'clearCourse', day: 3 });
   assert.deepEqual(dishes(state), [null, null, 'W1']);
@@ -185,7 +223,10 @@ test('Nem kérek and emptying keep a row, removing takes it off, and a tray with
   state = run(state, { type: 'removeCourse', day: 3, row: 2 });
   assert.deepEqual(courses(state), ['soup', 'main']);
   assert.equal(run(state, { type: 'removeCourse', day: 3, row: 5 }), state, 'only rows on the tray can be removed');
-  assert.equal(run(state, { type: 'saveCustom', day: 3 }), state, 'a tray without dishes cannot be saved');
+  assert.ok(
+    !Object.hasOwn(run(state, { type: 'navigate', step: 'overview' }).plans[w48]!.slots, 3),
+    'a tray without dishes saves nothing',
+  );
 
   state = run(state, { type: 'openDay', day: 4 }, { type: 'navigate', step: 'overview' }, { type: 'openDay', day: 3 });
   assert.deepEqual(
@@ -202,12 +243,12 @@ test('a set-menu row offers lunch and full-day menus; a menu alone is saved as t
     [setMenu.id, fullDayMenu.id],
   );
   state = run(state, { type: 'openStage', day: 3, stage: 0 }, { type: 'pickCourse', day: 3, dish: setMenu });
-  state = run(state, { type: 'saveCustom', day: 3 });
+  state = run(state, { type: 'navigate', step: 'overview' });
   assert.deepEqual(state.plans[w48]!.slots[3], dishOption(setMenu));
 
   state = run(state, { type: 'openDay', day: 3, edit: true });
   assert.deepEqual(draft(state).rows, [{ course: 'menu', dish: setMenu }]);
-  state = run(pickDish(state, pickle), { type: 'saveCustom', day: 3 });
+  state = run(pickDish(state, pickle), { type: 'navigate', step: 'overview' });
   const saved = state.plans[w48]!.slots[3]!;
   assert.equal(saved.kind, 'custom');
   assert.equal(saved.title, 'Menü 1 kiegészítőkkel');
@@ -231,7 +272,7 @@ test('set menus sit next to anything, two menus are a plain combined day, and a 
   const onSoup = run(state, { type: 'openStage', day: 3, stage: soupRow });
   assert.equal(run(onSoup, { type: 'pickCourse', day: 3, dish: setMenu }), onSoup, 'a set menu is not a soup');
 
-  state = run(state, { type: 'pickCourse', day: 3, dish: setMenu }, { type: 'saveCustom', day: 3 });
+  state = run(state, { type: 'pickCourse', day: 3, dish: setMenu }, { type: 'navigate', step: 'overview' });
   assert.equal(state.plans[w48]!.slots[3]!.title, 'Saját menü', 'two set menus have no single name');
 });
 
@@ -281,7 +322,7 @@ test('a calorie limit offers only dishes that fit what is left, hides unknown ca
   state = run(state, { type: 'addCourse', day: 3, course: 'drink' });
   assert.deepEqual(courseDeck(catalog, draft(state), 2, limited).options, []);
   assert.deepEqual(courseDeck(catalog, draft(state), 3, limited).options, [], 'drinks without calorie data are hidden');
-  state = run(state, { type: 'saveCustom', day: 3 });
+  state = run(state, { type: 'navigate', step: 'overview' });
 
   const saved = state.plans[w48]!.slots[3]!;
   assert.equal(saved.kcal, 1200);
@@ -312,8 +353,8 @@ test('dishes that fit come first, smallest overshoot next, and code exclusions a
   );
 });
 
-test('editing a saved day puts its dishes back on the tray, and the saved day stays until the edit is saved', () => {
-  let state = run(pickAll(customDay(), soup, pickle), { type: 'saveCustom', day: 3 });
+test('editing a saved day puts its dishes back on the tray, and the saved day stays until the user leaves the day', () => {
+  let state = run(pickAll(customDay(), soup, pickle), { type: 'navigate', step: 'overview' });
   const saved = state.plans[w48]!.slots[3]!;
 
   state = run(state, { type: 'navigate', step: 'overview' }, { type: 'openDay', day: 3, edit: true });
@@ -322,7 +363,7 @@ test('editing a saved day puts its dishes back on the tray, and the saved day st
 
   state = pickDish(state, main);
   assert.equal(state.plans[w48]!.slots[3], saved);
-  state = run(state, { type: 'saveCustom', day: 3 });
+  state = run(state, { type: 'navigate', step: 'overview' });
   assert.deepEqual(
     state.plans[w48]!.slots[3]!.dishes.map(item => item.code),
     ['A1', 'I1', 'W1'],

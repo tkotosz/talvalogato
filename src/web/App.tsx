@@ -100,9 +100,7 @@ export function App() {
       ? { label: 'Nap szerkesztése', onClick: () => dispatch({ type: 'openDay', day, edit: true }) }
       : inCourseDeck
         ? { label: 'Nem kérek', onClick: () => dispatch({ type: 'clearCourse', day }) }
-        : view.editing
-          ? { label: 'Választás törlése', onClick: () => dispatch({ type: 'clearDay', day }) }
-          : null;
+        : null;
 
   // The meal picker moves through the days in calendar order; a row's deck or list, or an idea, returns to the tray first.
   const { previousDay, nextDay } = view;
