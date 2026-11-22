@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { inAllergenOrder } from '../src/core/allergens.ts';
 import { allCourses } from '../src/core/courses.ts';
 import { dayCandidates, dishCodePattern, menuDeck } from '../src/core/planning.ts';
 import { demoDishes, demoMenu, demoWeekKeys } from '../src/scraper/demo.ts';
@@ -67,5 +68,36 @@ test('demo dishes are complete, invented lines without photos', () => {
     assert.equal(dish.photo, null);
     assert.ok(dish.components?.every(course => course.photo === null));
     if (dish.kind === 'menu') assert.equal(dish.name.split(' / ').length, dish.components?.length);
+  }
+});
+
+test('demo courses list their ingredients and allergens, and diet marks agree with them', () => {
+  const meat = /hus|csirke|pulyka|sertes|marha|borju|kolbasz|sonka|szalonna|csulok|virsli|csont|hal|lazac/;
+  const plainText = (text: string) =>
+    text
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase();
+  for (const dish of demoDishes('2026-W48')) {
+    for (const course of dish.components ?? []) {
+      assert.ok(course.ingredients, `${dish.id} lists ingredients`);
+      assert.ok(Array.isArray(course.allergens), `${dish.id} has known allergens`);
+      assert.deepEqual(course.allergens, inAllergenOrder(course.allergens!), `${dish.id} lists allergens in order`);
+      if (!dish.diet) continue;
+      assert.doesNotMatch(plainText(course.ingredients!), meat, `${dish.id} is ${dish.diet}`);
+      for (const allergen of ['fish', 'crustaceans', 'mollusks'] as const) assert.ok(!course.allergens!.includes(allergen));
+      if (dish.diet !== 'vegan') continue;
+      for (const allergen of ['milk', 'egg'] as const) assert.ok(!course.allergens!.includes(allergen), `${dish.id} is vegan`);
+      assert.doesNotMatch(plainText(course.ingredients!), /\bmez\b/, `${dish.id} is vegan`);
+    }
+  }
+});
+
+test('every day offers a vegan soup and two vegan mains', () => {
+  const dishes = demoDishes('2026-W48');
+  for (const day of [1, 2, 3, 4, 5, 6, 7]) {
+    const vegan = dayCandidates(dishes, day).filter(dish => dish.diet === 'vegan');
+    assert.ok(vegan.filter(dish => dish.course === 'soup').length >= 1, `day ${day} has a vegan soup`);
+    assert.ok(vegan.filter(dish => dish.course === 'main').length >= 2, `day ${day} has two vegan mains`);
   }
 });

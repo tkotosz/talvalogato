@@ -6,12 +6,14 @@ import type {
   Course,
   CourseKind,
   CustomCourse,
+  Diet,
   DishDetails,
   DishKind,
   PublishedWeek,
   WeekKey,
 } from '../core/types.ts';
 import { isoWeek, mondayOfWeek, todayInBudapest } from '../core/weeks.ts';
+import { courseAllergens } from './allergens.ts';
 
 export const teletal = 'https://www.teletal.hu';
 const detailSelector = 'a[kod][nap].menu-info-button, a[kod][nap].minib, a[kod][nap].mib';
@@ -137,6 +139,28 @@ function readMenuName(card: Cheerio<AnyNode>): string | null {
     : label;
 }
 
+/** The file names of the icons in a line's tag box, where Teletál puts its diet and spicy marks. */
+function tagIcons($: CheerioAPI, card: Cheerio<AnyNode>): string[] {
+  return card
+    .find('.menu-cell-tag img[src]')
+    .toArray()
+    .map(image => plain($(image).attr('src')?.split('/').pop() ?? ''));
+}
+
+/**
+ * Teletál's diet mark for a line. A line can carry a vegan or vegetarian icon. The lines of the Vega & vegán sections are
+ * marked by their group heading instead ("VEGA" or "VEGÁN"), and Teletál's notice there says TVE lines suit vegans too.
+ */
+function dietOf(icons: string[], groupId: string, menuName: string, code: string): Diet | null {
+  if (icons.some(icon => icon.startsWith('vegan_ikon'))) return 'vegan';
+  if (icons.some(icon => icon.startsWith('vega_ikon') || icon.startsWith('etel_v_jel'))) return 'vegetarian';
+  if (groupId !== vegaGroupName) return null;
+  const heading = plain(menuName);
+  if (heading === 'vega') return 'vegetarian';
+  if (heading === 'vegan' || /^TVE\d/.test(code)) return 'vegan';
+  return null;
+}
+
 function itemsFrom($: CheerioAPI, section: string, headings: Map<string, SectionHeading>): CatalogDish[] {
   const { category, groupId, cuisine, pickerEligible } = headings.get(section)!;
   return $(detailSelector)
@@ -172,6 +196,7 @@ function itemsFrom($: CheerioAPI, section: string, headings: Map<string, Section
         .find('img[title]')
         .toArray()
         .some(img => plain($(img).attr('title') ?? '').includes('szombat'));
+      const icons = tagIcons($, card);
       return [
         {
           id: `${day}:${type}:${code}`,
@@ -190,6 +215,8 @@ function itemsFrom($: CheerioAPI, section: string, headings: Map<string, Section
           pickerEligible,
           course: courseOf(section, kind),
           note,
+          diet: dietOf(icons, groupId, menuName, code),
+          spicy: icons.some(icon => icon.startsWith('csipos')),
         },
       ];
     });
@@ -319,40 +346,104 @@ function photoUrl(image: Cheerio<AnyNode>): string | null {
   }
 }
 
-function readComponents($: CheerioAPI): Course[] {
+const labelText = (value: string) => plain(cleanText(value)).replace(/[^a-z]/g, '');
+
+/** The bold row labels in `scope` that read `label` once normalized by `labelText`, such as "allergenek" for "Allergének:". */
+function labels($: CheerioAPI, scope: Cheerio<AnyNode>, label: string): Cheerio<AnyNode> {
+  return scope.find('strong').filter((_, node) => labelText($(node).text()) === label);
+}
+
+/**
+ * The values Teletál shows after a bold label in a course's details, such as `<span><strong>Allergének:</strong></span>
+ * <span>Glutén, Tej</span>`. A label whose value is not where Teletál puts it gives null.
+ */
+function labeledValues($: CheerioAPI, course: Cheerio<AnyNode>, label: string): (Cheerio<AnyNode> | null)[] {
+  return labels($, course, label)
+    .toArray()
+    .map(title => {
+      const value = $(title).parent().next('span');
+      return value.length ? value : null;
+    });
+}
+
+interface CourseReading {
+  course: Course;
+  /** Allergen names and bold ingredients that matched no allergen. */
+  unknownAllergens: string[];
+}
+
+function readComponents($: CheerioAPI): CourseReading[] {
   const headings = $('h1.uk-article-title:not(.uk-background-secondary)').toArray();
   const servings = $('.en_adag')
     .toArray()
     .map(element => cleanText($(element).text()))
     .filter(value => /kcal/i.test(value));
   if (!servings.length || headings.length !== servings.length) return [];
+  // A course can come in parts, such as a pasta and its cheese, each with a net weight, an ingredient list and an allergen
+  // list. When an allergen row on the page belongs to no course, no course's allergens are trusted.
+  const scopes = headings.map(heading => $(heading).nextUntil('h1, h2'));
+  const pageRows = labels($, $.root(), 'allergenek').length;
+  const courseRows = scopes.reduce((sum, scope) => sum + labels($, scope, 'allergenek').length, 0);
+  const rowsPairUp = pageRows === courseRows;
   return servings
-    .map((value, index) => {
+    .map((value, index): CourseReading => {
       const heading = $(headings[index]);
       const label = plain(cleanText(heading.prevAll('h2').first().text())).match(/\(\d+\)\s+(.+)$/)?.[1];
-      const course = heading.nextUntil('h1, h2');
+      const course = scopes[index]!;
       const images = course.filter('img').add(course.find('img'));
       const photo =
         images
           .toArray()
           .map(image => photoUrl($(image)))
           .find(Boolean) ?? null;
-      return {
-        name: cleanText(heading.text()),
-        kcal: Number(
-          value
-            .replace(/kcal\s*$/i, '')
-            .trim()
-            .replaceAll(',', '') || NaN,
+      const ingredients = labeledValues($, course, 'osszetevok').filter(value => value !== null);
+      const allergenLists = labeledValues($, course, 'allergenek');
+      // Every part needs its own allergen list; a part without one leaves the course's allergens unknown.
+      const parts = Math.max(labels($, course, 'nettosuly').length, ingredients.length, allergenLists.length);
+      const complete = rowsPairUp && allergenLists.length === parts && allergenLists.every(list => list !== null);
+      const { allergens, unknown } = courseAllergens(
+        complete ? allergenLists.map(list => cleanText(list!.text())) : [],
+        ingredients.flatMap(list =>
+          list
+            .find('strong, b')
+            .toArray()
+            .map(node => cleanText($(node).text()))
+            .filter(Boolean),
         ),
-        kind: label === undefined ? undefined : courseKinds.get(label),
-        photo,
+      );
+      return {
+        course: {
+          name: cleanText(heading.text()),
+          kcal: Number(
+            value
+              .replace(/kcal\s*$/i, '')
+              .trim()
+              .replaceAll(',', '') || NaN,
+          ),
+          kind: label === undefined ? undefined : courseKinds.get(label),
+          photo,
+          allergens,
+          ingredients:
+            ingredients
+              .map(list => cleanText(list.text()))
+              .filter(Boolean)
+              .join('; ') || null,
+        },
+        unknownAllergens: unknown,
       };
     })
-    .filter(component => Number.isFinite(component.kcal) && component.kcal >= 0);
+    .filter(({ course }) => Number.isFinite(course.kcal) && course.kcal >= 0);
 }
 
-export async function nutritionFor(key: WeekKey, ids: string[]): Promise<DishDetails[]> {
+/**
+ * Reads the detail page of each line: its courses with their calories, photos, ingredients and allergens. `warn` receives the
+ * allergen names and bold ingredients that matched no allergen, so the word lists in `allergens.ts` can be extended.
+ */
+export async function detailsFor(
+  key: WeekKey,
+  ids: string[],
+  warn: (message: string) => void = console.warn,
+): Promise<DishDetails[]> {
   const [year = '', week] = key.split('-W');
   return pendingPool(ids, 4, async (id): Promise<DishDetails> => {
     const [day = '', type = '', code = ''] = id.split(':');
@@ -361,7 +452,10 @@ export async function nutritionFor(key: WeekKey, ids: string[]): Promise<DishDet
         ajax: true,
         params: { ev: year, het: Number(week), tipus: type, nap: day, kod: code },
       });
-      const components = readComponents($);
+      const readings = readComponents($);
+      const unknown = readings.flatMap(reading => reading.unknownAllergens);
+      if (unknown.length) warn(`${key} ${id}: unknown allergen words, allergens left unknown: ${unknown.join(', ')}`);
+      const components = readings.map(reading => reading.course);
       const complete = components.length && components.length === $('h1.uk-article-title:not(.uk-background-secondary)').length;
       if (!complete) return { id, kcal: null };
       const total = Math.round(components.reduce((sum, course) => sum + course.kcal, 0) * 10) / 10;
