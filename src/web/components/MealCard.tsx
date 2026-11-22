@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { ChevronLeft, ChevronRight, ExternalLink, Flame } from 'lucide-react';
 import { allergenList, optionAllergens } from '../../core/filters.ts';
-import { normalizeGroupTitle, splitDishName } from '../../core/planning.ts';
+import { dishCodePattern, normalizeGroupTitle, splitDishName } from '../../core/planning.ts';
 import type { Allergen, Dish, MenuOption, WeekKey } from '../../core/types.ts';
 import { calories, money } from '../format.ts';
 
@@ -99,9 +99,14 @@ export function MealPhotos({
   );
 }
 
-/** The line of a dish on Teletál's weekly menu page, which has an anchor for every line. */
-function teletalLineUrl(week: WeekKey, { code, day }: Pick<Dish, 'code' | 'day'>): string {
-  return `https://www.teletal.hu/etlap/${Number(week.split('-W')[1])}#${encodeURIComponent(code)}_${day}`;
+/**
+ * The line of a dish on Teletál's weekly menu page, which has an anchor for every line, or null when the week, code or day
+ * is not in its expected form.
+ */
+function teletalLineUrl(week: WeekKey, { code, day }: Pick<Dish, 'code' | 'day'>): string | null {
+  const weekNumber = /^\d{4}-W(\d{2})$/.exec(week)?.[1];
+  if (!weekNumber || !dishCodePattern.test(code) || !Number.isInteger(day) || day < 1 || day > 7) return null;
+  return `https://www.teletal.hu/etlap/${Number(weekNumber)}#${code}_${day}`;
 }
 
 /** The allergens Teletál lists for a card's dishes, with a link to check them on Teletál where there is one. */
