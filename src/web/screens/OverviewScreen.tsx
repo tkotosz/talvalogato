@@ -72,7 +72,7 @@ export function OverviewScreen({
   onViewDay(day: Day): void;
 }) {
   const { plan, reviewDays, eligible, order } = view;
-  const { issues, total }: Omit<OrderSummary, 'lines'> = order ?? { issues: {}, total: 0 };
+  const { issues, total, kcal }: Omit<OrderSummary, 'lines'> = order ?? { issues: {}, total: 0, kcal: 0 };
   const summary = reviewDays.map(day => {
     const available = eligible.includes(day);
     const option = plan.slots[day];
@@ -177,7 +177,9 @@ export function OverviewScreen({
       )}
       <div className="review-total">
         <span>{hasIssues ? 'Küldhető tételek összege' : 'Becsült összeg'}</span>
-        <strong>{money(total)}</strong>
+        <strong>
+          {kcal === null ? 'ismeretlen kcal' : calories(kcal)} · {money(total)}
+        </strong>
       </div>
     </main>
   );

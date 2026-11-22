@@ -192,6 +192,9 @@ test('cart quantities use Friday for weekend plans and conflicts preserve picks'
   });
   assert.deepEqual(excluded.issues, { 5: 'Kizárt Teletál-kód', 6: 'Kizárt Teletál-kód', 7: 'Kizárt Teletál-kód' });
   assert.equal(excluded.total, olderCombo.price);
+  assert.equal(excluded.kcal, olderCombo.kcal, 'calories add up like the price, over the days that can be sent');
+  const unknown = orderSummary({ ...plan, slots: { 4: { ...olderCombo, kcal: null } } }, [4], thursday, newPreferences);
+  assert.equal(unknown.kcal, null, 'one day without calories makes the total unknown');
   assert.equal(plan.slots[5], option);
   assert.deepEqual(orderSummary(plan, [5, 6, 7], [], newPreferences).lines, []);
 });
