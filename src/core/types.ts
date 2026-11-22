@@ -142,6 +142,8 @@ export type CustomStage = 'overview' | number | 'generated';
 export interface TrayRow {
   course: TrayCourse;
   dish?: Dish;
+  /** Portions of the row's dish, from 2 up to `maxQuantity`; missing means one. */
+  quantity?: number;
 }
 
 /** What an idea needs to continue: the random sequence, how often each dish was offered by dish ID, and its rows. */

@@ -14,6 +14,7 @@ import {
   withoutDish,
   withoutRow,
   withPick,
+  withQuantity,
 } from './custom.ts';
 import { dishIssue } from './filters.ts';
 import { generateMenu, startGenerator } from './generate.ts';
@@ -74,6 +75,7 @@ export type PlannerAction =
   | { type: 'clearCourse'; day: Day }
   | { type: 'addCourse'; day: Day; course: TrayCourse }
   | { type: 'emptyCourse'; day: Day; row: number }
+  | { type: 'setQuantity'; day: Day; row: number; quantity: number }
   | { type: 'removeCourse'; day: Day; row: number }
   | { type: 'showOverLimit'; day: Day }
   // Ideas: generated dishes for the tray's empty rows, to keep, replace or cancel
@@ -412,6 +414,12 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
     case 'emptyCourse':
       return withDraft(action.day, draft =>
         !draft.generator && draft.rows[action.row]?.dish ? withoutDish(draft, action.row) : null,
+      );
+
+    case 'setQuantity':
+      // Portions go over the calorie limit like any pick the user allows; the tray then says by how much.
+      return withDraft(action.day, draft =>
+        !draft.generator && draft.rows[action.row]?.dish ? withQuantity(draft, action.row, action.quantity) : null,
       );
 
     case 'removeCourse':

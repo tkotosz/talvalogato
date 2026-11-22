@@ -168,6 +168,20 @@ type StoredDraft = Omit<CustomDraft, 'rows' | 'stage' | 'generator'> & {
   generator?: CustomDraft['generator'] & { menu?: string };
 };
 
+/** The most portions one row orders. */
+export const maxQuantity = 9;
+
+/** A stored quantity as a row keeps it: a whole number from 2 to `maxQuantity`, or undefined for one portion. */
+export function validQuantity(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 2 && value <= maxQuantity ? value : undefined;
+}
+
+/** A saved row with its portions kept only when they are valid and the row has a dish. */
+function restoreRow({ quantity, ...row }: TrayRow): TrayRow {
+  const portions = row.dish ? validQuantity(quantity) : undefined;
+  return portions ? { ...row, quantity: portions } : row;
+}
+
 /**
  * Days in progress as saved, in today's tray shape: older trays keep their dishes as rows, a set menu on a set-menu row
  * after any breakfast. An idea started in an older shape is dropped; it can be asked for again.
@@ -185,7 +199,9 @@ function restoreDrafts(custom: Record<Day, StoredDraft>): Record<Day, CustomDraf
         ? [{ course: 'menu' }]
         : [];
     const breakfast = courseRows.filter(row => row.course === 'breakfast');
-    const rows = stored.rows ?? [...breakfast, ...menuRows, ...courseRows.filter(row => row.course !== 'breakfast')];
+    const rows = (stored.rows ?? [...breakfast, ...menuRows, ...courseRows.filter(row => row.course !== 'breakfast')]).map(
+      restoreRow,
+    );
     const { stage } = stored;
     const draft: CustomDraft = {
       rows,

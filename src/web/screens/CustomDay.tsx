@@ -6,6 +6,7 @@ import {
   remainingCalories,
   remainingMoney,
   rowChoiceCounts,
+  rowQuantity,
   totalCalories,
   totalPrice,
   trayCourseNames,
@@ -13,7 +14,7 @@ import {
 } from '../../core/custom.ts';
 import { allergenList, dishAllergens } from '../../core/filters.ts';
 import type { PlannerAction } from '../../core/planner.ts';
-import { calorieLimit, dayCandidates, menuCourseNames, splitDishName } from '../../core/planning.ts';
+import { calorieLimit, dayCandidates, maxQuantity, menuCourseNames, splitDishName } from '../../core/planning.ts';
 import type { CustomDraft, Day, Dish, Plan, Preferences, TrayCourse, WeekKey } from '../../core/types.ts';
 import { ActiveFilters } from '../components/FilterNotes.tsx';
 import { GeneratedDeck } from '../components/GeneratedDeck.tsx';
@@ -39,6 +40,7 @@ function Tray({
   onOpen,
   onAdd,
   onEmpty,
+  onQuantity,
   onRemove,
   onGenerate,
   onSave,
@@ -53,6 +55,8 @@ function Tray({
   onAdd(course: TrayCourse): void;
   /** Takes the dish off a row, keeping the row. */
   onEmpty(row: number): void;
+  /** Sets how many portions of its dish a row orders. */
+  onQuantity(row: number, quantity: number): void;
   /** Takes an empty row off the tray. */
   onRemove(row: number): void;
   /** Asks for an idea for the empty rows. */
@@ -91,8 +95,10 @@ function Tray({
         )}
         {draft.rows.length > 0 && (
           <ul className="custom-summary">
-            {draft.rows.map(({ course, dish }, index) => {
+            {draft.rows.map((row, index) => {
+              const { course, dish } = row;
               const label = trayCourseNames[course];
+              const quantity = rowQuantity(row);
               return (
                 <li key={index} className={course === 'menu' ? 'tray-row tray-row-menu' : 'tray-row'}>
                   <button type="button" onClick={() => onOpen(index)}>
@@ -127,6 +133,27 @@ function Tray({
                       )}
                     </span>
                   </button>
+                  {dish && (
+                    <div className="tray-quantity" role="group" aria-label={`${label}: adagok`}>
+                      <button
+                        type="button"
+                        aria-label="Eggyel kevesebb adag"
+                        disabled={quantity <= 1}
+                        onClick={() => onQuantity(index, quantity - 1)}
+                      >
+                        <Minus size={15} aria-hidden="true" />
+                      </button>
+                      <output aria-live="polite">{quantity}</output>
+                      <button
+                        type="button"
+                        aria-label="Eggyel több adag"
+                        disabled={quantity >= maxQuantity}
+                        onClick={() => onQuantity(index, quantity + 1)}
+                      >
+                        <Plus size={15} aria-hidden="true" />
+                      </button>
+                    </div>
+                  )}
                   {dish ? (
                     <button
                       type="button"
@@ -254,6 +281,7 @@ export function CustomDay({
         onOpen={index => dispatch({ type: 'openStage', day, stage: index })}
         onAdd={course => dispatch({ type: 'addCourse', day, course })}
         onEmpty={index => dispatch({ type: 'emptyCourse', day, row: index })}
+        onQuantity={(index, quantity) => dispatch({ type: 'setQuantity', day, row: index, quantity })}
         onRemove={index => dispatch({ type: 'removeCourse', day, row: index })}
         // The seed makes every idea different; the reducer itself stays free of randomness.
         onGenerate={() => dispatch({ type: 'startGenerated', day, seed: Math.floor(Math.random() * 2 ** 32) })}

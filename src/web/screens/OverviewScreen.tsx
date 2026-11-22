@@ -1,8 +1,9 @@
 import { ChevronRight, ClipboardList, Copy } from 'lucide-react';
+import { groupedDishes } from '../../core/custom.ts';
 import type { PlannerView } from '../../core/planner.ts';
 import { days, menuCourseNames, type OrderSummary } from '../../core/planning.ts';
 import type { Day, MenuOption, Preferences } from '../../core/types.ts';
-import { menuCode } from '../components/CustomMenuCard.tsx';
+import { menuCode, portionsPrefix } from '../components/CustomMenuCard.tsx';
 import { OrderReminder } from '../components/FilterNotes.tsx';
 import { shortDayLabel, weekOptionLabel } from '../../core/weeks.ts';
 import { appName, calories, copyText, money } from '../format.ts';
@@ -33,11 +34,11 @@ function MenuItems({
 
 /** A custom day: its dishes with their Teletál codes, a set menu's courses each on its own line under the menu's code. */
 function CustomItems({ option }: { option: MenuOption }) {
-  const items = option.dishes.flatMap((dish, index) =>
+  const items = groupedDishes(option.dishes).flatMap(({ dish, quantity }, index) =>
     (dish.course ? [dish.name] : menuCourseNames(dish)).map((text, part) => ({
       key: `${index}:${part}`,
       code: dish.code,
-      text,
+      text: portionsPrefix(quantity) + text,
     })),
   );
   return <MenuItems code={menuCode(option)} title={option.title} items={items} />;
@@ -90,7 +91,9 @@ export function OverviewScreen({
         if (!option) return label + ' – ' + status;
         const dishes =
           (option.kind === 'custom' ? option.title + ': ' : '') +
-          option.dishes.map(dish => dish.code + ' ' + dish.name).join(' + ');
+          groupedDishes(option.dishes)
+            .map(({ dish, quantity }) => portionsPrefix(quantity) + dish.code + ' ' + dish.name)
+            .join(' + ');
         return (
           label +
           (day > 5 ? ' (pénteki kiszállítás)' : '') +
