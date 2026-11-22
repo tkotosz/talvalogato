@@ -3,7 +3,8 @@ name: Menu data
 # Commits the menu data as JSON to the data branch, which the Worker serves. The app runs as a demo: this writes the
 # invented demo menu and does not contact Teletál. To publish Teletál's real menus, run `npm run refresh-menu` in the
 # menu step instead and schedule it at 04:00 and 10:30 UTC, with `--reread-details` on the 04:00 run so corrections Teletál
-# makes to unchanged dishes arrive within a day.
+# makes to unchanged dishes arrive within a day. The scraper makes five requests a second, so a full read of four weeks
+# takes about 6 minutes.
 on:
   schedule:
     # Daily, so the demo moves on to new weeks.

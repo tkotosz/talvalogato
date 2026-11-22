@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { detailsFor, menuCatalog, teletal } from '../src/scraper/teletal.ts';
+import { detailsFor, menuCatalog, setRequestGap, teletal } from '../src/scraper/teletal.ts';
+
+// The fixtures are served locally, so there is no site to spare.
+setRequestGap(0);
 
 test('catalog entries follow the website order and preserve names for all menu codes', async t => {
   const row = (code: string, label: string, day = 4) => `<table><tr>
