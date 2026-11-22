@@ -30,6 +30,26 @@ export type DishKind = 'menu' | 'soup' | 'main' | 'dessert';
 export type CustomCourse = 'breakfast' | 'soup' | 'main' | 'cold' | 'pickle' | 'bread' | 'dessert' | 'drink';
 export type CourseKind = 'soup' | 'main' | 'dessert' | 'side';
 
+/** The 14 allergens EU law requires food sellers to declare. */
+export type Allergen =
+  | 'gluten'
+  | 'crustaceans'
+  | 'egg'
+  | 'fish'
+  | 'peanut'
+  | 'soy'
+  | 'milk'
+  | 'nuts'
+  | 'celery'
+  | 'mustard'
+  | 'sesame'
+  | 'sulfites'
+  | 'lupin'
+  | 'mollusks';
+
+/** A diet mark Teletál gives a line. Vegan lines are vegetarian too. */
+export type Diet = 'vegetarian' | 'vegan';
+
 /** One orderable line of the Teletál weekly menu, as read from the menu page. */
 export interface CatalogDish {
   /** `day:type:code`, unique within a week. */
@@ -51,6 +71,10 @@ export interface CatalogDish {
   course: CustomCourse | null;
   /** Promotion lines Teletál shows under the name, as written there, or null. */
   note?: string | null;
+  /** Teletál's diet mark for the line, or null when it has none. Missing in data written before diets were read. */
+  diet?: Diet | null;
+  /** Teletál marks the line as spicy. */
+  spicy?: boolean;
 }
 
 export interface Course {
@@ -58,6 +82,14 @@ export interface Course {
   kcal: number;
   kind?: CourseKind;
   photo: string | null;
+  /**
+   * The allergens Teletál declares for the course: its allergen list together with the ingredients it prints in bold.
+   * Empty only when Teletál wrote "-" for none. Null when the course's allergens are unknown, and missing in data written
+   * before allergens were read; both count as unknown.
+   */
+  allergens?: Allergen[] | null;
+  /** The ingredient list as Teletál writes it, or null when it shows none. */
+  ingredients?: string | null;
 }
 
 /** Nutrition and courses of one catalog line, read from its detail page. */

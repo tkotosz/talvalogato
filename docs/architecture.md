@@ -33,9 +33,9 @@ browser                                   Cloudflare      │ fetch
 
 ## Menu data
 
-`src/scraper/teletal.ts` reads Teletál's HTML with cheerio, including the sections Teletál loads separately and each dish's detail page.
+`src/scraper/teletal.ts` reads Teletál's HTML with cheerio, including the sections Teletál loads separately and each dish's detail page. A line carries Teletál's diet and spicy marks; each course its calories, photo, ingredients and allergens.
 
-`scripts/refresh-menu.ts` turns that into JSON: a list of the published weeks with the time of the refresh, and one file per week with every dish already combined with its details. It reuses the previous files' details for lines that did not change, and it reads everything before writing, so a failed run keeps the previous data.
+`scripts/refresh-menu.ts` turns that into JSON: a list of the published weeks with the time of the refresh, and one file per week with every dish already combined with its details. It reuses the previous files' details for lines that did not change, unless it is asked to read them all again, and it reads everything before writing, so a failed run keeps the previous data. A run also fails when too few courses have known allergens, which means Teletál's pages changed.
 
 `src/scraper/demo.ts` invents menus in the same shape, without photos, for the current week and the three after it. A week's menu depends only on its key, so the files change only when the weeks do. `scripts/demo-menu.ts` writes them with `demo: true` in `weeks.json`. Both scripts write through `src/scraper/files.ts`.
 

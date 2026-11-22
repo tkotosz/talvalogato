@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { menuCatalog, nutritionFor, teletal } from '../src/scraper/teletal.ts';
+import { detailsFor, menuCatalog, teletal } from '../src/scraper/teletal.ts';
 
 test('catalog entries follow the website order and preserve names for all menu codes', async t => {
   const row = (code: string, label: string, day = 4) => `<table><tr>
@@ -198,7 +198,7 @@ test('menu photos stay with their own courses when a course has no photo', async
   `),
   );
 
-  const [menu] = await nutritionFor('2026-W48', ['1:1:Q']);
+  const [menu] = await detailsFor('2026-W48', ['1:1:Q'], () => {});
   assert.ok(menu?.components);
   assert.equal(menu.kcal, 650);
   assert.equal(menu.components[2].kcal, 0);
@@ -211,4 +211,167 @@ test('menu photos stay with their own courses when a course has no photo', async
     ],
   );
   assert.equal(menu.photo, menu.components[0].photo);
+});
+
+/** One part of a course, such as a pasta or its cheese: its ingredient list and allergen list. Null leaves that row out. */
+type Part = [ingredients: string | null, allergens: string | null];
+
+/** A detail page course in Teletál's layout, with a net weight, an ingredient list and an allergen list for each part. */
+function detailCourse(index: number, name: string, kcal: number, ...parts: Part[]) {
+  const row = (label: string, value: string) =>
+    `<div class="uk-text-small uk-margin"><span uk-icon="icon: tag"></span><span><strong>${label}</strong></span><span>${value}</span></div>`;
+  const rows = parts.map(
+    ([ingredients, allergens], part) =>
+      (part ? `<div class="uk-grid-small uk-text-bold"><div class="uk-width-expand">Feltét</div></div>` : '') +
+      row('Nettó súly:', '100 g') +
+      (ingredients === null ? '' : row('Összetevők:', ingredients)) +
+      (allergens === null ? '' : row('Allergének:', allergens)),
+  );
+  return `<section><div class="uk-container"><h2>48.hét Hétfő: Q (${index}) foetel</h2>
+    <h1 class="uk-article-title">${name}</h1>
+    <div class="uk-grid"><div><span class="en_adag">1 adagban</span><span class="en_adag">${kcal} kcal</span></div>
+      <div>${rows.join('')}</div>
+    </div></div></section>`;
+}
+
+const detailPage = (...courses: string[]) =>
+  `<h1 class="uk-article-title uk-background-secondary">Q menü</h1>${courses.join('')}`;
+
+test('course allergens join the allergen list and the bold ingredients, and anything unclear leaves them unknown', async t => {
+  t.mock.method(
+    globalThis,
+    'fetch',
+    async () =>
+      new Response(
+        detailPage(
+          detailCourse(1, 'Zöldségleves', 200, [
+            'víz, sárgarépa, <strong>zeller</strong>, tészta (<strong>búzaliszt</strong>, <strong>tojás</strong>)',
+            'Zeller, Glutén',
+          ]),
+          detailCourse(2, 'Párolt rizs', 300, ['rizs, víz, só', '-']),
+          detailCourse(3, 'Csodasaláta', 150, ['saláta, <strong>tej</strong>', 'Tej, Csodabogyó']),
+          detailCourse(4, 'Titkos szósz', 100, ['paradicsom, <strong>rejtélyes adalék</strong>', 'Mustár']),
+          detailCourse(5, 'Savanyú káposzta', 50, ['káposzta, ecet, <strong>kén- dioxid</strong>', 'Kén-dioxid']),
+          detailCourse(6, 'Kenyér', 250, [null, 'Glutén']),
+          detailCourse(7, 'Túrós tészta', 400, ['tészta, <strong>tehéntej</strong>', 'Tej/Laktóz']),
+        ),
+      ),
+  );
+  const warnings: string[] = [];
+  const [menu] = await detailsFor('2026-W48', ['1:1:Q'], message => warnings.push(message));
+  assert.equal(menu?.kcal, 1450);
+  assert.deepEqual(
+    menu?.components?.map(({ allergens }) => allergens),
+    [['gluten', 'egg', 'celery'], [], null, null, ['sulfites'], ['gluten'], ['milk']],
+  );
+  assert.deepEqual(
+    menu?.components?.map(({ ingredients }) => ingredients),
+    [
+      'víz, sárgarépa, zeller, tészta (búzaliszt, tojás)',
+      'rizs, víz, só',
+      'saláta, tej',
+      'paradicsom, rejtélyes adalék',
+      'káposzta, ecet, kén- dioxid',
+      null,
+      'tészta, tehéntej',
+    ],
+  );
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0]!, /1:1:Q.*Csodabogyó, rejtélyes adalék/);
+});
+
+test('a course in parts joins their allergens, and a part without an allergen list leaves its course unknown', async t => {
+  t.mock.method(
+    globalThis,
+    'fetch',
+    async () =>
+      new Response(
+        detailPage(
+          detailCourse(
+            1,
+            'Spagetti sajttal',
+            700,
+            ['spagetti (<strong>búzaliszt</strong>)', 'Glutén'],
+            ['(<strong>tej</strong>, oltóenzim)', 'Tej'],
+          ),
+          detailCourse(2, 'Csirke szósszal', 600, ['csirke', '-'], ['szósz (<strong>mustár</strong>)', null]),
+        ),
+      ),
+  );
+  const [menu] = await detailsFor('2026-W48', ['1:1:Q'], () => {});
+  assert.deepEqual(
+    menu?.components?.map(({ allergens }) => allergens),
+    [['gluten', 'milk'], null],
+  );
+  assert.equal(menu?.components?.[0]?.ingredients, 'spagetti (búzaliszt); (tej, oltóenzim)');
+});
+
+test('an allergen row outside every course leaves the whole page unknown', async t => {
+  const stray = '<div><span><strong>Allergének:</strong></span><span>Glutén</span></div>';
+  t.mock.method(
+    globalThis,
+    'fetch',
+    async () => new Response(stray + detailPage(detailCourse(1, 'Leves', 200, ['víz, <strong>zeller</strong>', 'Zeller']))),
+  );
+  const [menu] = await detailsFor('2026-W48', ['1:1:Q'], () => {});
+  assert.equal(menu?.kcal, 200);
+  assert.deepEqual(
+    menu?.components?.map(({ allergens }) => allergens),
+    [null],
+  );
+});
+
+test('lines carry Teletál’s diet and spicy marks from their tag icons, or from the group heading in the Vega & vegán sections', async t => {
+  const tag = (...icons: string[]) => `<div class="menu-cell-tag">${icons.map(src => `<img src="${src}">`).join('')}</div>`;
+  const row = (code: string, label: string, day: number, tags = '', title = 'Étel') => `<table><tr>
+    <td class="menu-cell-code-sub2"><h2>${label}</h2></td>
+    <td><div class="menu-card">
+      <span class="menu-item-title">${title}</span>
+      <div class="menu-info-field"><a class="menu-info-button" kod="${code}" nap="${day}" tipus="1"></a>${tags}</div>
+      <input ar="1990">
+    </div></td>
+  </tr></table>`;
+  const page = `<form id="etlap_form" ev="2026" het="48">
+    <section section="Főételek"><h2>Főételek</h2>
+      ${row('F1', 'Főételek', 1, tag('/theme/teletal/icons/etel_v_jel.png'))}
+      ${row('F2', 'Főételek', 1)}
+      ${row('F3', 'VEGA', 1)}
+      ${row('F4', 'Főételek', 1, '', 'Étel <img src="/hirkep/Vegan_ikon_13x13.png">')}
+    </section>
+    <section section="V1" ewid="1"><span class="title-vega-vegan"></span><div class="dummy"></div></section>
+    <section section="V2" ewid="1"><span class="title-vega-vegan"></span><div class="dummy"></div></section>
+    <section section="V3" ewid="1"><span class="title-vega-vegan"></span><div class="dummy"></div></section>
+    <section section="szejtan" ewid="1"><span class="title-vega-vegan"></span><div class="dummy"></div></section>
+  </form>`;
+  const sections: Record<string, string> = {
+    V1: row('TVE1', 'LEVES', 1),
+    V2: row('TV2', 'VEGA', 1, tag('/hirkep/csipos_jel_pont.png')),
+    V3: row('TVE5', 'VEGÁN', 1),
+    szejtan:
+      row('TV7', 'SZEJTÁNNAL KÉSZÜLT ÉTELEK', 1, tag('/hirkep/Vegan_ikon_13x13.png')) +
+      row('TV7', 'SZEJTÁNNAL KÉSZÜLT ÉTELEK', 2, tag('/hirkep/Vega_ikon_13x13.png')) +
+      row('TV7', 'SZEJTÁNNAL KÉSZÜLT ÉTELEK', 3),
+  };
+  t.mock.method(
+    globalThis,
+    'fetch',
+    async (url: URL) => new Response(url.pathname === '/etlap/48' ? page : sections[url.searchParams.get('varname') ?? '']),
+  );
+
+  const catalog = await menuCatalog('2026-W48');
+  assert.deepEqual(
+    catalog.map(({ id, diet, spicy }) => [id, diet, spicy]),
+    [
+      ['1:1:F1', 'vegetarian', false],
+      ['1:1:F2', null, false],
+      ['1:1:F3', null, false],
+      ['1:1:F4', null, false],
+      ['1:1:TVE1', 'vegan', false],
+      ['1:1:TV2', 'vegetarian', true],
+      ['1:1:TVE5', 'vegan', false],
+      ['1:1:TV7', 'vegan', false],
+      ['2:1:TV7', 'vegetarian', false],
+      ['3:1:TV7', null, false],
+    ],
+  );
 });
