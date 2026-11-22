@@ -6,12 +6,14 @@
       "day": 1,
       "type": 1,
       "code": "A",
-      "name": "Krumplileves (kolbásszal) / Zöldséges rizottó (parmezánnal)",
+      "name": "Krumplileves (kolbásszal) / Zöldséges rizottó (sajttal)",
       "price": 2690,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -25,13 +27,23 @@
           "name": "Krumplileves (kolbásszal)",
           "kcal": 350,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk",
+            "celery"
+          ],
+          "ingredients": "burgonya, füstölt kolbász, pirospaprika, tejföl, zeller"
         },
         {
-          "name": "Zöldséges rizottó (parmezánnal)",
+          "name": "Zöldséges rizottó (sajttal)",
           "kcal": 610,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk",
+            "sulfites"
+          ],
+          "ingredients": "rizs, cukkini, zöldborsó, vaj, trappista sajt, fehérbor"
         }
       ]
     },
@@ -40,12 +52,14 @@
       "day": 1,
       "type": 1,
       "code": "B",
-      "name": "Gombakrémleves / Lecsó (kolbásszal, kenyérrel)",
-      "price": 2390,
+      "name": "Gombakrémleves / Rántott sajt (rizzsel, tartármártással)",
+      "price": 2890,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -53,19 +67,31 @@
       "menuName": "B menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 870,
+      "kcal": 1160,
       "components": [
         {
           "name": "Gombakrémleves",
           "kcal": 280,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "csiperkegomba, tejszín, vaj, búzaliszt, petrezselyem"
         },
         {
-          "name": "Lecsó (kolbásszal, kenyérrel)",
-          "kcal": 590,
+          "name": "Rántott sajt (rizzsel, tartármártással)",
+          "kcal": 880,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk",
+            "mustard"
+          ],
+          "ingredients": "trappista sajt, búzaliszt, tojás, zsemlemorzsa, rizs, majonéz (tojás, mustár)"
         }
       ]
     },
@@ -74,12 +100,14 @@
       "day": 1,
       "type": 1,
       "code": "C",
-      "name": "Krumplileves (kolbásszal) / Mákos tészta",
-      "price": 2390,
+      "name": "Krumplileves (kolbásszal) / Babgulyás",
+      "price": 2690,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -87,19 +115,30 @@
       "menuName": "C menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 1040,
+      "kcal": 970,
       "components": [
         {
           "name": "Krumplileves (kolbásszal)",
           "kcal": 350,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk",
+            "celery"
+          ],
+          "ingredients": "burgonya, füstölt kolbász, pirospaprika, tejföl, zeller"
         },
         {
-          "name": "Mákos tészta",
-          "kcal": 690,
+          "name": "Babgulyás",
+          "kcal": 620,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "celery"
+          ],
+          "ingredients": "marhalábszár, tarkabab, burgonya, sárgarépa, zeller, csipetke (búzaliszt, tojás)"
         }
       ]
     },
@@ -108,12 +147,14 @@
       "day": 1,
       "type": 1,
       "code": "D",
-      "name": "Bableves (füstölt csülökkel) / Tökfőzelék (fasírttal)",
-      "price": 2890,
+      "name": "Bableves (füstölt csülökkel) / Mákos tészta",
+      "price": 2490,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -121,19 +162,31 @@
       "menuName": "D menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 1070,
+      "kcal": 1120,
       "components": [
         {
           "name": "Bableves (füstölt csülökkel)",
           "kcal": 430,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk",
+            "celery"
+          ],
+          "ingredients": "tarkabab, füstölt sertéscsülök, sárgarépa, zeller, tejföl, búzaliszt"
         },
         {
-          "name": "Tökfőzelék (fasírttal)",
-          "kcal": 640,
+          "name": "Mákos tészta",
+          "kcal": 690,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tészta (búzaliszt, tojás), mák, porcukor, vaj"
         }
       ]
     },
@@ -142,12 +195,14 @@
       "day": 1,
       "type": 1,
       "code": "Z10",
-      "name": "Túrókrémes kifli / Paradicsomleves (betűtésztával) / Bolognai spagetti / Rántott sajt (rizzsel, tartármártással)",
-      "price": 5390,
+      "name": "Túrókrémes kifli / Zöldborsóleves (galuskával) / Csirkés-brokkolis penne / Tökfőzelék (fasírttal)",
+      "price": 5190,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -155,31 +210,53 @@
       "menuName": "Egész napos menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 2230,
+      "kcal": 1880,
       "components": [
         {
           "name": "Túrókrémes kifli",
           "kcal": 380,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "kifli (búzaliszt), túró, tejföl, kapor"
         },
         {
-          "name": "Paradicsomleves (betűtésztával)",
-          "kcal": 190,
+          "name": "Zöldborsóleves (galuskával)",
+          "kcal": 210,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "zöldborsó, sárgarépa, petrezselyem, galuska (búzaliszt, tojás), vaj"
         },
         {
-          "name": "Bolognai spagetti",
-          "kcal": 780,
+          "name": "Csirkés-brokkolis penne",
+          "kcal": 650,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "penne (durumbúzadara), csirkemell, brokkoli, tejszín, fokhagyma"
         },
         {
-          "name": "Rántott sajt (rizzsel, tartármártással)",
-          "kcal": 880,
+          "name": "Tökfőzelék (fasírttal)",
+          "kcal": 640,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tök, kapor, tejföl, búzaliszt, fasírt (darált sertéshús, tojás, zsemle)"
         }
       ]
     },
@@ -188,12 +265,14 @@
       "day": 1,
       "type": 1,
       "code": "Z11",
-      "name": "Sonkás-sajtos melegszendvics / Brokkolikrémleves (sajtos pirítóssal) / Paprikás csirke (nokedlivel) / Töltött paprika (főtt burgonyával)",
-      "price": 5890,
+      "name": "Zabkása (áfonyával) / Hideg meggyleves / Csirkés-brokkolis penne / Rántott csirkemell (petrezselymes burgonyával)",
+      "price": 5690,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -201,31 +280,50 @@
       "menuName": "Könnyű egész napos menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 2210,
+      "kcal": 2080,
       "components": [
         {
-          "name": "Sonkás-sajtos melegszendvics",
-          "kcal": 450,
+          "name": "Zabkása (áfonyával)",
+          "kcal": 340,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "zabpehely, tej, áfonya, méz"
         },
         {
-          "name": "Brokkolikrémleves (sajtos pirítóssal)",
-          "kcal": 310,
+          "name": "Hideg meggyleves",
+          "kcal": 270,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk"
+          ],
+          "ingredients": "meggy, tejszín, cukor, fahéj, szegfűszeg"
         },
         {
-          "name": "Paprikás csirke (nokedlivel)",
-          "kcal": 760,
+          "name": "Csirkés-brokkolis penne",
+          "kcal": 650,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "penne (durumbúzadara), csirkemell, brokkoli, tejszín, fokhagyma"
         },
         {
-          "name": "Töltött paprika (főtt burgonyával)",
-          "kcal": 690,
+          "name": "Rántott csirkemell (petrezselymes burgonyával)",
+          "kcal": 820,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg"
+          ],
+          "ingredients": "csirkemell, búzaliszt, tojás, zsemlemorzsa, burgonya, petrezselyem"
         }
       ]
     },
@@ -240,6 +338,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "main",
       "section": "Reggeli",
       "groupId": "Reggeli",
@@ -253,7 +353,12 @@
           "name": "Túrókrémes kifli",
           "kcal": 380,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "kifli (búzaliszt), túró, tejföl, kapor"
         }
       ]
     },
@@ -262,12 +367,14 @@
       "day": 1,
       "type": 1,
       "code": "R2",
-      "name": "Zabkása (áfonyával)",
-      "price": 990,
+      "name": "Sonkás-sajtos melegszendvics",
+      "price": 1190,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Reggeli",
       "groupId": "Reggeli",
@@ -275,13 +382,18 @@
       "menuName": "Reggeli",
       "pickerEligible": true,
       "course": "breakfast",
-      "kcal": 340,
+      "kcal": 450,
       "components": [
         {
-          "name": "Zabkása (áfonyával)",
-          "kcal": 340,
+          "name": "Sonkás-sajtos melegszendvics",
+          "kcal": 450,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "kenyér (búzaliszt), sertéssonka, trappista sajt, vaj"
         }
       ]
     },
@@ -290,12 +402,14 @@
       "day": 1,
       "type": 1,
       "code": "L1",
-      "name": "Zöldséges raguleves (csirkehússal)",
-      "price": 1150,
+      "name": "Krumplileves (kolbásszal)",
+      "price": 1090,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -303,13 +417,18 @@
       "menuName": "Levesek",
       "pickerEligible": true,
       "course": "soup",
-      "kcal": 290,
+      "kcal": 350,
       "components": [
         {
-          "name": "Zöldséges raguleves (csirkehússal)",
-          "kcal": 290,
+          "name": "Krumplileves (kolbásszal)",
+          "kcal": 350,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk",
+            "celery"
+          ],
+          "ingredients": "burgonya, füstölt kolbász, pirospaprika, tejföl, zeller"
         }
       ]
     },
@@ -318,12 +437,49 @@
       "day": 1,
       "type": 1,
       "code": "L2",
+      "name": "Gombakrémleves",
+      "price": 990,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
+      "kind": "soup",
+      "section": "Levesek",
+      "groupId": "Levesek",
+      "category": "Levesek",
+      "menuName": "Levesek",
+      "pickerEligible": true,
+      "course": "soup",
+      "kcal": 280,
+      "components": [
+        {
+          "name": "Gombakrémleves",
+          "kcal": 280,
+          "kind": "soup",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "csiperkegomba, tejszín, vaj, búzaliszt, petrezselyem"
+        }
+      ]
+    },
+    {
+      "id": "1:1:L3",
+      "day": 1,
+      "type": 1,
+      "code": "L3",
       "name": "Karfiolleves (tejföllel)",
       "price": 920,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -337,35 +493,13 @@
           "name": "Karfiolleves (tejföllel)",
           "kcal": 230,
           "kind": "soup",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "1:1:L3",
-      "day": 1,
-      "type": 1,
-      "code": "L3",
-      "name": "Lencseleves (virslivel)",
-      "price": 1190,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "soup",
-      "section": "Levesek",
-      "groupId": "Levesek",
-      "category": "Levesek",
-      "menuName": "Levesek",
-      "pickerEligible": true,
-      "course": "soup",
-      "kcal": 390,
-      "components": [
-        {
-          "name": "Lencseleves (virslivel)",
-          "kcal": 390,
-          "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk",
+            "celery"
+          ],
+          "ingredients": "karfiol, sárgarépa, zeller, tejföl, búzaliszt"
         }
       ]
     },
@@ -374,12 +508,14 @@
       "day": 1,
       "type": 1,
       "code": "L4",
-      "name": "Csontleves (cérnametélttel, zöldségekkel)",
-      "price": 950,
+      "name": "Sütőtökkrémleves (pirított tökmaggal)",
+      "price": 990,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -387,13 +523,15 @@
       "menuName": "Levesek",
       "pickerEligible": true,
       "course": "soup",
-      "kcal": 240,
+      "kcal": 260,
       "components": [
         {
-          "name": "Csontleves (cérnametélttel, zöldségekkel)",
-          "kcal": 240,
+          "name": "Sütőtökkrémleves (pirított tökmaggal)",
+          "kcal": 260,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "sütőtök, vöröshagyma, kókusztej, gyömbér, tökmag"
         }
       ]
     },
@@ -402,12 +540,85 @@
       "day": 1,
       "type": 1,
       "code": "F1",
+      "name": "Sertéspörkölt (tarhonyával)",
+      "price": 2590,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 840,
+      "components": [
+        {
+          "name": "Sertéspörkölt (tarhonyával)",
+          "kcal": 840,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg"
+          ],
+          "ingredients": "sertéslapocka, vöröshagyma, pirospaprika, tarhonya (búzaliszt, tojás)"
+        }
+      ]
+    },
+    {
+      "id": "1:1:F2",
+      "day": 1,
+      "type": 1,
+      "code": "F2",
+      "name": "Bolognai spagetti",
+      "price": 2190,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 780,
+      "components": [
+        {
+          "name": "Bolognai spagetti",
+          "kcal": 780,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk",
+            "celery"
+          ],
+          "ingredients": "spagetti (durumbúzadara), darált marhahús, paradicsom, sárgarépa, zeller, parmezán"
+        }
+      ]
+    },
+    {
+      "id": "1:1:F3",
+      "day": 1,
+      "type": 1,
+      "code": "F3",
       "name": "Pulykamell (grillezett zöldségekkel)",
       "price": 2590,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Főételek",
       "groupId": "Főételek",
@@ -421,49 +632,25 @@
           "name": "Pulykamell (grillezett zöldségekkel)",
           "kcal": 470,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "pulykamell, cukkini, padlizsán, paprika, olívaolaj"
         }
       ]
     },
     {
-      "id": "1:1:F2",
+      "id": "1:1:F4",
       "day": 1,
       "type": 1,
-      "code": "F2",
-      "name": "Sült csirkecomb (hagymás törtburgonyával)",
-      "price": 2490,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 810,
-      "components": [
-        {
-          "name": "Sült csirkecomb (hagymás törtburgonyával)",
-          "kcal": 810,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "1:1:F3",
-      "day": 1,
-      "type": 1,
-      "code": "F3",
+      "code": "F4",
       "name": "Rakott krumpli",
       "price": 2190,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Főételek",
       "groupId": "Főételek",
@@ -477,21 +664,64 @@
           "name": "Rakott krumpli",
           "kcal": 720,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "egg",
+            "milk"
+          ],
+          "ingredients": "burgonya, tojás, füstölt kolbász, tejföl"
         }
       ]
     },
     {
-      "id": "1:1:F4",
+      "id": "1:1:F5",
       "day": 1,
       "type": 1,
-      "code": "F4",
+      "code": "F5",
+      "name": "Mákos tészta",
+      "price": 1690,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 690,
+      "components": [
+        {
+          "name": "Mákos tészta",
+          "kcal": 690,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tészta (búzaliszt, tojás), mák, porcukor, vaj"
+        }
+      ]
+    },
+    {
+      "id": "1:1:F6",
+      "day": 1,
+      "type": 1,
+      "code": "F6",
       "name": "Grillezett lazac (párolt zöldségekkel)",
       "price": 3290,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Főételek",
       "groupId": "Főételek",
@@ -505,63 +735,110 @@
           "name": "Grillezett lazac (párolt zöldségekkel)",
           "kcal": 540,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "fish",
+            "milk"
+          ],
+          "ingredients": "lazac, brokkoli, sárgarépa, citrom, vaj"
         }
       ]
     },
     {
-      "id": "1:1:F5",
+      "id": "1:1:VL1",
       "day": 1,
       "type": 1,
-      "code": "F5",
-      "name": "Rántott sajt (rizzsel, tartármártással)",
-      "price": 2390,
+      "code": "VL1",
+      "name": "Céklakrémleves (tormával)",
+      "price": 890,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "soup",
+      "section": "Vega & vegán",
+      "groupId": "Vega & vegán",
+      "category": "Vega & vegán",
+      "menuName": "Vega & vegán",
       "pickerEligible": true,
-      "course": "main",
-      "kcal": 880,
+      "course": "soup",
+      "kcal": 200,
       "components": [
         {
-          "name": "Rántott sajt (rizzsel, tartármártással)",
-          "kcal": 880,
-          "kind": "main",
-          "photo": null
+          "name": "Céklakrémleves (tormával)",
+          "kcal": 200,
+          "kind": "soup",
+          "photo": null,
+          "allergens": [],
+          "ingredients": "cékla, burgonya, torma, almaecet, kókusztej"
         }
       ]
     },
     {
-      "id": "1:1:F6",
+      "id": "1:1:VF1",
       "day": 1,
       "type": 1,
-      "code": "F6",
-      "name": "Sajtos-tejfölös lasagne",
-      "price": 2390,
+      "code": "VF1",
+      "name": "Csicseriborsó-curry (barna rizzsel)",
+      "price": 2190,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
+      "section": "Vega & vegán",
+      "groupId": "Vega & vegán",
+      "category": "Vega & vegán",
+      "menuName": "Vega & vegán",
       "pickerEligible": true,
       "course": "main",
-      "kcal": 830,
+      "kcal": 560,
       "components": [
         {
-          "name": "Sajtos-tejfölös lasagne",
-          "kcal": 830,
+          "name": "Csicseriborsó-curry (barna rizzsel)",
+          "kcal": 560,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "csicseriborsó, kókusztej, paradicsom, spenót, curry, barna rizs"
+        }
+      ]
+    },
+    {
+      "id": "1:1:VF2",
+      "day": 1,
+      "type": 1,
+      "code": "VF2",
+      "name": "Lencsefasírt (paradicsomos bulgurral)",
+      "price": 2090,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "main",
+      "section": "Vega & vegán",
+      "groupId": "Vega & vegán",
+      "category": "Vega & vegán",
+      "menuName": "Vega & vegán",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 590,
+      "components": [
+        {
+          "name": "Lencsefasírt (paradicsomos bulgurral)",
+          "kcal": 590,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten"
+          ],
+          "ingredients": "vöröslencse, zabpehely, bulgur (búza), paradicsom, petrezselyem"
         }
       ]
     },
@@ -570,40 +847,14 @@
       "day": 1,
       "type": 1,
       "code": "H1",
-      "name": "Görög saláta",
-      "price": 1290,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Hidegkonyha",
-      "groupId": "Hidegkonyha",
-      "category": "Hidegkonyha",
-      "menuName": "Hidegkonyha",
-      "pickerEligible": true,
-      "course": "cold",
-      "kcal": 260,
-      "components": [
-        {
-          "name": "Görög saláta",
-          "kcal": 260,
-          "kind": "side",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "1:1:H2",
-      "day": 1,
-      "type": 1,
-      "code": "H2",
       "name": "Franciasaláta",
       "price": 1190,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "main",
       "section": "Hidegkonyha",
       "groupId": "Hidegkonyha",
@@ -617,7 +868,49 @@
           "name": "Franciasaláta",
           "kcal": 360,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "egg",
+            "mustard"
+          ],
+          "ingredients": "burgonya, sárgarépa, zöldborsó, csemegeuborka, majonéz (tojás, mustár)"
+        }
+      ]
+    },
+    {
+      "id": "1:1:H2",
+      "day": 1,
+      "type": 1,
+      "code": "H2",
+      "name": "Tonhalas tésztasaláta",
+      "price": 1390,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Hidegkonyha",
+      "groupId": "Hidegkonyha",
+      "category": "Hidegkonyha",
+      "menuName": "Hidegkonyha",
+      "pickerEligible": true,
+      "course": "cold",
+      "kcal": 420,
+      "components": [
+        {
+          "name": "Tonhalas tésztasaláta",
+          "kcal": 420,
+          "kind": "side",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "fish",
+            "mustard"
+          ],
+          "ingredients": "tészta (durumbúzadara), tonhal, kukorica, majonéz (tojás, mustár)"
         }
       ]
     },
@@ -632,6 +925,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Savanyúság",
       "groupId": "Savanyúság",
@@ -645,7 +940,12 @@
           "name": "Csemegeuborka",
           "kcal": 40,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "mustard",
+            "sulfites"
+          ],
+          "ingredients": "uborka, ecet, cukor, kapor, mustármag, kén-dioxid"
         }
       ]
     },
@@ -660,6 +960,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Savanyúság",
       "groupId": "Savanyúság",
@@ -673,7 +975,11 @@
           "name": "Káposztasaláta",
           "kcal": 70,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "sulfites"
+          ],
+          "ingredients": "fejes káposzta, ecet, cukor, só, kén-dioxid"
         }
       ]
     },
@@ -688,6 +994,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Pékáru",
       "groupId": "Pékáru",
@@ -701,7 +1009,11 @@
           "name": "Teljes kiőrlésű cipó",
           "kcal": 270,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten"
+          ],
+          "ingredients": "teljes kiőrlésű búzaliszt, rozsliszt, élesztő, só"
         }
       ]
     },
@@ -716,6 +1028,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "main",
       "section": "Pékáru",
       "groupId": "Pékáru",
@@ -729,7 +1043,12 @@
           "name": "Burgonyás cipó",
           "kcal": 310,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "búzaliszt, burgonyapehely, tej, élesztő"
         }
       ]
     },
@@ -738,68 +1057,14 @@
       "day": 1,
       "type": 1,
       "code": "D1",
-      "name": "Túrós rétes",
-      "price": 790,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "dessert",
-      "section": "Desszertek",
-      "groupId": "Desszertek",
-      "category": "Desszertek",
-      "menuName": "Desszertek",
-      "pickerEligible": true,
-      "course": "dessert",
-      "kcal": 330,
-      "components": [
-        {
-          "name": "Túrós rétes",
-          "kcal": 330,
-          "kind": "dessert",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "1:1:D2",
-      "day": 1,
-      "type": 1,
-      "code": "D2",
-      "name": "Csokoládés muffin",
-      "price": 690,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "dessert",
-      "section": "Desszertek",
-      "groupId": "Desszertek",
-      "category": "Desszertek",
-      "menuName": "Desszertek",
-      "pickerEligible": true,
-      "course": "dessert",
-      "kcal": 420,
-      "components": [
-        {
-          "name": "Csokoládés muffin",
-          "kcal": 420,
-          "kind": "dessert",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "1:1:D3",
-      "day": 1,
-      "type": 1,
-      "code": "D3",
       "name": "Almás pite",
       "price": 790,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "dessert",
       "section": "Desszertek",
       "groupId": "Desszertek",
@@ -813,7 +1078,85 @@
           "name": "Almás pite",
           "kcal": 380,
           "kind": "dessert",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "alma, búzaliszt, vaj, cukor, fahéj"
+        }
+      ]
+    },
+    {
+      "id": "1:1:D2",
+      "day": 1,
+      "type": 1,
+      "code": "D2",
+      "name": "Somlói galuska",
+      "price": 990,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
+      "kind": "dessert",
+      "section": "Desszertek",
+      "groupId": "Desszertek",
+      "category": "Desszertek",
+      "menuName": "Desszertek",
+      "pickerEligible": true,
+      "course": "dessert",
+      "kcal": 470,
+      "components": [
+        {
+          "name": "Somlói galuska",
+          "kcal": 470,
+          "kind": "dessert",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk",
+            "nuts"
+          ],
+          "ingredients": "piskóta (búzaliszt, tojás), dió, csokoládé, tejszín, mazsola"
+        }
+      ]
+    },
+    {
+      "id": "1:1:D3",
+      "day": 1,
+      "type": 1,
+      "code": "D3",
+      "name": "Túrós rétes",
+      "price": 790,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
+      "kind": "dessert",
+      "section": "Desszertek",
+      "groupId": "Desszertek",
+      "category": "Desszertek",
+      "menuName": "Desszertek",
+      "pickerEligible": true,
+      "course": "dessert",
+      "kcal": 330,
+      "components": [
+        {
+          "name": "Túrós rétes",
+          "kcal": 330,
+          "kind": "dessert",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "túró, búzaliszt, tojás, cukor, mazsola"
         }
       ]
     },
@@ -822,40 +1165,14 @@
       "day": 1,
       "type": 1,
       "code": "I1",
-      "name": "Házi limonádé",
-      "price": 690,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Italok",
-      "groupId": "Italok",
-      "category": "Italok",
-      "menuName": "Italok",
-      "pickerEligible": false,
-      "course": "drink",
-      "kcal": 120,
-      "components": [
-        {
-          "name": "Házi limonádé",
-          "kcal": 120,
-          "kind": "side",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "1:1:I2",
-      "day": 1,
-      "type": 1,
-      "code": "I2",
       "name": "Narancslé",
       "price": 590,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Italok",
       "groupId": "Italok",
@@ -869,7 +1186,41 @@
           "name": "Narancslé",
           "kcal": 140,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "narancslé"
+        }
+      ]
+    },
+    {
+      "id": "1:1:I2",
+      "day": 1,
+      "type": 1,
+      "code": "I2",
+      "name": "Szénsavmentes ásványvíz",
+      "price": 290,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "main",
+      "section": "Italok",
+      "groupId": "Italok",
+      "category": "Italok",
+      "menuName": "Italok",
+      "pickerEligible": false,
+      "course": "drink",
+      "kcal": 0,
+      "components": [
+        {
+          "name": "Szénsavmentes ásványvíz",
+          "kcal": 0,
+          "kind": "side",
+          "photo": null,
+          "allergens": [],
+          "ingredients": "természetes ásványvíz"
         }
       ]
     },
@@ -878,12 +1229,14 @@
       "day": 2,
       "type": 1,
       "code": "A",
-      "name": "Brokkolikrémleves (sajtos pirítóssal) / Sertéspörkölt (tarhonyával)",
-      "price": 3090,
+      "name": "Zöldborsóleves (galuskával) / Sült csirkecomb (hagymás törtburgonyával)",
+      "price": 2890,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -891,19 +1244,29 @@
       "menuName": "A menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 1150,
+      "kcal": 1020,
       "components": [
         {
-          "name": "Brokkolikrémleves (sajtos pirítóssal)",
-          "kcal": 310,
+          "name": "Zöldborsóleves (galuskával)",
+          "kcal": 210,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "zöldborsó, sárgarépa, petrezselyem, galuska (búzaliszt, tojás), vaj"
         },
         {
-          "name": "Sertéspörkölt (tarhonyával)",
-          "kcal": 840,
+          "name": "Sült csirkecomb (hagymás törtburgonyával)",
+          "kcal": 810,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk"
+          ],
+          "ingredients": "csirkecomb, burgonya, vöröshagyma, vaj, tej"
         }
       ]
     },
@@ -912,12 +1275,14 @@
       "day": 2,
       "type": 1,
       "code": "B",
-      "name": "Csontleves (cérnametélttel, zöldségekkel) / Rakott krumpli",
-      "price": 2690,
+      "name": "Bableves (füstölt csülökkel) / Mákos tészta",
+      "price": 2490,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -925,19 +1290,31 @@
       "menuName": "B menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 960,
+      "kcal": 1120,
       "components": [
         {
-          "name": "Csontleves (cérnametélttel, zöldségekkel)",
-          "kcal": 240,
+          "name": "Bableves (füstölt csülökkel)",
+          "kcal": 430,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk",
+            "celery"
+          ],
+          "ingredients": "tarkabab, füstölt sertéscsülök, sárgarépa, zeller, tejföl, búzaliszt"
         },
         {
-          "name": "Rakott krumpli",
-          "kcal": 720,
+          "name": "Mákos tészta",
+          "kcal": 690,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tészta (búzaliszt, tojás), mák, porcukor, vaj"
         }
       ]
     },
@@ -946,12 +1323,14 @@
       "day": 2,
       "type": 1,
       "code": "C",
-      "name": "Krumplileves (kolbásszal) / Rántott csirkemell (petrezselymes burgonyával)",
-      "price": 2990,
+      "name": "Sütőtökkrémleves (pirított tökmaggal) / Mákos tészta",
+      "price": 2290,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -959,19 +1338,27 @@
       "menuName": "C menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 1170,
+      "kcal": 950,
       "components": [
         {
-          "name": "Krumplileves (kolbásszal)",
-          "kcal": 350,
+          "name": "Sütőtökkrémleves (pirított tökmaggal)",
+          "kcal": 260,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "sütőtök, vöröshagyma, kókusztej, gyömbér, tökmag"
         },
         {
-          "name": "Rántott csirkemell (petrezselymes burgonyával)",
-          "kcal": 820,
+          "name": "Mákos tészta",
+          "kcal": 690,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tészta (búzaliszt, tojás), mák, porcukor, vaj"
         }
       ]
     },
@@ -980,12 +1367,14 @@
       "day": 2,
       "type": 1,
       "code": "D",
-      "name": "Brokkolikrémleves (sajtos pirítóssal) / Zöldséges rizottó (parmezánnal)",
-      "price": 2690,
+      "name": "Krumplileves (kolbásszal) / Mákos tészta",
+      "price": 2390,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -993,19 +1382,30 @@
       "menuName": "D menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 920,
+      "kcal": 1040,
       "components": [
         {
-          "name": "Brokkolikrémleves (sajtos pirítóssal)",
-          "kcal": 310,
+          "name": "Krumplileves (kolbásszal)",
+          "kcal": 350,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk",
+            "celery"
+          ],
+          "ingredients": "burgonya, füstölt kolbász, pirospaprika, tejföl, zeller"
         },
         {
-          "name": "Zöldséges rizottó (parmezánnal)",
-          "kcal": 610,
+          "name": "Mákos tészta",
+          "kcal": 690,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tészta (búzaliszt, tojás), mák, porcukor, vaj"
         }
       ]
     },
@@ -1014,12 +1414,14 @@
       "day": 2,
       "type": 1,
       "code": "Z10",
-      "name": "Túrókrémes kifli / Zöldséges raguleves (csirkehússal) / Pulykamell (grillezett zöldségekkel) / Vegán csicseriborsó-curry (barna rizzsel)",
-      "price": 5790,
+      "name": "Sonkás-sajtos melegszendvics / Zöldborsóleves (galuskával) / Sajtos-tejfölös lasagne / Rántott csirkemell (petrezselymes burgonyával)",
+      "price": 5890,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -1027,31 +1429,53 @@
       "menuName": "Egész napos menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 1700,
+      "kcal": 2310,
       "components": [
         {
-          "name": "Túrókrémes kifli",
-          "kcal": 380,
+          "name": "Sonkás-sajtos melegszendvics",
+          "kcal": 450,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "kenyér (búzaliszt), sertéssonka, trappista sajt, vaj"
         },
         {
-          "name": "Zöldséges raguleves (csirkehússal)",
-          "kcal": 290,
+          "name": "Zöldborsóleves (galuskával)",
+          "kcal": 210,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "zöldborsó, sárgarépa, petrezselyem, galuska (búzaliszt, tojás), vaj"
         },
         {
-          "name": "Pulykamell (grillezett zöldségekkel)",
-          "kcal": 470,
+          "name": "Sajtos-tejfölös lasagne",
+          "kcal": 830,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "lasagne tészta (búzaliszt, tojás), darált sertéshús, paradicsom, tejföl, trappista sajt"
         },
         {
-          "name": "Vegán csicseriborsó-curry (barna rizzsel)",
-          "kcal": 560,
+          "name": "Rántott csirkemell (petrezselymes burgonyával)",
+          "kcal": 820,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg"
+          ],
+          "ingredients": "csirkemell, búzaliszt, tojás, zsemlemorzsa, burgonya, petrezselyem"
         }
       ]
     },
@@ -1060,12 +1484,14 @@
       "day": 2,
       "type": 1,
       "code": "Z11",
-      "name": "Rántotta (pirítóssal) / Hideg meggyleves / Vegán csicseriborsó-curry (barna rizzsel) / Sertéspörkölt (tarhonyával)",
-      "price": 5890,
+      "name": "Túrókrémes kifli / Zöldborsóleves (galuskával) / Sült csirkecomb (hagymás törtburgonyával) / Sertéspörkölt (tarhonyával)",
+      "price": 5790,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -1073,31 +1499,51 @@
       "menuName": "Könnyű egész napos menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 2080,
+      "kcal": 2240,
       "components": [
         {
-          "name": "Rántotta (pirítóssal)",
-          "kcal": 410,
+          "name": "Túrókrémes kifli",
+          "kcal": 380,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "kifli (búzaliszt), túró, tejföl, kapor"
         },
         {
-          "name": "Hideg meggyleves",
-          "kcal": 270,
+          "name": "Zöldborsóleves (galuskával)",
+          "kcal": 210,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "zöldborsó, sárgarépa, petrezselyem, galuska (búzaliszt, tojás), vaj"
         },
         {
-          "name": "Vegán csicseriborsó-curry (barna rizzsel)",
-          "kcal": 560,
+          "name": "Sült csirkecomb (hagymás törtburgonyával)",
+          "kcal": 810,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk"
+          ],
+          "ingredients": "csirkecomb, burgonya, vöröshagyma, vaj, tej"
         },
         {
           "name": "Sertéspörkölt (tarhonyával)",
           "kcal": 840,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg"
+          ],
+          "ingredients": "sertéslapocka, vöröshagyma, pirospaprika, tarhonya (búzaliszt, tojás)"
         }
       ]
     },
@@ -1112,6 +1558,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Reggeli",
       "groupId": "Reggeli",
@@ -1125,7 +1573,12 @@
           "name": "Sonkás-sajtos melegszendvics",
           "kcal": 450,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "kenyér (búzaliszt), sertéssonka, trappista sajt, vaj"
         }
       ]
     },
@@ -1134,12 +1587,14 @@
       "day": 2,
       "type": 1,
       "code": "R2",
-      "name": "Zabkása (áfonyával)",
-      "price": 990,
+      "name": "Túrókrémes kifli",
+      "price": 890,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "main",
       "section": "Reggeli",
       "groupId": "Reggeli",
@@ -1147,13 +1602,18 @@
       "menuName": "Reggeli",
       "pickerEligible": true,
       "course": "breakfast",
-      "kcal": 340,
+      "kcal": 380,
       "components": [
         {
-          "name": "Zabkása (áfonyával)",
-          "kcal": 340,
+          "name": "Túrókrémes kifli",
+          "kcal": 380,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "kifli (búzaliszt), túró, tejföl, kapor"
         }
       ]
     },
@@ -1162,12 +1622,14 @@
       "day": 2,
       "type": 1,
       "code": "L1",
-      "name": "Bableves (füstölt csülökkel)",
-      "price": 1290,
+      "name": "Lencseleves (virslivel)",
+      "price": 1190,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -1175,13 +1637,17 @@
       "menuName": "Levesek",
       "pickerEligible": true,
       "course": "soup",
-      "kcal": 430,
+      "kcal": 390,
       "components": [
         {
-          "name": "Bableves (füstölt csülökkel)",
-          "kcal": 430,
+          "name": "Lencseleves (virslivel)",
+          "kcal": 390,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "mustard"
+          ],
+          "ingredients": "lencse, sertésvirsli, vöröshagyma, mustár, babérlevél"
         }
       ]
     },
@@ -1196,6 +1662,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -1209,7 +1677,12 @@
           "name": "Gombakrémleves",
           "kcal": 280,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "csiperkegomba, tejszín, vaj, búzaliszt, petrezselyem"
         }
       ]
     },
@@ -1218,12 +1691,14 @@
       "day": 2,
       "type": 1,
       "code": "L3",
-      "name": "Sütőtökkrémleves (pirított tökmaggal)",
-      "price": 990,
+      "name": "Brokkolikrémleves (sajtos pirítóssal)",
+      "price": 1050,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -1231,13 +1706,18 @@
       "menuName": "Levesek",
       "pickerEligible": true,
       "course": "soup",
-      "kcal": 260,
+      "kcal": 310,
       "components": [
         {
-          "name": "Sütőtökkrémleves (pirított tökmaggal)",
-          "kcal": 260,
+          "name": "Brokkolikrémleves (sajtos pirítóssal)",
+          "kcal": 310,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "brokkoli, tejszín, kenyér (búzaliszt), trappista sajt"
         }
       ]
     },
@@ -1246,12 +1726,14 @@
       "day": 2,
       "type": 1,
       "code": "L4",
-      "name": "Krumplileves (kolbásszal)",
-      "price": 1090,
+      "name": "Bableves (füstölt csülökkel)",
+      "price": 1290,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -1259,13 +1741,19 @@
       "menuName": "Levesek",
       "pickerEligible": true,
       "course": "soup",
-      "kcal": 350,
+      "kcal": 430,
       "components": [
         {
-          "name": "Krumplileves (kolbásszal)",
-          "kcal": 350,
+          "name": "Bableves (füstölt csülökkel)",
+          "kcal": 430,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk",
+            "celery"
+          ],
+          "ingredients": "tarkabab, füstölt sertéscsülök, sárgarépa, zeller, tejföl, búzaliszt"
         }
       ]
     },
@@ -1274,12 +1762,14 @@
       "day": 2,
       "type": 1,
       "code": "F1",
-      "name": "Vegán csicseriborsó-curry (barna rizzsel)",
+      "name": "Rakott krumpli",
       "price": 2190,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Főételek",
       "groupId": "Főételek",
@@ -1287,13 +1777,18 @@
       "menuName": "Főételek",
       "pickerEligible": true,
       "course": "main",
-      "kcal": 560,
+      "kcal": 720,
       "components": [
         {
-          "name": "Vegán csicseriborsó-curry (barna rizzsel)",
-          "kcal": 560,
+          "name": "Rakott krumpli",
+          "kcal": 720,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "egg",
+            "milk"
+          ],
+          "ingredients": "burgonya, tojás, füstölt kolbász, tejföl"
         }
       ]
     },
@@ -1302,124 +1797,14 @@
       "day": 2,
       "type": 1,
       "code": "F2",
-      "name": "Csirkés-brokkolis penne",
-      "price": 2190,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 650,
-      "components": [
-        {
-          "name": "Csirkés-brokkolis penne",
-          "kcal": 650,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "2:1:F3",
-      "day": 2,
-      "type": 1,
-      "code": "F3",
-      "name": "Babgulyás",
-      "price": 2090,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 620,
-      "components": [
-        {
-          "name": "Babgulyás",
-          "kcal": 620,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "2:1:F4",
-      "day": 2,
-      "type": 1,
-      "code": "F4",
-      "name": "Sült csirkecomb (hagymás törtburgonyával)",
-      "price": 2490,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 810,
-      "components": [
-        {
-          "name": "Sült csirkecomb (hagymás törtburgonyával)",
-          "kcal": 810,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "2:1:F5",
-      "day": 2,
-      "type": 1,
-      "code": "F5",
-      "name": "Sajtos-tejfölös lasagne",
-      "price": 2390,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 830,
-      "components": [
-        {
-          "name": "Sajtos-tejfölös lasagne",
-          "kcal": 830,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "2:1:F6",
-      "day": 2,
-      "type": 1,
-      "code": "F6",
       "name": "Tökfőzelék (fasírttal)",
       "price": 2090,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Főételek",
       "groupId": "Főételek",
@@ -1433,7 +1818,260 @@
           "name": "Tökfőzelék (fasírttal)",
           "kcal": 640,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tök, kapor, tejföl, búzaliszt, fasírt (darált sertéshús, tojás, zsemle)"
+        }
+      ]
+    },
+    {
+      "id": "2:1:F3",
+      "day": 2,
+      "type": 1,
+      "code": "F3",
+      "name": "Rántott sajt (rizzsel, tartármártással)",
+      "price": 2390,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 880,
+      "components": [
+        {
+          "name": "Rántott sajt (rizzsel, tartármártással)",
+          "kcal": 880,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk",
+            "mustard"
+          ],
+          "ingredients": "trappista sajt, búzaliszt, tojás, zsemlemorzsa, rizs, majonéz (tojás, mustár)"
+        }
+      ]
+    },
+    {
+      "id": "2:1:F4",
+      "day": 2,
+      "type": 1,
+      "code": "F4",
+      "name": "Mákos tészta",
+      "price": 1690,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 690,
+      "components": [
+        {
+          "name": "Mákos tészta",
+          "kcal": 690,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tészta (búzaliszt, tojás), mák, porcukor, vaj"
+        }
+      ]
+    },
+    {
+      "id": "2:1:F5",
+      "day": 2,
+      "type": 1,
+      "code": "F5",
+      "name": "Babgulyás",
+      "price": 2090,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 620,
+      "components": [
+        {
+          "name": "Babgulyás",
+          "kcal": 620,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "celery"
+          ],
+          "ingredients": "marhalábszár, tarkabab, burgonya, sárgarépa, zeller, csipetke (búzaliszt, tojás)"
+        }
+      ]
+    },
+    {
+      "id": "2:1:F6",
+      "day": 2,
+      "type": 1,
+      "code": "F6",
+      "name": "Sajtos-tejfölös lasagne",
+      "price": 2390,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 830,
+      "components": [
+        {
+          "name": "Sajtos-tejfölös lasagne",
+          "kcal": 830,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "lasagne tészta (búzaliszt, tojás), darált sertéshús, paradicsom, tejföl, trappista sajt"
+        }
+      ]
+    },
+    {
+      "id": "2:1:VL1",
+      "day": 2,
+      "type": 1,
+      "code": "VL1",
+      "name": "Zöldséges gombaleves",
+      "price": 850,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "soup",
+      "section": "Vega & vegán",
+      "groupId": "Vega & vegán",
+      "category": "Vega & vegán",
+      "menuName": "Vega & vegán",
+      "pickerEligible": true,
+      "course": "soup",
+      "kcal": 180,
+      "components": [
+        {
+          "name": "Zöldséges gombaleves",
+          "kcal": 180,
+          "kind": "soup",
+          "photo": null,
+          "allergens": [
+            "celery"
+          ],
+          "ingredients": "csiperkegomba, sárgarépa, petrezselyemgyökér, zeller, kapor"
+        }
+      ]
+    },
+    {
+      "id": "2:1:VF1",
+      "day": 2,
+      "type": 1,
+      "code": "VF1",
+      "name": "Mogyorós pirított rizstészta",
+      "price": 2190,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": true,
+      "kind": "main",
+      "section": "Vega & vegán",
+      "groupId": "Vega & vegán",
+      "category": "Vega & vegán",
+      "menuName": "Vega & vegán",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 680,
+      "components": [
+        {
+          "name": "Mogyorós pirított rizstészta",
+          "kcal": 680,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "peanut",
+            "soy"
+          ],
+          "ingredients": "rizstészta, földimogyoró, brokkoli, sárgarépa, szójaszósz (szójabab, búza), chili"
+        }
+      ]
+    },
+    {
+      "id": "2:1:VF2",
+      "day": 2,
+      "type": 1,
+      "code": "VF2",
+      "name": "Babos chili (jázminrizzsel)",
+      "price": 2090,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": true,
+      "kind": "main",
+      "section": "Vega & vegán",
+      "groupId": "Vega & vegán",
+      "category": "Vega & vegán",
+      "menuName": "Vega & vegán",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 610,
+      "components": [
+        {
+          "name": "Babos chili (jázminrizzsel)",
+          "kcal": 610,
+          "kind": "main",
+          "photo": null,
+          "allergens": [],
+          "ingredients": "vörösbab, kukorica, paprika, paradicsom, chili, jázminrizs"
         }
       ]
     },
@@ -1448,6 +2086,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Hidegkonyha",
       "groupId": "Hidegkonyha",
@@ -1461,7 +2101,14 @@
           "name": "Tonhalas tésztasaláta",
           "kcal": 420,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "fish",
+            "mustard"
+          ],
+          "ingredients": "tészta (durumbúzadara), tonhal, kukorica, majonéz (tojás, mustár)"
         }
       ]
     },
@@ -1470,12 +2117,14 @@
       "day": 2,
       "type": 1,
       "code": "H2",
-      "name": "Franciasaláta",
-      "price": 1190,
+      "name": "Görög saláta",
+      "price": 1290,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "main",
       "section": "Hidegkonyha",
       "groupId": "Hidegkonyha",
@@ -1483,13 +2132,17 @@
       "menuName": "Hidegkonyha",
       "pickerEligible": true,
       "course": "cold",
-      "kcal": 360,
+      "kcal": 260,
       "components": [
         {
-          "name": "Franciasaláta",
-          "kcal": 360,
+          "name": "Görög saláta",
+          "kcal": 260,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk"
+          ],
+          "ingredients": "paradicsom, uborka, lilahagyma, feta sajt, olívabogyó"
         }
       ]
     },
@@ -1498,12 +2151,48 @@
       "day": 2,
       "type": 1,
       "code": "S1",
+      "name": "Káposztasaláta",
+      "price": 390,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "main",
+      "section": "Savanyúság",
+      "groupId": "Savanyúság",
+      "category": "Savanyúság",
+      "menuName": "Savanyúság",
+      "pickerEligible": true,
+      "course": "pickle",
+      "kcal": 70,
+      "components": [
+        {
+          "name": "Káposztasaláta",
+          "kcal": 70,
+          "kind": "side",
+          "photo": null,
+          "allergens": [
+            "sulfites"
+          ],
+          "ingredients": "fejes káposzta, ecet, cukor, só, kén-dioxid"
+        }
+      ]
+    },
+    {
+      "id": "2:1:S2",
+      "day": 2,
+      "type": 1,
+      "code": "S2",
       "name": "Csemegeuborka",
       "price": 390,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Savanyúság",
       "groupId": "Savanyúság",
@@ -1517,35 +2206,12 @@
           "name": "Csemegeuborka",
           "kcal": 40,
           "kind": "side",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "2:1:S2",
-      "day": 2,
-      "type": 1,
-      "code": "S2",
-      "name": "Ecetes paprika",
-      "price": 390,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Savanyúság",
-      "groupId": "Savanyúság",
-      "category": "Savanyúság",
-      "menuName": "Savanyúság",
-      "pickerEligible": true,
-      "course": "pickle",
-      "kcal": 35,
-      "components": [
-        {
-          "name": "Ecetes paprika",
-          "kcal": 35,
-          "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "mustard",
+            "sulfites"
+          ],
+          "ingredients": "uborka, ecet, cukor, kapor, mustármag, kén-dioxid"
         }
       ]
     },
@@ -1554,40 +2220,14 @@
       "day": 2,
       "type": 1,
       "code": "C1",
-      "name": "Burgonyás cipó",
-      "price": 490,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Pékáru",
-      "groupId": "Pékáru",
-      "category": "Pékáru",
-      "menuName": "Pékáru",
-      "pickerEligible": true,
-      "course": "bread",
-      "kcal": 310,
-      "components": [
-        {
-          "name": "Burgonyás cipó",
-          "kcal": 310,
-          "kind": "side",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "2:1:C2",
-      "day": 2,
-      "type": 1,
-      "code": "C2",
       "name": "Teljes kiőrlésű cipó",
       "price": 490,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Pékáru",
       "groupId": "Pékáru",
@@ -1601,7 +2241,46 @@
           "name": "Teljes kiőrlésű cipó",
           "kcal": 270,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten"
+          ],
+          "ingredients": "teljes kiőrlésű búzaliszt, rozsliszt, élesztő, só"
+        }
+      ]
+    },
+    {
+      "id": "2:1:C2",
+      "day": 2,
+      "type": 1,
+      "code": "C2",
+      "name": "Burgonyás cipó",
+      "price": 490,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
+      "kind": "main",
+      "section": "Pékáru",
+      "groupId": "Pékáru",
+      "category": "Pékáru",
+      "menuName": "Pékáru",
+      "pickerEligible": true,
+      "course": "bread",
+      "kcal": 310,
+      "components": [
+        {
+          "name": "Burgonyás cipó",
+          "kcal": 310,
+          "kind": "side",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "búzaliszt, burgonyapehely, tej, élesztő"
         }
       ]
     },
@@ -1616,6 +2295,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "dessert",
       "section": "Desszertek",
       "groupId": "Desszertek",
@@ -1629,7 +2310,13 @@
           "name": "Palacsinta (barackízzel)",
           "kcal": 360,
           "kind": "dessert",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "búzaliszt, tej, tojás, sárgabarack-íz"
         }
       ]
     },
@@ -1638,12 +2325,14 @@
       "day": 2,
       "type": 1,
       "code": "D2",
-      "name": "Csokoládés muffin",
-      "price": 690,
+      "name": "Somlói galuska",
+      "price": 990,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "dessert",
       "section": "Desszertek",
       "groupId": "Desszertek",
@@ -1651,13 +2340,20 @@
       "menuName": "Desszertek",
       "pickerEligible": true,
       "course": "dessert",
-      "kcal": 420,
+      "kcal": 470,
       "components": [
         {
-          "name": "Csokoládés muffin",
-          "kcal": 420,
+          "name": "Somlói galuska",
+          "kcal": 470,
           "kind": "dessert",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk",
+            "nuts"
+          ],
+          "ingredients": "piskóta (búzaliszt, tojás), dió, csokoládé, tejszín, mazsola"
         }
       ]
     },
@@ -1666,12 +2362,14 @@
       "day": 2,
       "type": 1,
       "code": "D3",
-      "name": "Túrós rétes",
-      "price": 790,
+      "name": "Gyümölcsjoghurt",
+      "price": 590,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "dessert",
       "section": "Desszertek",
       "groupId": "Desszertek",
@@ -1679,13 +2377,17 @@
       "menuName": "Desszertek",
       "pickerEligible": true,
       "course": "dessert",
-      "kcal": 330,
+      "kcal": 180,
       "components": [
         {
-          "name": "Túrós rétes",
-          "kcal": 330,
+          "name": "Gyümölcsjoghurt",
+          "kcal": 180,
           "kind": "dessert",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk"
+          ],
+          "ingredients": "joghurt (tej), eper, cukor"
         }
       ]
     },
@@ -1700,6 +2402,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Italok",
       "groupId": "Italok",
@@ -1713,7 +2417,9 @@
           "name": "Szénsavmentes ásványvíz",
           "kcal": 0,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "természetes ásványvíz"
         }
       ]
     },
@@ -1728,6 +2434,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Italok",
       "groupId": "Italok",
@@ -1741,7 +2449,9 @@
           "name": "Narancslé",
           "kcal": 140,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "narancslé"
         }
       ]
     },
@@ -1750,12 +2460,14 @@
       "day": 3,
       "type": 1,
       "code": "A",
-      "name": "Hideg meggyleves / Csirkés-brokkolis penne",
-      "price": 2790,
+      "name": "Gombakrémleves / Csirkés-brokkolis penne",
+      "price": 2690,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -1763,19 +2475,29 @@
       "menuName": "A menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 920,
+      "kcal": 930,
       "components": [
         {
-          "name": "Hideg meggyleves",
-          "kcal": 270,
+          "name": "Gombakrémleves",
+          "kcal": 280,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "csiperkegomba, tejszín, vaj, búzaliszt, petrezselyem"
         },
         {
           "name": "Csirkés-brokkolis penne",
           "kcal": 650,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "penne (durumbúzadara), csirkemell, brokkoli, tejszín, fokhagyma"
         }
       ]
     },
@@ -1784,12 +2506,14 @@
       "day": 3,
       "type": 1,
       "code": "B",
-      "name": "Hideg meggyleves / Rántott csirkemell (petrezselymes burgonyával)",
-      "price": 2990,
+      "name": "Krumplileves (kolbásszal) / Lecsó (kolbásszal, kenyérrel)",
+      "price": 2490,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -1797,19 +2521,28 @@
       "menuName": "B menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 1090,
+      "kcal": 940,
       "components": [
         {
-          "name": "Hideg meggyleves",
-          "kcal": 270,
+          "name": "Krumplileves (kolbásszal)",
+          "kcal": 350,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk",
+            "celery"
+          ],
+          "ingredients": "burgonya, füstölt kolbász, pirospaprika, tejföl, zeller"
         },
         {
-          "name": "Rántott csirkemell (petrezselymes burgonyával)",
-          "kcal": 820,
+          "name": "Lecsó (kolbásszal, kenyérrel)",
+          "kcal": 590,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten"
+          ],
+          "ingredients": "paprika, paradicsom, vöröshagyma, füstölt kolbász, kenyér (búzaliszt)"
         }
       ]
     },
@@ -1818,12 +2551,14 @@
       "day": 3,
       "type": 1,
       "code": "C",
-      "name": "Csontleves (cérnametélttel, zöldségekkel) / Sült csirkecomb (hagymás törtburgonyával)",
-      "price": 2890,
+      "name": "Brokkolikrémleves (sajtos pirítóssal) / Lecsó (kolbásszal, kenyérrel)",
+      "price": 2490,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -1831,19 +2566,28 @@
       "menuName": "C menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 1050,
+      "kcal": 900,
       "components": [
         {
-          "name": "Csontleves (cérnametélttel, zöldségekkel)",
-          "kcal": 240,
+          "name": "Brokkolikrémleves (sajtos pirítóssal)",
+          "kcal": 310,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "brokkoli, tejszín, kenyér (búzaliszt), trappista sajt"
         },
         {
-          "name": "Sült csirkecomb (hagymás törtburgonyával)",
-          "kcal": 810,
+          "name": "Lecsó (kolbásszal, kenyérrel)",
+          "kcal": 590,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten"
+          ],
+          "ingredients": "paprika, paradicsom, vöröshagyma, füstölt kolbász, kenyér (búzaliszt)"
         }
       ]
     },
@@ -1852,12 +2596,14 @@
       "day": 3,
       "type": 1,
       "code": "D",
-      "name": "Hideg meggyleves / Lecsó (kolbásszal, kenyérrel)",
-      "price": 2490,
+      "name": "Paradicsomleves (betűtésztával) / Sertéspörkölt (tarhonyával)",
+      "price": 2890,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -1865,19 +2611,29 @@
       "menuName": "D menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 860,
+      "kcal": 1030,
       "components": [
         {
-          "name": "Hideg meggyleves",
-          "kcal": 270,
+          "name": "Paradicsomleves (betűtésztával)",
+          "kcal": 190,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "celery"
+          ],
+          "ingredients": "paradicsom, zeller, cukor, betűtészta (durumbúzadara)"
         },
         {
-          "name": "Lecsó (kolbásszal, kenyérrel)",
-          "kcal": 590,
+          "name": "Sertéspörkölt (tarhonyával)",
+          "kcal": 840,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg"
+          ],
+          "ingredients": "sertéslapocka, vöröshagyma, pirospaprika, tarhonya (búzaliszt, tojás)"
         }
       ]
     },
@@ -1886,12 +2642,14 @@
       "day": 3,
       "type": 1,
       "code": "Z10",
-      "name": "Zabkása (áfonyával) / Zöldséges raguleves (csirkehússal) / Sertéspörkölt (tarhonyával) / Tökfőzelék (fasírttal)",
+      "name": "Zabkása (áfonyával) / Zöldséges raguleves (csirkehússal) / Pulykamell (grillezett zöldségekkel) / Tökfőzelék (fasírttal)",
       "price": 5790,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -1899,31 +2657,48 @@
       "menuName": "Egész napos menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 2110,
+      "kcal": 1740,
       "components": [
         {
           "name": "Zabkása (áfonyával)",
           "kcal": 340,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "zabpehely, tej, áfonya, méz"
         },
         {
           "name": "Zöldséges raguleves (csirkehússal)",
           "kcal": 290,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "celery"
+          ],
+          "ingredients": "csirkemell, sárgarépa, zöldborsó, zeller, tárkony"
         },
         {
-          "name": "Sertéspörkölt (tarhonyával)",
-          "kcal": 840,
+          "name": "Pulykamell (grillezett zöldségekkel)",
+          "kcal": 470,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "pulykamell, cukkini, padlizsán, paprika, olívaolaj"
         },
         {
           "name": "Tökfőzelék (fasírttal)",
           "kcal": 640,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tök, kapor, tejföl, búzaliszt, fasírt (darált sertéshús, tojás, zsemle)"
         }
       ]
     },
@@ -1932,12 +2707,14 @@
       "day": 3,
       "type": 1,
       "code": "Z11",
-      "name": "Rántotta (pirítóssal) / Gombakrémleves / Tökfőzelék (fasírttal) / Pulykamell (grillezett zöldségekkel)",
-      "price": 5690,
+      "name": "Sonkás-sajtos melegszendvics / Krumplileves (kolbásszal) / Paprikás csirke (nokedlivel) / Rántott csirkemell (petrezselymes burgonyával)",
+      "price": 6090,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -1945,31 +2722,52 @@
       "menuName": "Könnyű egész napos menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 1800,
+      "kcal": 2380,
       "components": [
         {
-          "name": "Rántotta (pirítóssal)",
-          "kcal": 410,
+          "name": "Sonkás-sajtos melegszendvics",
+          "kcal": 450,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "kenyér (búzaliszt), sertéssonka, trappista sajt, vaj"
         },
         {
-          "name": "Gombakrémleves",
-          "kcal": 280,
+          "name": "Krumplileves (kolbásszal)",
+          "kcal": 350,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk",
+            "celery"
+          ],
+          "ingredients": "burgonya, füstölt kolbász, pirospaprika, tejföl, zeller"
         },
         {
-          "name": "Tökfőzelék (fasírttal)",
-          "kcal": 640,
+          "name": "Paprikás csirke (nokedlivel)",
+          "kcal": 760,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "csirkecomb, pirospaprika, tejföl, nokedli (búzaliszt, tojás)"
         },
         {
-          "name": "Pulykamell (grillezett zöldségekkel)",
-          "kcal": 470,
+          "name": "Rántott csirkemell (petrezselymes burgonyával)",
+          "kcal": 820,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg"
+          ],
+          "ingredients": "csirkemell, búzaliszt, tojás, zsemlemorzsa, burgonya, petrezselyem"
         }
       ]
     },
@@ -1984,6 +2782,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "main",
       "section": "Reggeli",
       "groupId": "Reggeli",
@@ -1997,7 +2797,12 @@
           "name": "Zabkása (áfonyával)",
           "kcal": 340,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "zabpehely, tej, áfonya, méz"
         }
       ]
     },
@@ -2012,6 +2817,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "main",
       "section": "Reggeli",
       "groupId": "Reggeli",
@@ -2025,7 +2832,13 @@
           "name": "Rántotta (pirítóssal)",
           "kcal": 410,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tojás, vaj, kenyér (búzaliszt), snidling"
         }
       ]
     },
@@ -2034,40 +2847,14 @@
       "day": 3,
       "type": 1,
       "code": "L1",
-      "name": "Bableves (füstölt csülökkel)",
-      "price": 1290,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "soup",
-      "section": "Levesek",
-      "groupId": "Levesek",
-      "category": "Levesek",
-      "menuName": "Levesek",
-      "pickerEligible": true,
-      "course": "soup",
-      "kcal": 430,
-      "components": [
-        {
-          "name": "Bableves (füstölt csülökkel)",
-          "kcal": 430,
-          "kind": "soup",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "3:1:L2",
-      "day": 3,
-      "type": 1,
-      "code": "L2",
       "name": "Zöldséges raguleves (csirkehússal)",
       "price": 1150,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -2081,21 +2868,27 @@
           "name": "Zöldséges raguleves (csirkehússal)",
           "kcal": 290,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "celery"
+          ],
+          "ingredients": "csirkemell, sárgarépa, zöldborsó, zeller, tárkony"
         }
       ]
     },
     {
-      "id": "3:1:L3",
+      "id": "3:1:L2",
       "day": 3,
       "type": 1,
-      "code": "L3",
+      "code": "L2",
       "name": "Lencseleves (virslivel)",
       "price": 1190,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -2109,7 +2902,46 @@
           "name": "Lencseleves (virslivel)",
           "kcal": 390,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "mustard"
+          ],
+          "ingredients": "lencse, sertésvirsli, vöröshagyma, mustár, babérlevél"
+        }
+      ]
+    },
+    {
+      "id": "3:1:L3",
+      "day": 3,
+      "type": 1,
+      "code": "L3",
+      "name": "Krumplileves (kolbásszal)",
+      "price": 1090,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "soup",
+      "section": "Levesek",
+      "groupId": "Levesek",
+      "category": "Levesek",
+      "menuName": "Levesek",
+      "pickerEligible": true,
+      "course": "soup",
+      "kcal": 350,
+      "components": [
+        {
+          "name": "Krumplileves (kolbásszal)",
+          "kcal": 350,
+          "kind": "soup",
+          "photo": null,
+          "allergens": [
+            "milk",
+            "celery"
+          ],
+          "ingredients": "burgonya, füstölt kolbász, pirospaprika, tejföl, zeller"
         }
       ]
     },
@@ -2118,12 +2950,14 @@
       "day": 3,
       "type": 1,
       "code": "L4",
-      "name": "Zöldborsóleves (galuskával)",
-      "price": 890,
+      "name": "Sütőtökkrémleves (pirított tökmaggal)",
+      "price": 990,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -2131,13 +2965,15 @@
       "menuName": "Levesek",
       "pickerEligible": true,
       "course": "soup",
-      "kcal": 210,
+      "kcal": 260,
       "components": [
         {
-          "name": "Zöldborsóleves (galuskával)",
-          "kcal": 210,
+          "name": "Sütőtökkrémleves (pirított tökmaggal)",
+          "kcal": 260,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "sütőtök, vöröshagyma, kókusztej, gyömbér, tökmag"
         }
       ]
     },
@@ -2146,12 +2982,14 @@
       "day": 3,
       "type": 1,
       "code": "F1",
-      "name": "Tökfőzelék (fasírttal)",
-      "price": 2090,
+      "name": "Paprikás csirke (nokedlivel)",
+      "price": 2390,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Főételek",
       "groupId": "Főételek",
@@ -2159,13 +2997,19 @@
       "menuName": "Főételek",
       "pickerEligible": true,
       "course": "main",
-      "kcal": 640,
+      "kcal": 760,
       "components": [
         {
-          "name": "Tökfőzelék (fasírttal)",
-          "kcal": 640,
+          "name": "Paprikás csirke (nokedlivel)",
+          "kcal": 760,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "csirkecomb, pirospaprika, tejföl, nokedli (búzaliszt, tojás)"
         }
       ]
     },
@@ -2174,96 +3018,14 @@
       "day": 3,
       "type": 1,
       "code": "F2",
-      "name": "Grillezett lazac (párolt zöldségekkel)",
-      "price": 3290,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 540,
-      "components": [
-        {
-          "name": "Grillezett lazac (párolt zöldségekkel)",
-          "kcal": 540,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "3:1:F3",
-      "day": 3,
-      "type": 1,
-      "code": "F3",
-      "name": "Zöldséges rizottó (parmezánnal)",
-      "price": 2090,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 610,
-      "components": [
-        {
-          "name": "Zöldséges rizottó (parmezánnal)",
-          "kcal": 610,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "3:1:F4",
-      "day": 3,
-      "type": 1,
-      "code": "F4",
-      "name": "Bolognai spagetti",
-      "price": 2190,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 780,
-      "components": [
-        {
-          "name": "Bolognai spagetti",
-          "kcal": 780,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "3:1:F5",
-      "day": 3,
-      "type": 1,
-      "code": "F5",
       "name": "Sült csirkecomb (hagymás törtburgonyával)",
       "price": 2490,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Főételek",
       "groupId": "Főételek",
@@ -2277,7 +3039,118 @@
           "name": "Sült csirkecomb (hagymás törtburgonyával)",
           "kcal": 810,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk"
+          ],
+          "ingredients": "csirkecomb, burgonya, vöröshagyma, vaj, tej"
+        }
+      ]
+    },
+    {
+      "id": "3:1:F3",
+      "day": 3,
+      "type": 1,
+      "code": "F3",
+      "name": "Sajtos-tejfölös lasagne",
+      "price": 2390,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 830,
+      "components": [
+        {
+          "name": "Sajtos-tejfölös lasagne",
+          "kcal": 830,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "lasagne tészta (búzaliszt, tojás), darált sertéshús, paradicsom, tejföl, trappista sajt"
+        }
+      ]
+    },
+    {
+      "id": "3:1:F4",
+      "day": 3,
+      "type": 1,
+      "code": "F4",
+      "name": "Rántott sajt (rizzsel, tartármártással)",
+      "price": 2390,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 880,
+      "components": [
+        {
+          "name": "Rántott sajt (rizzsel, tartármártással)",
+          "kcal": 880,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk",
+            "mustard"
+          ],
+          "ingredients": "trappista sajt, búzaliszt, tojás, zsemlemorzsa, rizs, majonéz (tojás, mustár)"
+        }
+      ]
+    },
+    {
+      "id": "3:1:F5",
+      "day": 3,
+      "type": 1,
+      "code": "F5",
+      "name": "Lecsó (kolbásszal, kenyérrel)",
+      "price": 1890,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 590,
+      "components": [
+        {
+          "name": "Lecsó (kolbásszal, kenyérrel)",
+          "kcal": 590,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten"
+          ],
+          "ingredients": "paprika, paradicsom, vöröshagyma, füstölt kolbász, kenyér (búzaliszt)"
         }
       ]
     },
@@ -2286,12 +3159,14 @@
       "day": 3,
       "type": 1,
       "code": "F6",
-      "name": "Csirkés-brokkolis penne",
-      "price": 2190,
+      "name": "Rántott csirkemell (petrezselymes burgonyával)",
+      "price": 2490,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Főételek",
       "groupId": "Főételek",
@@ -2299,13 +3174,120 @@
       "menuName": "Főételek",
       "pickerEligible": true,
       "course": "main",
-      "kcal": 650,
+      "kcal": 820,
       "components": [
         {
-          "name": "Csirkés-brokkolis penne",
-          "kcal": 650,
+          "name": "Rántott csirkemell (petrezselymes burgonyával)",
+          "kcal": 820,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg"
+          ],
+          "ingredients": "csirkemell, búzaliszt, tojás, zsemlemorzsa, burgonya, petrezselyem"
+        }
+      ]
+    },
+    {
+      "id": "3:1:VL1",
+      "day": 3,
+      "type": 1,
+      "code": "VL1",
+      "name": "Lencsés zöldségleves",
+      "price": 950,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "soup",
+      "section": "Vega & vegán",
+      "groupId": "Vega & vegán",
+      "category": "Vega & vegán",
+      "menuName": "Vega & vegán",
+      "pickerEligible": true,
+      "course": "soup",
+      "kcal": 260,
+      "components": [
+        {
+          "name": "Lencsés zöldségleves",
+          "kcal": 260,
+          "kind": "soup",
+          "photo": null,
+          "allergens": [
+            "celery"
+          ],
+          "ingredients": "vöröslencse, sárgarépa, zeller, paradicsom, kömény"
+        }
+      ]
+    },
+    {
+      "id": "3:1:VF1",
+      "day": 3,
+      "type": 1,
+      "code": "VF1",
+      "name": "Mogyorós pirított rizstészta",
+      "price": 2190,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": true,
+      "kind": "main",
+      "section": "Vega & vegán",
+      "groupId": "Vega & vegán",
+      "category": "Vega & vegán",
+      "menuName": "Vega & vegán",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 680,
+      "components": [
+        {
+          "name": "Mogyorós pirított rizstészta",
+          "kcal": 680,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "peanut",
+            "soy"
+          ],
+          "ingredients": "rizstészta, földimogyoró, brokkoli, sárgarépa, szójaszósz (szójabab, búza), chili"
+        }
+      ]
+    },
+    {
+      "id": "3:1:VF2",
+      "day": 3,
+      "type": 1,
+      "code": "VF2",
+      "name": "Babos chili (jázminrizzsel)",
+      "price": 2090,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": true,
+      "kind": "main",
+      "section": "Vega & vegán",
+      "groupId": "Vega & vegán",
+      "category": "Vega & vegán",
+      "menuName": "Vega & vegán",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 610,
+      "components": [
+        {
+          "name": "Babos chili (jázminrizzsel)",
+          "kcal": 610,
+          "kind": "main",
+          "photo": null,
+          "allergens": [],
+          "ingredients": "vörösbab, kukorica, paprika, paradicsom, chili, jázminrizs"
         }
       ]
     },
@@ -2314,40 +3296,14 @@
       "day": 3,
       "type": 1,
       "code": "H1",
-      "name": "Franciasaláta",
-      "price": 1190,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Hidegkonyha",
-      "groupId": "Hidegkonyha",
-      "category": "Hidegkonyha",
-      "menuName": "Hidegkonyha",
-      "pickerEligible": true,
-      "course": "cold",
-      "kcal": 360,
-      "components": [
-        {
-          "name": "Franciasaláta",
-          "kcal": 360,
-          "kind": "side",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "3:1:H2",
-      "day": 3,
-      "type": 1,
-      "code": "H2",
       "name": "Görög saláta",
       "price": 1290,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "main",
       "section": "Hidegkonyha",
       "groupId": "Hidegkonyha",
@@ -2361,7 +3317,48 @@
           "name": "Görög saláta",
           "kcal": 260,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk"
+          ],
+          "ingredients": "paradicsom, uborka, lilahagyma, feta sajt, olívabogyó"
+        }
+      ]
+    },
+    {
+      "id": "3:1:H2",
+      "day": 3,
+      "type": 1,
+      "code": "H2",
+      "name": "Tonhalas tésztasaláta",
+      "price": 1390,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Hidegkonyha",
+      "groupId": "Hidegkonyha",
+      "category": "Hidegkonyha",
+      "menuName": "Hidegkonyha",
+      "pickerEligible": true,
+      "course": "cold",
+      "kcal": 420,
+      "components": [
+        {
+          "name": "Tonhalas tésztasaláta",
+          "kcal": 420,
+          "kind": "side",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "fish",
+            "mustard"
+          ],
+          "ingredients": "tészta (durumbúzadara), tonhal, kukorica, majonéz (tojás, mustár)"
         }
       ]
     },
@@ -2370,40 +3367,14 @@
       "day": 3,
       "type": 1,
       "code": "S1",
-      "name": "Káposztasaláta",
-      "price": 390,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Savanyúság",
-      "groupId": "Savanyúság",
-      "category": "Savanyúság",
-      "menuName": "Savanyúság",
-      "pickerEligible": true,
-      "course": "pickle",
-      "kcal": 70,
-      "components": [
-        {
-          "name": "Káposztasaláta",
-          "kcal": 70,
-          "kind": "side",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "3:1:S2",
-      "day": 3,
-      "type": 1,
-      "code": "S2",
       "name": "Ecetes paprika",
       "price": 390,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Savanyúság",
       "groupId": "Savanyúság",
@@ -2417,7 +3388,45 @@
           "name": "Ecetes paprika",
           "kcal": 35,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "sulfites"
+          ],
+          "ingredients": "paprika, ecet, cukor, só, kén-dioxid"
+        }
+      ]
+    },
+    {
+      "id": "3:1:S2",
+      "day": 3,
+      "type": 1,
+      "code": "S2",
+      "name": "Káposztasaláta",
+      "price": 390,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "main",
+      "section": "Savanyúság",
+      "groupId": "Savanyúság",
+      "category": "Savanyúság",
+      "menuName": "Savanyúság",
+      "pickerEligible": true,
+      "course": "pickle",
+      "kcal": 70,
+      "components": [
+        {
+          "name": "Káposztasaláta",
+          "kcal": 70,
+          "kind": "side",
+          "photo": null,
+          "allergens": [
+            "sulfites"
+          ],
+          "ingredients": "fejes káposzta, ecet, cukor, só, kén-dioxid"
         }
       ]
     },
@@ -2432,6 +3441,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "main",
       "section": "Pékáru",
       "groupId": "Pékáru",
@@ -2445,7 +3456,12 @@
           "name": "Burgonyás cipó",
           "kcal": 310,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "búzaliszt, burgonyapehely, tej, élesztő"
         }
       ]
     },
@@ -2460,6 +3476,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Pékáru",
       "groupId": "Pékáru",
@@ -2473,7 +3491,11 @@
           "name": "Teljes kiőrlésű cipó",
           "kcal": 270,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten"
+          ],
+          "ingredients": "teljes kiőrlésű búzaliszt, rozsliszt, élesztő, só"
         }
       ]
     },
@@ -2488,6 +3510,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "dessert",
       "section": "Desszertek",
       "groupId": "Desszertek",
@@ -2501,7 +3525,12 @@
           "name": "Almás pite",
           "kcal": 380,
           "kind": "dessert",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "alma, búzaliszt, vaj, cukor, fahéj"
         }
       ]
     },
@@ -2510,12 +3539,14 @@
       "day": 3,
       "type": 1,
       "code": "D2",
-      "name": "Somlói galuska",
-      "price": 990,
+      "name": "Palacsinta (barackízzel)",
+      "price": 790,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "dessert",
       "section": "Desszertek",
       "groupId": "Desszertek",
@@ -2523,13 +3554,19 @@
       "menuName": "Desszertek",
       "pickerEligible": true,
       "course": "dessert",
-      "kcal": 470,
+      "kcal": 360,
       "components": [
         {
-          "name": "Somlói galuska",
-          "kcal": 470,
+          "name": "Palacsinta (barackízzel)",
+          "kcal": 360,
           "kind": "dessert",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "búzaliszt, tej, tojás, sárgabarack-íz"
         }
       ]
     },
@@ -2538,12 +3575,14 @@
       "day": 3,
       "type": 1,
       "code": "D3",
-      "name": "Gyümölcsjoghurt",
-      "price": 590,
+      "name": "Csokoládés muffin",
+      "price": 690,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "dessert",
       "section": "Desszertek",
       "groupId": "Desszertek",
@@ -2551,13 +3590,19 @@
       "menuName": "Desszertek",
       "pickerEligible": true,
       "course": "dessert",
-      "kcal": 180,
+      "kcal": 420,
       "components": [
         {
-          "name": "Gyümölcsjoghurt",
-          "kcal": 180,
+          "name": "Csokoládés muffin",
+          "kcal": 420,
           "kind": "dessert",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "búzaliszt, kakaó, cukor, tojás, vaj, tej"
         }
       ]
     },
@@ -2566,40 +3611,14 @@
       "day": 3,
       "type": 1,
       "code": "I1",
-      "name": "Szénsavmentes ásványvíz",
-      "price": 290,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Italok",
-      "groupId": "Italok",
-      "category": "Italok",
-      "menuName": "Italok",
-      "pickerEligible": false,
-      "course": "drink",
-      "kcal": 0,
-      "components": [
-        {
-          "name": "Szénsavmentes ásványvíz",
-          "kcal": 0,
-          "kind": "side",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "3:1:I2",
-      "day": 3,
-      "type": 1,
-      "code": "I2",
       "name": "Narancslé",
       "price": 590,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Italok",
       "groupId": "Italok",
@@ -2613,7 +3632,41 @@
           "name": "Narancslé",
           "kcal": 140,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "narancslé"
+        }
+      ]
+    },
+    {
+      "id": "3:1:I2",
+      "day": 3,
+      "type": 1,
+      "code": "I2",
+      "name": "Házi limonádé",
+      "price": 690,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "main",
+      "section": "Italok",
+      "groupId": "Italok",
+      "category": "Italok",
+      "menuName": "Italok",
+      "pickerEligible": false,
+      "course": "drink",
+      "kcal": 120,
+      "components": [
+        {
+          "name": "Házi limonádé",
+          "kcal": 120,
+          "kind": "side",
+          "photo": null,
+          "allergens": [],
+          "ingredients": "víz, citrom, cukor, menta"
         }
       ]
     },
@@ -2622,12 +3675,14 @@
       "day": 4,
       "type": 1,
       "code": "A",
-      "name": "Sütőtökkrémleves (pirított tökmaggal) / Bolognai spagetti",
-      "price": 2690,
+      "name": "Paradicsomleves (betűtésztával) / Csirkés-brokkolis penne",
+      "price": 2590,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -2635,19 +3690,29 @@
       "menuName": "A menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 1040,
+      "kcal": 840,
       "components": [
         {
-          "name": "Sütőtökkrémleves (pirított tökmaggal)",
-          "kcal": 260,
+          "name": "Paradicsomleves (betűtésztával)",
+          "kcal": 190,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "celery"
+          ],
+          "ingredients": "paradicsom, zeller, cukor, betűtészta (durumbúzadara)"
         },
         {
-          "name": "Bolognai spagetti",
-          "kcal": 780,
+          "name": "Csirkés-brokkolis penne",
+          "kcal": 650,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "penne (durumbúzadara), csirkemell, brokkoli, tejszín, fokhagyma"
         }
       ]
     },
@@ -2656,12 +3721,14 @@
       "day": 4,
       "type": 1,
       "code": "B",
-      "name": "Hideg meggyleves / Sertéspörkölt (tarhonyával)",
-      "price": 3090,
+      "name": "Zöldborsóleves (galuskával) / Rántott csirkemell (petrezselymes burgonyával)",
+      "price": 2890,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -2669,19 +3736,30 @@
       "menuName": "B menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 1110,
+      "kcal": 1030,
       "components": [
         {
-          "name": "Hideg meggyleves",
-          "kcal": 270,
+          "name": "Zöldborsóleves (galuskával)",
+          "kcal": 210,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "zöldborsó, sárgarépa, petrezselyem, galuska (búzaliszt, tojás), vaj"
         },
         {
-          "name": "Sertéspörkölt (tarhonyával)",
-          "kcal": 840,
+          "name": "Rántott csirkemell (petrezselymes burgonyával)",
+          "kcal": 820,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg"
+          ],
+          "ingredients": "csirkemell, búzaliszt, tojás, zsemlemorzsa, burgonya, petrezselyem"
         }
       ]
     },
@@ -2690,12 +3768,14 @@
       "day": 4,
       "type": 1,
       "code": "C",
-      "name": "Lencseleves (virslivel) / Rakott krumpli",
-      "price": 2890,
+      "name": "Karfiolleves (tejföllel) / Bolognai spagetti",
+      "price": 2590,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -2703,19 +3783,31 @@
       "menuName": "C menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 1110,
+      "kcal": 1010,
       "components": [
         {
-          "name": "Lencseleves (virslivel)",
-          "kcal": 390,
+          "name": "Karfiolleves (tejföllel)",
+          "kcal": 230,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk",
+            "celery"
+          ],
+          "ingredients": "karfiol, sárgarépa, zeller, tejföl, búzaliszt"
         },
         {
-          "name": "Rakott krumpli",
-          "kcal": 720,
+          "name": "Bolognai spagetti",
+          "kcal": 780,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk",
+            "celery"
+          ],
+          "ingredients": "spagetti (durumbúzadara), darált marhahús, paradicsom, sárgarépa, zeller, parmezán"
         }
       ]
     },
@@ -2724,12 +3816,14 @@
       "day": 4,
       "type": 1,
       "code": "D",
-      "name": "Krumplileves (kolbásszal) / Grillezett lazac (párolt zöldségekkel)",
-      "price": 3690,
+      "name": "Karfiolleves (tejföllel) / Töltött paprika (főtt burgonyával)",
+      "price": 2690,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -2737,19 +3831,27 @@
       "menuName": "D menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 890,
+      "kcal": 920,
       "components": [
         {
-          "name": "Krumplileves (kolbásszal)",
-          "kcal": 350,
+          "name": "Karfiolleves (tejföllel)",
+          "kcal": 230,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk",
+            "celery"
+          ],
+          "ingredients": "karfiol, sárgarépa, zeller, tejföl, búzaliszt"
         },
         {
-          "name": "Grillezett lazac (párolt zöldségekkel)",
-          "kcal": 540,
+          "name": "Töltött paprika (főtt burgonyával)",
+          "kcal": 690,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "paprika, darált sertéshús, rizs, paradicsom, burgonya"
         }
       ]
     },
@@ -2758,12 +3860,14 @@
       "day": 4,
       "type": 1,
       "code": "Z10",
-      "name": "Rántotta (pirítóssal) / Paradicsomleves (betűtésztával) / Zöldséges rizottó (parmezánnal) / Bolognai spagetti",
-      "price": 5290,
+      "name": "Zabkása (áfonyával) / Zöldséges raguleves (csirkehússal) / Sertéspörkölt (tarhonyával) / Tökfőzelék (fasírttal)",
+      "price": 5790,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -2771,31 +3875,51 @@
       "menuName": "Egész napos menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 1990,
+      "kcal": 2110,
       "components": [
         {
-          "name": "Rántotta (pirítóssal)",
-          "kcal": 410,
+          "name": "Zabkása (áfonyával)",
+          "kcal": 340,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "zabpehely, tej, áfonya, méz"
         },
         {
-          "name": "Paradicsomleves (betűtésztával)",
-          "kcal": 190,
+          "name": "Zöldséges raguleves (csirkehússal)",
+          "kcal": 290,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "celery"
+          ],
+          "ingredients": "csirkemell, sárgarépa, zöldborsó, zeller, tárkony"
         },
         {
-          "name": "Zöldséges rizottó (parmezánnal)",
-          "kcal": 610,
+          "name": "Sertéspörkölt (tarhonyával)",
+          "kcal": 840,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg"
+          ],
+          "ingredients": "sertéslapocka, vöröshagyma, pirospaprika, tarhonya (búzaliszt, tojás)"
         },
         {
-          "name": "Bolognai spagetti",
-          "kcal": 780,
+          "name": "Tökfőzelék (fasírttal)",
+          "kcal": 640,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tök, kapor, tejföl, búzaliszt, fasírt (darált sertéshús, tojás, zsemle)"
         }
       ]
     },
@@ -2804,12 +3928,14 @@
       "day": 4,
       "type": 1,
       "code": "Z11",
-      "name": "Rántotta (pirítóssal) / Brokkolikrémleves (sajtos pirítóssal) / Mákos tészta / Zöldséges rizottó (parmezánnal)",
-      "price": 4990,
+      "name": "Rántotta (pirítóssal) / Lencseleves (virslivel) / Mákos tészta / Sült csirkecomb (hagymás törtburgonyával)",
+      "price": 5490,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -2817,31 +3943,51 @@
       "menuName": "Könnyű egész napos menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 2020,
+      "kcal": 2300,
       "components": [
         {
           "name": "Rántotta (pirítóssal)",
           "kcal": 410,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tojás, vaj, kenyér (búzaliszt), snidling"
         },
         {
-          "name": "Brokkolikrémleves (sajtos pirítóssal)",
-          "kcal": 310,
+          "name": "Lencseleves (virslivel)",
+          "kcal": 390,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "mustard"
+          ],
+          "ingredients": "lencse, sertésvirsli, vöröshagyma, mustár, babérlevél"
         },
         {
           "name": "Mákos tészta",
           "kcal": 690,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tészta (búzaliszt, tojás), mák, porcukor, vaj"
         },
         {
-          "name": "Zöldséges rizottó (parmezánnal)",
-          "kcal": 610,
+          "name": "Sült csirkecomb (hagymás törtburgonyával)",
+          "kcal": 810,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk"
+          ],
+          "ingredients": "csirkecomb, burgonya, vöröshagyma, vaj, tej"
         }
       ]
     },
@@ -2856,6 +4002,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "main",
       "section": "Reggeli",
       "groupId": "Reggeli",
@@ -2869,7 +4017,13 @@
           "name": "Rántotta (pirítóssal)",
           "kcal": 410,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tojás, vaj, kenyér (búzaliszt), snidling"
         }
       ]
     },
@@ -2878,12 +4032,14 @@
       "day": 4,
       "type": 1,
       "code": "R2",
-      "name": "Zabkása (áfonyával)",
-      "price": 990,
+      "name": "Sonkás-sajtos melegszendvics",
+      "price": 1190,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Reggeli",
       "groupId": "Reggeli",
@@ -2891,13 +4047,18 @@
       "menuName": "Reggeli",
       "pickerEligible": true,
       "course": "breakfast",
-      "kcal": 340,
+      "kcal": 450,
       "components": [
         {
-          "name": "Zabkása (áfonyával)",
-          "kcal": 340,
+          "name": "Sonkás-sajtos melegszendvics",
+          "kcal": 450,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "kenyér (búzaliszt), sertéssonka, trappista sajt, vaj"
         }
       ]
     },
@@ -2906,12 +4067,49 @@
       "day": 4,
       "type": 1,
       "code": "L1",
+      "name": "Gombakrémleves",
+      "price": 990,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
+      "kind": "soup",
+      "section": "Levesek",
+      "groupId": "Levesek",
+      "category": "Levesek",
+      "menuName": "Levesek",
+      "pickerEligible": true,
+      "course": "soup",
+      "kcal": 280,
+      "components": [
+        {
+          "name": "Gombakrémleves",
+          "kcal": 280,
+          "kind": "soup",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "csiperkegomba, tejszín, vaj, búzaliszt, petrezselyem"
+        }
+      ]
+    },
+    {
+      "id": "4:1:L2",
+      "day": 4,
+      "type": 1,
+      "code": "L2",
       "name": "Hideg meggyleves",
       "price": 1090,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -2925,35 +4123,11 @@
           "name": "Hideg meggyleves",
           "kcal": 270,
           "kind": "soup",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "4:1:L2",
-      "day": 4,
-      "type": 1,
-      "code": "L2",
-      "name": "Csontleves (cérnametélttel, zöldségekkel)",
-      "price": 950,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "soup",
-      "section": "Levesek",
-      "groupId": "Levesek",
-      "category": "Levesek",
-      "menuName": "Levesek",
-      "pickerEligible": true,
-      "course": "soup",
-      "kcal": 240,
-      "components": [
-        {
-          "name": "Csontleves (cérnametélttel, zöldségekkel)",
-          "kcal": 240,
-          "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk"
+          ],
+          "ingredients": "meggy, tejszín, cukor, fahéj, szegfűszeg"
         }
       ]
     },
@@ -2962,12 +4136,49 @@
       "day": 4,
       "type": 1,
       "code": "L3",
+      "name": "Paradicsomleves (betűtésztával)",
+      "price": 850,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "soup",
+      "section": "Levesek",
+      "groupId": "Levesek",
+      "category": "Levesek",
+      "menuName": "Levesek",
+      "pickerEligible": true,
+      "course": "soup",
+      "kcal": 190,
+      "components": [
+        {
+          "name": "Paradicsomleves (betűtésztával)",
+          "kcal": 190,
+          "kind": "soup",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "celery"
+          ],
+          "ingredients": "paradicsom, zeller, cukor, betűtészta (durumbúzadara)"
+        }
+      ]
+    },
+    {
+      "id": "4:1:L4",
+      "day": 4,
+      "type": 1,
+      "code": "L4",
       "name": "Krumplileves (kolbásszal)",
       "price": 1090,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -2981,35 +4192,12 @@
           "name": "Krumplileves (kolbásszal)",
           "kcal": 350,
           "kind": "soup",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "4:1:L4",
-      "day": 4,
-      "type": 1,
-      "code": "L4",
-      "name": "Zöldséges raguleves (csirkehússal)",
-      "price": 1150,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "soup",
-      "section": "Levesek",
-      "groupId": "Levesek",
-      "category": "Levesek",
-      "menuName": "Levesek",
-      "pickerEligible": true,
-      "course": "soup",
-      "kcal": 290,
-      "components": [
-        {
-          "name": "Zöldséges raguleves (csirkehússal)",
-          "kcal": 290,
-          "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk",
+            "celery"
+          ],
+          "ingredients": "burgonya, füstölt kolbász, pirospaprika, tejföl, zeller"
         }
       ]
     },
@@ -3018,96 +4206,14 @@
       "day": 4,
       "type": 1,
       "code": "F1",
-      "name": "Zöldséges rizottó (parmezánnal)",
-      "price": 2090,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 610,
-      "components": [
-        {
-          "name": "Zöldséges rizottó (parmezánnal)",
-          "kcal": 610,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "4:1:F2",
-      "day": 4,
-      "type": 1,
-      "code": "F2",
-      "name": "Sertéspörkölt (tarhonyával)",
-      "price": 2590,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 840,
-      "components": [
-        {
-          "name": "Sertéspörkölt (tarhonyával)",
-          "kcal": 840,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "4:1:F3",
-      "day": 4,
-      "type": 1,
-      "code": "F3",
-      "name": "Bolognai spagetti",
-      "price": 2190,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 780,
-      "components": [
-        {
-          "name": "Bolognai spagetti",
-          "kcal": 780,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "4:1:F4",
-      "day": 4,
-      "type": 1,
-      "code": "F4",
       "name": "Tökfőzelék (fasírttal)",
       "price": 2090,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Főételek",
       "groupId": "Főételek",
@@ -3121,7 +4227,119 @@
           "name": "Tökfőzelék (fasírttal)",
           "kcal": 640,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tök, kapor, tejföl, búzaliszt, fasírt (darált sertéshús, tojás, zsemle)"
+        }
+      ]
+    },
+    {
+      "id": "4:1:F2",
+      "day": 4,
+      "type": 1,
+      "code": "F2",
+      "name": "Grillezett lazac (párolt zöldségekkel)",
+      "price": 3290,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 540,
+      "components": [
+        {
+          "name": "Grillezett lazac (párolt zöldségekkel)",
+          "kcal": 540,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "fish",
+            "milk"
+          ],
+          "ingredients": "lazac, brokkoli, sárgarépa, citrom, vaj"
+        }
+      ]
+    },
+    {
+      "id": "4:1:F3",
+      "day": 4,
+      "type": 1,
+      "code": "F3",
+      "name": "Paprikás csirke (nokedlivel)",
+      "price": 2390,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 760,
+      "components": [
+        {
+          "name": "Paprikás csirke (nokedlivel)",
+          "kcal": 760,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "csirkecomb, pirospaprika, tejföl, nokedli (búzaliszt, tojás)"
+        }
+      ]
+    },
+    {
+      "id": "4:1:F4",
+      "day": 4,
+      "type": 1,
+      "code": "F4",
+      "name": "Sertéspörkölt (tarhonyával)",
+      "price": 2590,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 840,
+      "components": [
+        {
+          "name": "Sertéspörkölt (tarhonyával)",
+          "kcal": 840,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg"
+          ],
+          "ingredients": "sertéslapocka, vöröshagyma, pirospaprika, tarhonya (búzaliszt, tojás)"
         }
       ]
     },
@@ -3130,12 +4348,14 @@
       "day": 4,
       "type": 1,
       "code": "F5",
-      "name": "Rántott sajt (rizzsel, tartármártással)",
-      "price": 2390,
+      "name": "Lecsó (kolbásszal, kenyérrel)",
+      "price": 1890,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Főételek",
       "groupId": "Főételek",
@@ -3143,13 +4363,17 @@
       "menuName": "Főételek",
       "pickerEligible": true,
       "course": "main",
-      "kcal": 880,
+      "kcal": 590,
       "components": [
         {
-          "name": "Rántott sajt (rizzsel, tartármártással)",
-          "kcal": 880,
+          "name": "Lecsó (kolbásszal, kenyérrel)",
+          "kcal": 590,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten"
+          ],
+          "ingredients": "paprika, paradicsom, vöröshagyma, füstölt kolbász, kenyér (búzaliszt)"
         }
       ]
     },
@@ -3158,12 +4382,14 @@
       "day": 4,
       "type": 1,
       "code": "F6",
-      "name": "Vegán csicseriborsó-curry (barna rizzsel)",
-      "price": 2190,
+      "name": "Töltött paprika (főtt burgonyával)",
+      "price": 2290,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Főételek",
       "groupId": "Főételek",
@@ -3171,13 +4397,116 @@
       "menuName": "Főételek",
       "pickerEligible": true,
       "course": "main",
+      "kcal": 690,
+      "components": [
+        {
+          "name": "Töltött paprika (főtt burgonyával)",
+          "kcal": 690,
+          "kind": "main",
+          "photo": null,
+          "allergens": [],
+          "ingredients": "paprika, darált sertéshús, rizs, paradicsom, burgonya"
+        }
+      ]
+    },
+    {
+      "id": "4:1:VL1",
+      "day": 4,
+      "type": 1,
+      "code": "VL1",
+      "name": "Zöldséges gombaleves",
+      "price": 850,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "soup",
+      "section": "Vega & vegán",
+      "groupId": "Vega & vegán",
+      "category": "Vega & vegán",
+      "menuName": "Vega & vegán",
+      "pickerEligible": true,
+      "course": "soup",
+      "kcal": 180,
+      "components": [
+        {
+          "name": "Zöldséges gombaleves",
+          "kcal": 180,
+          "kind": "soup",
+          "photo": null,
+          "allergens": [
+            "celery"
+          ],
+          "ingredients": "csiperkegomba, sárgarépa, petrezselyemgyökér, zeller, kapor"
+        }
+      ]
+    },
+    {
+      "id": "4:1:VF1",
+      "day": 4,
+      "type": 1,
+      "code": "VF1",
+      "name": "Csicseriborsó-curry (barna rizzsel)",
+      "price": 2190,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "main",
+      "section": "Vega & vegán",
+      "groupId": "Vega & vegán",
+      "category": "Vega & vegán",
+      "menuName": "Vega & vegán",
+      "pickerEligible": true,
+      "course": "main",
       "kcal": 560,
       "components": [
         {
-          "name": "Vegán csicseriborsó-curry (barna rizzsel)",
+          "name": "Csicseriborsó-curry (barna rizzsel)",
           "kcal": 560,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "csicseriborsó, kókusztej, paradicsom, spenót, curry, barna rizs"
+        }
+      ]
+    },
+    {
+      "id": "4:1:VF2",
+      "day": 4,
+      "type": 1,
+      "code": "VF2",
+      "name": "Sült zöldségek (humusszal, pitával)",
+      "price": 2290,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "main",
+      "section": "Vega & vegán",
+      "groupId": "Vega & vegán",
+      "category": "Vega & vegán",
+      "menuName": "Vega & vegán",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 640,
+      "components": [
+        {
+          "name": "Sült zöldségek (humusszal, pitával)",
+          "kcal": 640,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "sesame"
+          ],
+          "ingredients": "padlizsán, cukkini, paprika, csicseriborsó, tahini (szezámmag), pita (búzaliszt)"
         }
       ]
     },
@@ -3186,12 +4515,14 @@
       "day": 4,
       "type": 1,
       "code": "H1",
-      "name": "Görög saláta",
-      "price": 1290,
+      "name": "Tonhalas tésztasaláta",
+      "price": 1390,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Hidegkonyha",
       "groupId": "Hidegkonyha",
@@ -3199,13 +4530,20 @@
       "menuName": "Hidegkonyha",
       "pickerEligible": true,
       "course": "cold",
-      "kcal": 260,
+      "kcal": 420,
       "components": [
         {
-          "name": "Görög saláta",
-          "kcal": 260,
+          "name": "Tonhalas tésztasaláta",
+          "kcal": 420,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "fish",
+            "mustard"
+          ],
+          "ingredients": "tészta (durumbúzadara), tonhal, kukorica, majonéz (tojás, mustár)"
         }
       ]
     },
@@ -3220,6 +4558,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "main",
       "section": "Hidegkonyha",
       "groupId": "Hidegkonyha",
@@ -3233,7 +4573,12 @@
           "name": "Franciasaláta",
           "kcal": 360,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "egg",
+            "mustard"
+          ],
+          "ingredients": "burgonya, sárgarépa, zöldborsó, csemegeuborka, majonéz (tojás, mustár)"
         }
       ]
     },
@@ -3242,40 +4587,14 @@
       "day": 4,
       "type": 1,
       "code": "S1",
-      "name": "Káposztasaláta",
-      "price": 390,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Savanyúság",
-      "groupId": "Savanyúság",
-      "category": "Savanyúság",
-      "menuName": "Savanyúság",
-      "pickerEligible": true,
-      "course": "pickle",
-      "kcal": 70,
-      "components": [
-        {
-          "name": "Káposztasaláta",
-          "kcal": 70,
-          "kind": "side",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "4:1:S2",
-      "day": 4,
-      "type": 1,
-      "code": "S2",
       "name": "Csemegeuborka",
       "price": 390,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Savanyúság",
       "groupId": "Savanyúság",
@@ -3289,7 +4608,46 @@
           "name": "Csemegeuborka",
           "kcal": 40,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "mustard",
+            "sulfites"
+          ],
+          "ingredients": "uborka, ecet, cukor, kapor, mustármag, kén-dioxid"
+        }
+      ]
+    },
+    {
+      "id": "4:1:S2",
+      "day": 4,
+      "type": 1,
+      "code": "S2",
+      "name": "Káposztasaláta",
+      "price": 390,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "main",
+      "section": "Savanyúság",
+      "groupId": "Savanyúság",
+      "category": "Savanyúság",
+      "menuName": "Savanyúság",
+      "pickerEligible": true,
+      "course": "pickle",
+      "kcal": 70,
+      "components": [
+        {
+          "name": "Káposztasaláta",
+          "kcal": 70,
+          "kind": "side",
+          "photo": null,
+          "allergens": [
+            "sulfites"
+          ],
+          "ingredients": "fejes káposzta, ecet, cukor, só, kén-dioxid"
         }
       ]
     },
@@ -3298,40 +4656,14 @@
       "day": 4,
       "type": 1,
       "code": "C1",
-      "name": "Burgonyás cipó",
-      "price": 490,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Pékáru",
-      "groupId": "Pékáru",
-      "category": "Pékáru",
-      "menuName": "Pékáru",
-      "pickerEligible": true,
-      "course": "bread",
-      "kcal": 310,
-      "components": [
-        {
-          "name": "Burgonyás cipó",
-          "kcal": 310,
-          "kind": "side",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "4:1:C2",
-      "day": 4,
-      "type": 1,
-      "code": "C2",
       "name": "Teljes kiőrlésű cipó",
       "price": 490,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Pékáru",
       "groupId": "Pékáru",
@@ -3345,7 +4677,46 @@
           "name": "Teljes kiőrlésű cipó",
           "kcal": 270,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten"
+          ],
+          "ingredients": "teljes kiőrlésű búzaliszt, rozsliszt, élesztő, só"
+        }
+      ]
+    },
+    {
+      "id": "4:1:C2",
+      "day": 4,
+      "type": 1,
+      "code": "C2",
+      "name": "Burgonyás cipó",
+      "price": 490,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
+      "kind": "main",
+      "section": "Pékáru",
+      "groupId": "Pékáru",
+      "category": "Pékáru",
+      "menuName": "Pékáru",
+      "pickerEligible": true,
+      "course": "bread",
+      "kcal": 310,
+      "components": [
+        {
+          "name": "Burgonyás cipó",
+          "kcal": 310,
+          "kind": "side",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "búzaliszt, burgonyapehely, tej, élesztő"
         }
       ]
     },
@@ -3354,12 +4725,50 @@
       "day": 4,
       "type": 1,
       "code": "D1",
+      "name": "Csokoládés muffin",
+      "price": 690,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
+      "kind": "dessert",
+      "section": "Desszertek",
+      "groupId": "Desszertek",
+      "category": "Desszertek",
+      "menuName": "Desszertek",
+      "pickerEligible": true,
+      "course": "dessert",
+      "kcal": 420,
+      "components": [
+        {
+          "name": "Csokoládés muffin",
+          "kcal": 420,
+          "kind": "dessert",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "búzaliszt, kakaó, cukor, tojás, vaj, tej"
+        }
+      ]
+    },
+    {
+      "id": "4:1:D2",
+      "day": 4,
+      "type": 1,
+      "code": "D2",
       "name": "Túrós rétes",
       "price": 790,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "dessert",
       "section": "Desszertek",
       "groupId": "Desszertek",
@@ -3373,35 +4782,13 @@
           "name": "Túrós rétes",
           "kcal": 330,
           "kind": "dessert",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "4:1:D2",
-      "day": 4,
-      "type": 1,
-      "code": "D2",
-      "name": "Almás pite",
-      "price": 790,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "dessert",
-      "section": "Desszertek",
-      "groupId": "Desszertek",
-      "category": "Desszertek",
-      "menuName": "Desszertek",
-      "pickerEligible": true,
-      "course": "dessert",
-      "kcal": 380,
-      "components": [
-        {
-          "name": "Almás pite",
-          "kcal": 380,
-          "kind": "dessert",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "túró, búzaliszt, tojás, cukor, mazsola"
         }
       ]
     },
@@ -3410,12 +4797,14 @@
       "day": 4,
       "type": 1,
       "code": "D3",
-      "name": "Gyümölcsjoghurt",
-      "price": 590,
+      "name": "Palacsinta (barackízzel)",
+      "price": 790,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "dessert",
       "section": "Desszertek",
       "groupId": "Desszertek",
@@ -3423,13 +4812,19 @@
       "menuName": "Desszertek",
       "pickerEligible": true,
       "course": "dessert",
-      "kcal": 180,
+      "kcal": 360,
       "components": [
         {
-          "name": "Gyümölcsjoghurt",
-          "kcal": 180,
+          "name": "Palacsinta (barackízzel)",
+          "kcal": 360,
           "kind": "dessert",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "búzaliszt, tej, tojás, sárgabarack-íz"
         }
       ]
     },
@@ -3438,40 +4833,14 @@
       "day": 4,
       "type": 1,
       "code": "I1",
-      "name": "Házi limonádé",
-      "price": 690,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Italok",
-      "groupId": "Italok",
-      "category": "Italok",
-      "menuName": "Italok",
-      "pickerEligible": false,
-      "course": "drink",
-      "kcal": 120,
-      "components": [
-        {
-          "name": "Házi limonádé",
-          "kcal": 120,
-          "kind": "side",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "4:1:I2",
-      "day": 4,
-      "type": 1,
-      "code": "I2",
       "name": "Narancslé",
       "price": 590,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Italok",
       "groupId": "Italok",
@@ -3485,7 +4854,41 @@
           "name": "Narancslé",
           "kcal": 140,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "narancslé"
+        }
+      ]
+    },
+    {
+      "id": "4:1:I2",
+      "day": 4,
+      "type": 1,
+      "code": "I2",
+      "name": "Házi limonádé",
+      "price": 690,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "main",
+      "section": "Italok",
+      "groupId": "Italok",
+      "category": "Italok",
+      "menuName": "Italok",
+      "pickerEligible": false,
+      "course": "drink",
+      "kcal": 120,
+      "components": [
+        {
+          "name": "Házi limonádé",
+          "kcal": 120,
+          "kind": "side",
+          "photo": null,
+          "allergens": [],
+          "ingredients": "víz, citrom, cukor, menta"
         }
       ]
     },
@@ -3494,12 +4897,14 @@
       "day": 5,
       "type": 1,
       "code": "A",
-      "name": "Lencseleves (virslivel) / Töltött paprika (főtt burgonyával)",
-      "price": 2990,
+      "name": "Lencseleves (virslivel) / Sült csirkecomb (hagymás törtburgonyával)",
+      "price": 3090,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -3507,19 +4912,27 @@
       "menuName": "A menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 1080,
+      "kcal": 1200,
       "components": [
         {
           "name": "Lencseleves (virslivel)",
           "kcal": 390,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "mustard"
+          ],
+          "ingredients": "lencse, sertésvirsli, vöröshagyma, mustár, babérlevél"
         },
         {
-          "name": "Töltött paprika (főtt burgonyával)",
-          "kcal": 690,
+          "name": "Sült csirkecomb (hagymás törtburgonyával)",
+          "kcal": 810,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk"
+          ],
+          "ingredients": "csirkecomb, burgonya, vöröshagyma, vaj, tej"
         }
       ]
     },
@@ -3528,12 +4941,14 @@
       "day": 5,
       "type": 1,
       "code": "B",
-      "name": "Brokkolikrémleves (sajtos pirítóssal) / Sült csirkecomb (hagymás törtburgonyával)",
-      "price": 2990,
+      "name": "Hideg meggyleves / Lecsó (kolbásszal, kenyérrel)",
+      "price": 2490,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -3541,19 +4956,27 @@
       "menuName": "B menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 1120,
+      "kcal": 860,
       "components": [
         {
-          "name": "Brokkolikrémleves (sajtos pirítóssal)",
-          "kcal": 310,
+          "name": "Hideg meggyleves",
+          "kcal": 270,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk"
+          ],
+          "ingredients": "meggy, tejszín, cukor, fahéj, szegfűszeg"
         },
         {
-          "name": "Sült csirkecomb (hagymás törtburgonyával)",
-          "kcal": 810,
+          "name": "Lecsó (kolbásszal, kenyérrel)",
+          "kcal": 590,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten"
+          ],
+          "ingredients": "paprika, paradicsom, vöröshagyma, füstölt kolbász, kenyér (búzaliszt)"
         }
       ]
     },
@@ -3562,12 +4985,14 @@
       "day": 5,
       "type": 1,
       "code": "C",
-      "name": "Gombakrémleves / Vegán csicseriborsó-curry (barna rizzsel)",
-      "price": 2690,
+      "name": "Paradicsomleves (betűtésztával) / Lecsó (kolbásszal, kenyérrel)",
+      "price": 2290,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -3575,19 +5000,28 @@
       "menuName": "C menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 840,
+      "kcal": 780,
       "components": [
         {
-          "name": "Gombakrémleves",
-          "kcal": 280,
+          "name": "Paradicsomleves (betűtésztával)",
+          "kcal": 190,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "celery"
+          ],
+          "ingredients": "paradicsom, zeller, cukor, betűtészta (durumbúzadara)"
         },
         {
-          "name": "Vegán csicseriborsó-curry (barna rizzsel)",
-          "kcal": 560,
+          "name": "Lecsó (kolbásszal, kenyérrel)",
+          "kcal": 590,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten"
+          ],
+          "ingredients": "paprika, paradicsom, vöröshagyma, füstölt kolbász, kenyér (búzaliszt)"
         }
       ]
     },
@@ -3596,12 +5030,14 @@
       "day": 5,
       "type": 1,
       "code": "D",
-      "name": "Karfiolleves (tejföllel) / Vegán csicseriborsó-curry (barna rizzsel)",
-      "price": 2590,
+      "name": "Zöldséges raguleves (csirkehússal) / Bolognai spagetti",
+      "price": 2790,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -3609,19 +5045,29 @@
       "menuName": "D menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 790,
+      "kcal": 1070,
       "components": [
         {
-          "name": "Karfiolleves (tejföllel)",
-          "kcal": 230,
+          "name": "Zöldséges raguleves (csirkehússal)",
+          "kcal": 290,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "celery"
+          ],
+          "ingredients": "csirkemell, sárgarépa, zöldborsó, zeller, tárkony"
         },
         {
-          "name": "Vegán csicseriborsó-curry (barna rizzsel)",
-          "kcal": 560,
+          "name": "Bolognai spagetti",
+          "kcal": 780,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk",
+            "celery"
+          ],
+          "ingredients": "spagetti (durumbúzadara), darált marhahús, paradicsom, sárgarépa, zeller, parmezán"
         }
       ]
     },
@@ -3630,12 +5076,14 @@
       "day": 5,
       "type": 1,
       "code": "Z10",
-      "name": "Túrókrémes kifli / Zöldséges raguleves (csirkehússal) / Tökfőzelék (fasírttal) / Rántott sajt (rizzsel, tartármártással)",
-      "price": 5490,
+      "name": "Rántotta (pirítóssal) / Sütőtökkrémleves (pirított tökmaggal) / Lecsó (kolbásszal, kenyérrel) / Rántott sajt (rizzsel, tartármártással)",
+      "price": 5390,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -3643,31 +5091,50 @@
       "menuName": "Egész napos menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 2190,
+      "kcal": 2140,
       "components": [
         {
-          "name": "Túrókrémes kifli",
-          "kcal": 380,
+          "name": "Rántotta (pirítóssal)",
+          "kcal": 410,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tojás, vaj, kenyér (búzaliszt), snidling"
         },
         {
-          "name": "Zöldséges raguleves (csirkehússal)",
-          "kcal": 290,
+          "name": "Sütőtökkrémleves (pirított tökmaggal)",
+          "kcal": 260,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "sütőtök, vöröshagyma, kókusztej, gyömbér, tökmag"
         },
         {
-          "name": "Tökfőzelék (fasírttal)",
-          "kcal": 640,
+          "name": "Lecsó (kolbásszal, kenyérrel)",
+          "kcal": 590,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten"
+          ],
+          "ingredients": "paprika, paradicsom, vöröshagyma, füstölt kolbász, kenyér (búzaliszt)"
         },
         {
           "name": "Rántott sajt (rizzsel, tartármártással)",
           "kcal": 880,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk",
+            "mustard"
+          ],
+          "ingredients": "trappista sajt, búzaliszt, tojás, zsemlemorzsa, rizs, majonéz (tojás, mustár)"
         }
       ]
     },
@@ -3676,12 +5143,14 @@
       "day": 5,
       "type": 1,
       "code": "Z11",
-      "name": "Sonkás-sajtos melegszendvics / Sütőtökkrémleves (pirított tökmaggal) / Lecsó (kolbásszal, kenyérrel) / Vegán csicseriborsó-curry (barna rizzsel)",
-      "price": 5290,
+      "name": "Sonkás-sajtos melegszendvics / Gombakrémleves / Bolognai spagetti / Rakott krumpli",
+      "price": 5590,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -3689,31 +5158,52 @@
       "menuName": "Könnyű egész napos menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 1860,
+      "kcal": 2230,
       "components": [
         {
           "name": "Sonkás-sajtos melegszendvics",
           "kcal": 450,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "kenyér (búzaliszt), sertéssonka, trappista sajt, vaj"
         },
         {
-          "name": "Sütőtökkrémleves (pirított tökmaggal)",
-          "kcal": 260,
+          "name": "Gombakrémleves",
+          "kcal": 280,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "csiperkegomba, tejszín, vaj, búzaliszt, petrezselyem"
         },
         {
-          "name": "Lecsó (kolbásszal, kenyérrel)",
-          "kcal": 590,
+          "name": "Bolognai spagetti",
+          "kcal": 780,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk",
+            "celery"
+          ],
+          "ingredients": "spagetti (durumbúzadara), darált marhahús, paradicsom, sárgarépa, zeller, parmezán"
         },
         {
-          "name": "Vegán csicseriborsó-curry (barna rizzsel)",
-          "kcal": 560,
+          "name": "Rakott krumpli",
+          "kcal": 720,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "egg",
+            "milk"
+          ],
+          "ingredients": "burgonya, tojás, füstölt kolbász, tejföl"
         }
       ]
     },
@@ -3722,12 +5212,49 @@
       "day": 5,
       "type": 1,
       "code": "R1",
+      "name": "Sonkás-sajtos melegszendvics",
+      "price": 1190,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Reggeli",
+      "groupId": "Reggeli",
+      "category": "Reggeli",
+      "menuName": "Reggeli",
+      "pickerEligible": true,
+      "course": "breakfast",
+      "kcal": 450,
+      "components": [
+        {
+          "name": "Sonkás-sajtos melegszendvics",
+          "kcal": 450,
+          "kind": "side",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "kenyér (búzaliszt), sertéssonka, trappista sajt, vaj"
+        }
+      ]
+    },
+    {
+      "id": "5:1:R2",
+      "day": 5,
+      "type": 1,
+      "code": "R2",
       "name": "Túrókrémes kifli",
       "price": 890,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "main",
       "section": "Reggeli",
       "groupId": "Reggeli",
@@ -3741,35 +5268,12 @@
           "name": "Túrókrémes kifli",
           "kcal": 380,
           "kind": "side",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "5:1:R2",
-      "day": 5,
-      "type": 1,
-      "code": "R2",
-      "name": "Zabkása (áfonyával)",
-      "price": 990,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Reggeli",
-      "groupId": "Reggeli",
-      "category": "Reggeli",
-      "menuName": "Reggeli",
-      "pickerEligible": true,
-      "course": "breakfast",
-      "kcal": 340,
-      "components": [
-        {
-          "name": "Zabkása (áfonyával)",
-          "kcal": 340,
-          "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "kifli (búzaliszt), túró, tejföl, kapor"
         }
       ]
     },
@@ -3778,12 +5282,14 @@
       "day": 5,
       "type": 1,
       "code": "L1",
-      "name": "Sütőtökkrémleves (pirított tökmaggal)",
-      "price": 990,
+      "name": "Csontleves (cérnametélttel, zöldségekkel)",
+      "price": 950,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -3791,13 +5297,19 @@
       "menuName": "Levesek",
       "pickerEligible": true,
       "course": "soup",
-      "kcal": 260,
+      "kcal": 240,
       "components": [
         {
-          "name": "Sütőtökkrémleves (pirított tökmaggal)",
-          "kcal": 260,
+          "name": "Csontleves (cérnametélttel, zöldségekkel)",
+          "kcal": 240,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "celery"
+          ],
+          "ingredients": "sertéscsont, sárgarépa, zeller, cérnametélt (búzaliszt, tojás)"
         }
       ]
     },
@@ -3806,12 +5318,14 @@
       "day": 5,
       "type": 1,
       "code": "L2",
-      "name": "Karfiolleves (tejföllel)",
-      "price": 920,
+      "name": "Zöldborsóleves (galuskával)",
+      "price": 890,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -3819,13 +5333,19 @@
       "menuName": "Levesek",
       "pickerEligible": true,
       "course": "soup",
-      "kcal": 230,
+      "kcal": 210,
       "components": [
         {
-          "name": "Karfiolleves (tejföllel)",
-          "kcal": 230,
+          "name": "Zöldborsóleves (galuskával)",
+          "kcal": 210,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "zöldborsó, sárgarépa, petrezselyem, galuska (búzaliszt, tojás), vaj"
         }
       ]
     },
@@ -3834,12 +5354,14 @@
       "day": 5,
       "type": 1,
       "code": "L3",
-      "name": "Bableves (füstölt csülökkel)",
-      "price": 1290,
+      "name": "Krumplileves (kolbásszal)",
+      "price": 1090,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -3847,13 +5369,18 @@
       "menuName": "Levesek",
       "pickerEligible": true,
       "course": "soup",
-      "kcal": 430,
+      "kcal": 350,
       "components": [
         {
-          "name": "Bableves (füstölt csülökkel)",
-          "kcal": 430,
+          "name": "Krumplileves (kolbásszal)",
+          "kcal": 350,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "milk",
+            "celery"
+          ],
+          "ingredients": "burgonya, füstölt kolbász, pirospaprika, tejföl, zeller"
         }
       ]
     },
@@ -3862,12 +5389,14 @@
       "day": 5,
       "type": 1,
       "code": "L4",
-      "name": "Paradicsomleves (betűtésztával)",
-      "price": 850,
+      "name": "Gombakrémleves",
+      "price": 990,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "soup",
       "section": "Levesek",
       "groupId": "Levesek",
@@ -3875,13 +5404,18 @@
       "menuName": "Levesek",
       "pickerEligible": true,
       "course": "soup",
-      "kcal": 190,
+      "kcal": 280,
       "components": [
         {
-          "name": "Paradicsomleves (betűtésztával)",
-          "kcal": 190,
+          "name": "Gombakrémleves",
+          "kcal": 280,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "csiperkegomba, tejszín, vaj, búzaliszt, petrezselyem"
         }
       ]
     },
@@ -3890,152 +5424,14 @@
       "day": 5,
       "type": 1,
       "code": "F1",
-      "name": "Csirkés-brokkolis penne",
-      "price": 2190,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 650,
-      "components": [
-        {
-          "name": "Csirkés-brokkolis penne",
-          "kcal": 650,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "5:1:F2",
-      "day": 5,
-      "type": 1,
-      "code": "F2",
-      "name": "Grillezett lazac (párolt zöldségekkel)",
-      "price": 3290,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 540,
-      "components": [
-        {
-          "name": "Grillezett lazac (párolt zöldségekkel)",
-          "kcal": 540,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "5:1:F3",
-      "day": 5,
-      "type": 1,
-      "code": "F3",
-      "name": "Sült csirkecomb (hagymás törtburgonyával)",
-      "price": 2490,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 810,
-      "components": [
-        {
-          "name": "Sült csirkecomb (hagymás törtburgonyával)",
-          "kcal": 810,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "5:1:F4",
-      "day": 5,
-      "type": 1,
-      "code": "F4",
-      "name": "Tökfőzelék (fasírttal)",
-      "price": 2090,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 640,
-      "components": [
-        {
-          "name": "Tökfőzelék (fasírttal)",
-          "kcal": 640,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "5:1:F5",
-      "day": 5,
-      "type": 1,
-      "code": "F5",
-      "name": "Rakott krumpli",
-      "price": 2190,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Főételek",
-      "groupId": "Főételek",
-      "category": "Főételek",
-      "menuName": "Főételek",
-      "pickerEligible": true,
-      "course": "main",
-      "kcal": 720,
-      "components": [
-        {
-          "name": "Rakott krumpli",
-          "kcal": 720,
-          "kind": "main",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "5:1:F6",
-      "day": 5,
-      "type": 1,
-      "code": "F6",
       "name": "Pulykamell (grillezett zöldségekkel)",
       "price": 2590,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Főételek",
       "groupId": "Főételek",
@@ -4049,7 +5445,291 @@
           "name": "Pulykamell (grillezett zöldségekkel)",
           "kcal": 470,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "pulykamell, cukkini, padlizsán, paprika, olívaolaj"
+        }
+      ]
+    },
+    {
+      "id": "5:1:F2",
+      "day": 5,
+      "type": 1,
+      "code": "F2",
+      "name": "Paprikás csirke (nokedlivel)",
+      "price": 2390,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 760,
+      "components": [
+        {
+          "name": "Paprikás csirke (nokedlivel)",
+          "kcal": 760,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "csirkecomb, pirospaprika, tejföl, nokedli (búzaliszt, tojás)"
+        }
+      ]
+    },
+    {
+      "id": "5:1:F3",
+      "day": 5,
+      "type": 1,
+      "code": "F3",
+      "name": "Babgulyás",
+      "price": 2090,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 620,
+      "components": [
+        {
+          "name": "Babgulyás",
+          "kcal": 620,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "celery"
+          ],
+          "ingredients": "marhalábszár, tarkabab, burgonya, sárgarépa, zeller, csipetke (búzaliszt, tojás)"
+        }
+      ]
+    },
+    {
+      "id": "5:1:F4",
+      "day": 5,
+      "type": 1,
+      "code": "F4",
+      "name": "Sajtos-tejfölös lasagne",
+      "price": 2390,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 830,
+      "components": [
+        {
+          "name": "Sajtos-tejfölös lasagne",
+          "kcal": 830,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "lasagne tészta (búzaliszt, tojás), darált sertéshús, paradicsom, tejföl, trappista sajt"
+        }
+      ]
+    },
+    {
+      "id": "5:1:F5",
+      "day": 5,
+      "type": 1,
+      "code": "F5",
+      "name": "Rántott csirkemell (petrezselymes burgonyával)",
+      "price": 2490,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 820,
+      "components": [
+        {
+          "name": "Rántott csirkemell (petrezselymes burgonyával)",
+          "kcal": 820,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg"
+          ],
+          "ingredients": "csirkemell, búzaliszt, tojás, zsemlemorzsa, burgonya, petrezselyem"
+        }
+      ]
+    },
+    {
+      "id": "5:1:F6",
+      "day": 5,
+      "type": 1,
+      "code": "F6",
+      "name": "Grillezett lazac (párolt zöldségekkel)",
+      "price": 3290,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": null,
+      "spicy": false,
+      "kind": "main",
+      "section": "Főételek",
+      "groupId": "Főételek",
+      "category": "Főételek",
+      "menuName": "Főételek",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 540,
+      "components": [
+        {
+          "name": "Grillezett lazac (párolt zöldségekkel)",
+          "kcal": 540,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "fish",
+            "milk"
+          ],
+          "ingredients": "lazac, brokkoli, sárgarépa, citrom, vaj"
+        }
+      ]
+    },
+    {
+      "id": "5:1:VL1",
+      "day": 5,
+      "type": 1,
+      "code": "VL1",
+      "name": "Zöldséges gombaleves",
+      "price": 850,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "soup",
+      "section": "Vega & vegán",
+      "groupId": "Vega & vegán",
+      "category": "Vega & vegán",
+      "menuName": "Vega & vegán",
+      "pickerEligible": true,
+      "course": "soup",
+      "kcal": 180,
+      "components": [
+        {
+          "name": "Zöldséges gombaleves",
+          "kcal": 180,
+          "kind": "soup",
+          "photo": null,
+          "allergens": [
+            "celery"
+          ],
+          "ingredients": "csiperkegomba, sárgarépa, petrezselyemgyökér, zeller, kapor"
+        }
+      ]
+    },
+    {
+      "id": "5:1:VF1",
+      "day": 5,
+      "type": 1,
+      "code": "VF1",
+      "name": "Mogyorós pirított rizstészta",
+      "price": 2190,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": true,
+      "kind": "main",
+      "section": "Vega & vegán",
+      "groupId": "Vega & vegán",
+      "category": "Vega & vegán",
+      "menuName": "Vega & vegán",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 680,
+      "components": [
+        {
+          "name": "Mogyorós pirított rizstészta",
+          "kcal": 680,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "peanut",
+            "soy"
+          ],
+          "ingredients": "rizstészta, földimogyoró, brokkoli, sárgarépa, szójaszósz (szójabab, búza), chili"
+        }
+      ]
+    },
+    {
+      "id": "5:1:VF2",
+      "day": 5,
+      "type": 1,
+      "code": "VF2",
+      "name": "Lencsefasírt (paradicsomos bulgurral)",
+      "price": 2090,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "main",
+      "section": "Vega & vegán",
+      "groupId": "Vega & vegán",
+      "category": "Vega & vegán",
+      "menuName": "Vega & vegán",
+      "pickerEligible": true,
+      "course": "main",
+      "kcal": 590,
+      "components": [
+        {
+          "name": "Lencsefasírt (paradicsomos bulgurral)",
+          "kcal": 590,
+          "kind": "main",
+          "photo": null,
+          "allergens": [
+            "gluten"
+          ],
+          "ingredients": "vöröslencse, zabpehely, bulgur (búza), paradicsom, petrezselyem"
         }
       ]
     },
@@ -4064,6 +5744,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "main",
       "section": "Hidegkonyha",
       "groupId": "Hidegkonyha",
@@ -4077,7 +5759,12 @@
           "name": "Franciasaláta",
           "kcal": 360,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "egg",
+            "mustard"
+          ],
+          "ingredients": "burgonya, sárgarépa, zöldborsó, csemegeuborka, majonéz (tojás, mustár)"
         }
       ]
     },
@@ -4086,12 +5773,14 @@
       "day": 5,
       "type": 1,
       "code": "H2",
-      "name": "Görög saláta",
-      "price": 1290,
+      "name": "Tonhalas tésztasaláta",
+      "price": 1390,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "main",
       "section": "Hidegkonyha",
       "groupId": "Hidegkonyha",
@@ -4099,13 +5788,20 @@
       "menuName": "Hidegkonyha",
       "pickerEligible": true,
       "course": "cold",
-      "kcal": 260,
+      "kcal": 420,
       "components": [
         {
-          "name": "Görög saláta",
-          "kcal": 260,
+          "name": "Tonhalas tésztasaláta",
+          "kcal": 420,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "fish",
+            "mustard"
+          ],
+          "ingredients": "tészta (durumbúzadara), tonhal, kukorica, majonéz (tojás, mustár)"
         }
       ]
     },
@@ -4120,6 +5816,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Savanyúság",
       "groupId": "Savanyúság",
@@ -4133,7 +5831,11 @@
           "name": "Káposztasaláta",
           "kcal": 70,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "sulfites"
+          ],
+          "ingredients": "fejes káposzta, ecet, cukor, só, kén-dioxid"
         }
       ]
     },
@@ -4142,12 +5844,14 @@
       "day": 5,
       "type": 1,
       "code": "S2",
-      "name": "Ecetes paprika",
+      "name": "Csemegeuborka",
       "price": 390,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Savanyúság",
       "groupId": "Savanyúság",
@@ -4155,13 +5859,18 @@
       "menuName": "Savanyúság",
       "pickerEligible": true,
       "course": "pickle",
-      "kcal": 35,
+      "kcal": 40,
       "components": [
         {
-          "name": "Ecetes paprika",
-          "kcal": 35,
+          "name": "Csemegeuborka",
+          "kcal": 40,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "mustard",
+            "sulfites"
+          ],
+          "ingredients": "uborka, ecet, cukor, kapor, mustármag, kén-dioxid"
         }
       ]
     },
@@ -4170,40 +5879,14 @@
       "day": 5,
       "type": 1,
       "code": "C1",
-      "name": "Teljes kiőrlésű cipó",
-      "price": 490,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "main",
-      "section": "Pékáru",
-      "groupId": "Pékáru",
-      "category": "Pékáru",
-      "menuName": "Pékáru",
-      "pickerEligible": true,
-      "course": "bread",
-      "kcal": 270,
-      "components": [
-        {
-          "name": "Teljes kiőrlésű cipó",
-          "kcal": 270,
-          "kind": "side",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "5:1:C2",
-      "day": 5,
-      "type": 1,
-      "code": "C2",
       "name": "Burgonyás cipó",
       "price": 490,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "main",
       "section": "Pékáru",
       "groupId": "Pékáru",
@@ -4217,7 +5900,46 @@
           "name": "Burgonyás cipó",
           "kcal": 310,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "búzaliszt, burgonyapehely, tej, élesztő"
+        }
+      ]
+    },
+    {
+      "id": "5:1:C2",
+      "day": 5,
+      "type": 1,
+      "code": "C2",
+      "name": "Teljes kiőrlésű cipó",
+      "price": 490,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegan",
+      "spicy": false,
+      "kind": "main",
+      "section": "Pékáru",
+      "groupId": "Pékáru",
+      "category": "Pékáru",
+      "menuName": "Pékáru",
+      "pickerEligible": true,
+      "course": "bread",
+      "kcal": 270,
+      "components": [
+        {
+          "name": "Teljes kiőrlésű cipó",
+          "kcal": 270,
+          "kind": "side",
+          "photo": null,
+          "allergens": [
+            "gluten"
+          ],
+          "ingredients": "teljes kiőrlésű búzaliszt, rozsliszt, élesztő, só"
         }
       ]
     },
@@ -4226,40 +5948,14 @@
       "day": 5,
       "type": 1,
       "code": "D1",
-      "name": "Csokoládés muffin",
-      "price": 690,
-      "cuisine": null,
-      "weekend": false,
-      "note": null,
-      "photo": null,
-      "kind": "dessert",
-      "section": "Desszertek",
-      "groupId": "Desszertek",
-      "category": "Desszertek",
-      "menuName": "Desszertek",
-      "pickerEligible": true,
-      "course": "dessert",
-      "kcal": 420,
-      "components": [
-        {
-          "name": "Csokoládés muffin",
-          "kcal": 420,
-          "kind": "dessert",
-          "photo": null
-        }
-      ]
-    },
-    {
-      "id": "5:1:D2",
-      "day": 5,
-      "type": 1,
-      "code": "D2",
       "name": "Palacsinta (barackízzel)",
       "price": 790,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "dessert",
       "section": "Desszertek",
       "groupId": "Desszertek",
@@ -4273,7 +5969,50 @@
           "name": "Palacsinta (barackízzel)",
           "kcal": 360,
           "kind": "dessert",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "búzaliszt, tej, tojás, sárgabarack-íz"
+        }
+      ]
+    },
+    {
+      "id": "5:1:D2",
+      "day": 5,
+      "type": 1,
+      "code": "D2",
+      "name": "Somlói galuska",
+      "price": 990,
+      "cuisine": null,
+      "weekend": false,
+      "note": null,
+      "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
+      "kind": "dessert",
+      "section": "Desszertek",
+      "groupId": "Desszertek",
+      "category": "Desszertek",
+      "menuName": "Desszertek",
+      "pickerEligible": true,
+      "course": "dessert",
+      "kcal": 470,
+      "components": [
+        {
+          "name": "Somlói galuska",
+          "kcal": 470,
+          "kind": "dessert",
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk",
+            "nuts"
+          ],
+          "ingredients": "piskóta (búzaliszt, tojás), dió, csokoládé, tejszín, mazsola"
         }
       ]
     },
@@ -4288,6 +6027,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegetarian",
+      "spicy": false,
       "kind": "dessert",
       "section": "Desszertek",
       "groupId": "Desszertek",
@@ -4301,7 +6042,13 @@
           "name": "Túrós rétes",
           "kcal": 330,
           "kind": "dessert",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "túró, búzaliszt, tojás, cukor, mazsola"
         }
       ]
     },
@@ -4316,6 +6063,8 @@
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Italok",
       "groupId": "Italok",
@@ -4329,7 +6078,9 @@
           "name": "Szénsavmentes ásványvíz",
           "kcal": 0,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "természetes ásványvíz"
         }
       ]
     },
@@ -4338,12 +6089,14 @@
       "day": 5,
       "type": 1,
       "code": "I2",
-      "name": "Narancslé",
-      "price": 590,
+      "name": "Házi limonádé",
+      "price": 690,
       "cuisine": null,
       "weekend": false,
       "note": null,
       "photo": null,
+      "diet": "vegan",
+      "spicy": false,
       "kind": "main",
       "section": "Italok",
       "groupId": "Italok",
@@ -4351,13 +6104,15 @@
       "menuName": "Italok",
       "pickerEligible": false,
       "course": "drink",
-      "kcal": 140,
+      "kcal": 120,
       "components": [
         {
-          "name": "Narancslé",
-          "kcal": 140,
+          "name": "Házi limonádé",
+          "kcal": 120,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "víz, citrom, cukor, menta"
         }
       ]
     },
@@ -4366,12 +6121,14 @@
       "day": 6,
       "type": 1,
       "code": "Z10",
-      "name": "Túrókrémes kifli / Karfiolleves (tejföllel) / Zöldséges rizottó (parmezánnal) / Sajtos-tejfölös lasagne",
-      "price": 5290,
+      "name": "Túrókrémes kifli / Gombakrémleves / Mákos tészta / Pulykamell (grillezett zöldségekkel)",
+      "price": 5190,
       "cuisine": null,
       "weekend": true,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -4379,31 +6136,49 @@
       "menuName": "Egész napos menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 2050,
+      "kcal": 1820,
       "components": [
         {
           "name": "Túrókrémes kifli",
           "kcal": 380,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "kifli (búzaliszt), túró, tejföl, kapor"
         },
         {
-          "name": "Karfiolleves (tejföllel)",
-          "kcal": 230,
+          "name": "Gombakrémleves",
+          "kcal": 280,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "csiperkegomba, tejszín, vaj, búzaliszt, petrezselyem"
         },
         {
-          "name": "Zöldséges rizottó (parmezánnal)",
-          "kcal": 610,
+          "name": "Mákos tészta",
+          "kcal": 690,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tészta (búzaliszt, tojás), mák, porcukor, vaj"
         },
         {
-          "name": "Sajtos-tejfölös lasagne",
-          "kcal": 830,
+          "name": "Pulykamell (grillezett zöldségekkel)",
+          "kcal": 470,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "pulykamell, cukkini, padlizsán, paprika, olívaolaj"
         }
       ]
     },
@@ -4412,12 +6187,14 @@
       "day": 6,
       "type": 1,
       "code": "Z11",
-      "name": "Sonkás-sajtos melegszendvics / Hideg meggyleves / Töltött paprika (főtt burgonyával) / Sajtos-tejfölös lasagne",
-      "price": 5890,
+      "name": "Rántotta (pirítóssal) / Zöldborsóleves (galuskával) / Sertéspörkölt (tarhonyával) / Babgulyás",
+      "price": 5690,
       "cuisine": null,
       "weekend": true,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -4425,31 +6202,54 @@
       "menuName": "Könnyű egész napos menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 2240,
+      "kcal": 2080,
       "components": [
         {
-          "name": "Sonkás-sajtos melegszendvics",
-          "kcal": 450,
+          "name": "Rántotta (pirítóssal)",
+          "kcal": 410,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tojás, vaj, kenyér (búzaliszt), snidling"
         },
         {
-          "name": "Hideg meggyleves",
-          "kcal": 270,
+          "name": "Zöldborsóleves (galuskával)",
+          "kcal": 210,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "zöldborsó, sárgarépa, petrezselyem, galuska (búzaliszt, tojás), vaj"
         },
         {
-          "name": "Töltött paprika (főtt burgonyával)",
-          "kcal": 690,
+          "name": "Sertéspörkölt (tarhonyával)",
+          "kcal": 840,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg"
+          ],
+          "ingredients": "sertéslapocka, vöröshagyma, pirospaprika, tarhonya (búzaliszt, tojás)"
         },
         {
-          "name": "Sajtos-tejfölös lasagne",
-          "kcal": 830,
+          "name": "Babgulyás",
+          "kcal": 620,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "celery"
+          ],
+          "ingredients": "marhalábszár, tarkabab, burgonya, sárgarépa, zeller, csipetke (búzaliszt, tojás)"
         }
       ]
     },
@@ -4458,12 +6258,14 @@
       "day": 7,
       "type": 1,
       "code": "Z10",
-      "name": "Zabkása (áfonyával) / Bableves (füstölt csülökkel) / Pulykamell (grillezett zöldségekkel) / Paprikás csirke (nokedlivel)",
-      "price": 6190,
+      "name": "Rántotta (pirítóssal) / Zöldborsóleves (galuskával) / Csirkés-brokkolis penne / Sertéspörkölt (tarhonyával)",
+      "price": 5690,
       "cuisine": null,
       "weekend": true,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -4471,31 +6273,53 @@
       "menuName": "Egész napos menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 2000,
+      "kcal": 2110,
       "components": [
         {
-          "name": "Zabkása (áfonyával)",
-          "kcal": 340,
+          "name": "Rántotta (pirítóssal)",
+          "kcal": 410,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "tojás, vaj, kenyér (búzaliszt), snidling"
         },
         {
-          "name": "Bableves (füstölt csülökkel)",
-          "kcal": 430,
+          "name": "Zöldborsóleves (galuskával)",
+          "kcal": 210,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg",
+            "milk"
+          ],
+          "ingredients": "zöldborsó, sárgarépa, petrezselyem, galuska (búzaliszt, tojás), vaj"
         },
         {
-          "name": "Pulykamell (grillezett zöldségekkel)",
-          "kcal": 470,
+          "name": "Csirkés-brokkolis penne",
+          "kcal": 650,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "penne (durumbúzadara), csirkemell, brokkoli, tejszín, fokhagyma"
         },
         {
-          "name": "Paprikás csirke (nokedlivel)",
-          "kcal": 760,
+          "name": "Sertéspörkölt (tarhonyával)",
+          "kcal": 840,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "egg"
+          ],
+          "ingredients": "sertéslapocka, vöröshagyma, pirospaprika, tarhonya (búzaliszt, tojás)"
         }
       ]
     },
@@ -4504,12 +6328,14 @@
       "day": 7,
       "type": 1,
       "code": "Z11",
-      "name": "Sonkás-sajtos melegszendvics / Zöldséges raguleves (csirkehússal) / Sajtos-tejfölös lasagne / Grillezett lazac (párolt zöldségekkel)",
-      "price": 6790,
+      "name": "Túrókrémes kifli / Paradicsomleves (betűtésztával) / Töltött paprika (főtt burgonyával) / Csirkés-brokkolis penne",
+      "price": 5290,
       "cuisine": null,
       "weekend": true,
       "note": null,
       "photo": null,
+      "diet": null,
+      "spicy": false,
       "kind": "menu",
       "section": "Menük",
       "groupId": "Menük",
@@ -4517,31 +6343,48 @@
       "menuName": "Könnyű egész napos menü",
       "pickerEligible": true,
       "course": null,
-      "kcal": 2110,
+      "kcal": 1910,
       "components": [
         {
-          "name": "Sonkás-sajtos melegszendvics",
-          "kcal": 450,
+          "name": "Túrókrémes kifli",
+          "kcal": 380,
           "kind": "side",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "kifli (búzaliszt), túró, tejföl, kapor"
         },
         {
-          "name": "Zöldséges raguleves (csirkehússal)",
-          "kcal": 290,
+          "name": "Paradicsomleves (betűtésztával)",
+          "kcal": 190,
           "kind": "soup",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "celery"
+          ],
+          "ingredients": "paradicsom, zeller, cukor, betűtészta (durumbúzadara)"
         },
         {
-          "name": "Sajtos-tejfölös lasagne",
-          "kcal": 830,
+          "name": "Töltött paprika (főtt burgonyával)",
+          "kcal": 690,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [],
+          "ingredients": "paprika, darált sertéshús, rizs, paradicsom, burgonya"
         },
         {
-          "name": "Grillezett lazac (párolt zöldségekkel)",
-          "kcal": 540,
+          "name": "Csirkés-brokkolis penne",
+          "kcal": 650,
           "kind": "main",
-          "photo": null
+          "photo": null,
+          "allergens": [
+            "gluten",
+            "milk"
+          ],
+          "ingredients": "penne (durumbúzadara), csirkemell, brokkoli, tejszín, fokhagyma"
         }
       ]
     }
