@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Eraser, Flame, Minus, Plus, Sparkles, Utensils, Wallet, X } from 'lucide-react';
+import { Check, Eraser, Flame, Minus, Plus, Sparkles, Utensils, Wallet, X } from 'lucide-react';
 import {
   canGenerate,
   courseDeck,
@@ -101,80 +101,81 @@ function Tray({
               const quantity = rowQuantity(row);
               return (
                 <li key={index} className={course === 'menu' ? 'tray-row tray-row-menu' : 'tray-row'}>
-                  <button type="button" onClick={() => onOpen(index)}>
-                    <strong>{label}</strong>
-                    <span className={dish ? undefined : 'custom-empty'} lang="hu">
-                      {!dish ? (
-                        'Nincs kiválasztva'
-                      ) : course === 'menu' ? (
-                        // The code in its own column, so the courses line up under the menu name.
-                        <span className="tray-menu">
-                          <span className="meal-code">{dish.code}</span>
-                          <span>
-                            {dish.menuName}
-                            <small className="tray-menu-courses">
-                              {menuCourseNames(dish).map((name, part) => (
-                                <span key={part}>{name}</span>
-                              ))}
-                            </small>
+                  {/*
+                    The row's frame: the part that opens its deck or list; under it the dish's eraser and portions, or on an
+                    empty row a button that takes the row off.
+                  */}
+                  <div className={dish ? 'tray-row-card' : 'tray-row-card tray-row-card-empty'}>
+                    <button type="button" className="tray-row-open" onClick={() => onOpen(index)}>
+                      <strong className="tray-label">{label}</strong>
+                      <span className={dish ? 'tray-name' : 'tray-name custom-empty'} lang="hu">
+                        {!dish ? (
+                          'Nincs kiválasztva'
+                        ) : course === 'menu' ? (
+                          // The code in its own column, so the courses line up under the menu name.
+                          <span className="tray-menu">
+                            <span className="meal-code">{dish.code}</span>
+                            <span>
+                              {dish.menuName}
+                              <small className="tray-menu-courses">
+                                {menuCourseNames(dish).map((name, part) => (
+                                  <span key={part}>{name}</span>
+                                ))}
+                              </small>
+                            </span>
                           </span>
-                        </span>
-                      ) : (
-                        <>
-                          <span className="meal-code">{dish.code}</span> {dish.name}
-                        </>
-                      )}
-                    </span>
-                    <span>
-                      {dish ? (
-                        `${calories(dish.kcal)} · ${money(dish.price)}`
-                      ) : (
-                        <ChevronRight size={16} aria-label="Kiválasztás" />
-                      )}
-                    </span>
-                  </button>
-                  {dish && (
-                    <div className="tray-quantity" role="group" aria-label={`${label}: adagok`}>
+                        ) : (
+                          <>
+                            <span className="meal-code">{dish.code}</span> {dish.name}
+                          </>
+                        )}
+                      </span>
+                      {dish && <span className="tray-numbers">{`${calories(dish.kcal)} · ${money(dish.price)}`}</span>}
+                    </button>
+                    {!dish && (
                       <button
                         type="button"
-                        aria-label="Eggyel kevesebb adag"
-                        disabled={quantity <= 1}
-                        onClick={() => onQuantity(index, quantity - 1)}
+                        className="tray-action tray-remove-row"
+                        aria-label={`${label} eltávolítása`}
+                        title="Eltávolítás"
+                        onClick={() => onRemove(index)}
                       >
-                        <Minus size={15} aria-hidden="true" />
+                        <X size={17} aria-hidden="true" />
                       </button>
-                      <output aria-live="polite">{quantity}</output>
-                      <button
-                        type="button"
-                        aria-label="Eggyel több adag"
-                        disabled={quantity >= maxQuantity}
-                        onClick={() => onQuantity(index, quantity + 1)}
-                      >
-                        <Plus size={15} aria-hidden="true" />
-                      </button>
-                    </div>
-                  )}
-                  {dish ? (
-                    <button
-                      type="button"
-                      className="tray-remove"
-                      aria-label={`${label} ürítése`}
-                      title="Ürítés"
-                      onClick={() => onEmpty(index)}
-                    >
-                      <Eraser size={17} aria-hidden="true" />
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="tray-remove"
-                      aria-label={`${label} eltávolítása`}
-                      title="Eltávolítás"
-                      onClick={() => onRemove(index)}
-                    >
-                      <X size={17} aria-hidden="true" />
-                    </button>
-                  )}
+                    )}
+                    {dish && (
+                      <div className="tray-row-footer">
+                        <button
+                          type="button"
+                          className="tray-action"
+                          aria-label={`${label} ürítése`}
+                          title="Ürítés"
+                          onClick={() => onEmpty(index)}
+                        >
+                          <Eraser size={17} aria-hidden="true" />
+                        </button>
+                        <div className="tray-quantity" role="group" aria-label={`${label}: adagok`}>
+                          <button
+                            type="button"
+                            aria-label="Eggyel kevesebb adag"
+                            disabled={quantity <= 1}
+                            onClick={() => onQuantity(index, quantity - 1)}
+                          >
+                            <Minus size={15} aria-hidden="true" />
+                          </button>
+                          <output aria-live="polite">{quantity}</output>
+                          <button
+                            type="button"
+                            aria-label="Eggyel több adag"
+                            disabled={quantity >= maxQuantity}
+                            onClick={() => onQuantity(index, quantity + 1)}
+                          >
+                            <Plus size={15} aria-hidden="true" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </li>
               );
             })}
