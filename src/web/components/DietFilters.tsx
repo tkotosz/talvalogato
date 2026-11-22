@@ -4,7 +4,7 @@ import { allAllergens, allergenNames, inAllergenOrder } from '../../core/allerge
 import { allDislikes, dislikeRules, minDislikeLetters, ownDislikeWord } from '../../core/filters.ts';
 import { maxOwnDislikes } from '../../core/planning.ts';
 import type { Preferences } from '../../core/types.ts';
-import { MultiSelect } from './MultiSelect.tsx';
+import { PickList } from './PickList.tsx';
 
 /** The settings this part of the form edits. */
 export type DietSettings = Pick<
@@ -99,9 +99,9 @@ export function DietFilters({
               {demo && ' A bemutató ételei és allergénjei kitaláltak.'}
             </p>
           </div>
-          <MultiSelect
+          <PickList
             label="Kizárt allergének"
-            placeholder="Válassz allergéneket"
+            hint="Pipáld be a kizárandó allergéneket."
             keys={allAllergens}
             names={allergenNames}
             selected={value.excludedAllergens}
@@ -123,9 +123,9 @@ export function DietFilters({
           <p className="preference-hint">
             Szavakat keres az ételek nevében és összetevőiben, ezért nem helyettesíti az allergénszűrőt.
           </p>
-          <MultiSelect
-            label="Gyakori kerülendő összetevők"
-            placeholder="Válassz a listából"
+          <PickList
+            label="Kerülendő"
+            hint="Pipáld be, amit nem eszel, vagy adj meg saját szót lent."
             keys={allDislikes}
             names={dislikeNames}
             selected={value.dislikes}
