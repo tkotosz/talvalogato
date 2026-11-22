@@ -4,3 +4,5 @@ pages-dist/
 .wrangler/
 .openai/.cache/
 test/e2e/screenshots/
+# Real Teletál menu data for local use; Teletál does not allow republishing it.
+local/

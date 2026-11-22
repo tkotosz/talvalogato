@@ -64,7 +64,25 @@ interface FetchOptions {
   params?: Record<string, string | number>;
 }
 
+/** The least time between two requests to Teletál, to keep the load on its site low: five requests a second. */
+let requestGap = 200;
+let nextRequestAt = 0;
+
+/** Changes the time between requests; tests that serve pages from fixtures set it to 0. */
+export function setRequestGap(milliseconds: number): void {
+  requestGap = milliseconds;
+}
+
+/** Waits until the next request may start; requests from parallel readers take turns. */
+async function waitForTurn(): Promise<void> {
+  const now = Date.now();
+  const at = Math.max(now, nextRequestAt);
+  nextRequestAt = at + requestGap;
+  if (at > now) await new Promise(resolve => setTimeout(resolve, at - now));
+}
+
 async function fetchHtml(path: string, { ajax = false, cookie, referer, params }: FetchOptions = {}) {
+  await waitForTurn();
   const url = new URL(path, teletal);
   if (params) {
     // Teletál expects percent-encoded spaces in section names.
