@@ -1,26 +1,21 @@
-import { useState } from 'react';
-import { ChevronRight, Flame, ListChecks, Sparkles, Sun, Truck, Utensils } from 'lucide-react';
+import { ChevronRight, Flame, Truck } from 'lucide-react';
+import { emptyTray, trayCourseNames } from '../../core/custom.ts';
 import type { PlannerAction } from '../../core/planner.ts';
-import { calorieLimit, dayCandidates, days, mealOptions, menuDeck, menuDecks, selectionIssue } from '../../core/planning.ts';
-import type { Dish, CustomDraft, Day, Plan, Preferences, WeekKey } from '../../core/types.ts';
+import { calorieLimit, days, selectionIssue } from '../../core/planning.ts';
+import type { CustomDraft, Day, Dish, Plan, Preferences, WeekKey } from '../../core/types.ts';
 import { CustomMenuCard } from '../components/CustomMenuCard.tsx';
-import { ActiveFilters } from '../components/FilterNotes.tsx';
 import { MealCard } from '../components/MealCard.tsx';
-import { SwipeDeck } from '../components/SwipeDeck.tsx';
 import { WeekProgress } from '../components/WeekProgress.tsx';
-import { calories, daysOn } from '../format.ts';
+import { calories } from '../format.ts';
 import { CustomDay } from './CustomDay.tsx';
 
-const menuNouns = { missing: 'menühöz', again: 'Menük újranézése' };
-
-/** Step 2: one day at a time, first the menu type, then its swipe deck or the custom-day flow. A finished day shows its decision. */
+/** Step 2: one day at a time, on the day's tray. A finished day shows its decision. */
 export function MealsScreen({
   plan,
   day,
   eligible,
   catalog,
   preferences,
-  editing,
   done,
   custom,
   teletalWeek,
@@ -32,48 +27,31 @@ export function MealsScreen({
   eligible: Day[];
   catalog: Dish[];
   preferences: Preferences;
-  editing: boolean;
   done: boolean;
-  /** The day as a custom day in progress, if it is one. */
+  /** The day's tray in progress, or null before its first row. */
   custom: CustomDraft | null;
   /** The week whose Teletál menu the cards link to, or null for no links, as in the demo. */
   teletalWeek: WeekKey | null;
   dispatch(action: PlannerAction): void;
   onOpenSettings(): void;
 }) {
-  const [deck, setDeck] = useState<(typeof menuDecks)[number] | null>(null);
   const picked = plan.slots[day];
   const budget = preferences.limitCalories ? calorieLimit(preferences) : null;
   const issue = done && picked && selectionIssue(picked, day, eligible, catalog, preferences);
-  const choosing = !done && !custom && !deck;
-  // Teletál delivers weekend meals with Friday's delivery.
-  const weekendNote = day > 5 && (
-    <p className="info-note" role="note">
-      <Truck size={18} aria-hidden="true" />
-      <span>A {day === 6 ? 'szombati' : 'vasárnapi'} ételek pénteken érkeznek, mert a Teletál hétvégén nem szállít.</span>
-    </p>
-  );
-  const toMenuTypes = () => (custom ? dispatch({ type: 'leaveCustom', day }) : setDeck(null));
-  const open = (stage: CustomDraft['stage']) => dispatch({ type: 'openStage', day, stage });
-  // The breadcrumb: the menu type, then either the set-menu deck or the custom-day steps.
-  const crumbs: { label: string; onClick?: () => void }[] = [{ label: 'Mit eszel?', onClick: toMenuTypes }];
-  if (custom) {
-    crumbs.push({ label: 'Összetevők', onClick: () => open('select') });
-    if (custom.stage !== 'select') {
-      crumbs.push(
-        custom.generator
-          ? { label: 'Generált menü', onClick: () => open('generated') }
-          : { label: 'Saját menü', onClick: () => open('overview') },
-      );
-    }
-  } else if (deck) {
-    crumbs.push({ label: deck.label });
+  // The breadcrumb, while the tray has opened a row or an idea.
+  const crumbs: { label: string; onClick?: () => void }[] = [];
+  if (custom?.generator) {
+    crumbs.push({ label: 'A nap menüje', onClick: () => dispatch({ type: 'cancelGenerated', day }) });
+    crumbs.push({ label: 'Ötlet' });
+  } else if (custom && typeof custom.stage === 'number' && custom.rows[custom.stage]) {
+    crumbs.push({ label: 'A nap menüje', onClick: () => dispatch({ type: 'openStage', day, stage: 'overview' }) });
+    crumbs.push({ label: trayCourseNames[custom.rows[custom.stage]!.course] });
   }
 
   return (
     <main className="picker" aria-label={`Napi válogatás · ${days[day - 1]}`}>
       <WeekProgress plan={{ ...plan, day }} eligible={eligible} onSelect={value => dispatch({ type: 'openDay', day: value })} />
-      {!done && crumbs.length > 1 && (
+      {!done && crumbs.length > 0 && (
         <nav className="day-steps" aria-label="A napi válogatás lépései">
           <ol>
             {crumbs.map(({ label, onClick }, index) => {
@@ -94,16 +72,19 @@ export function MealsScreen({
           </ol>
         </nav>
       )}
-      {!choosing && weekendNote}
-      {budget !== null && (!custom || custom.generator) && (
+      {/* Teletál delivers weekend meals with Friday's delivery. */}
+      {day > 5 && (
+        <p className="info-note" role="note">
+          <Truck size={18} aria-hidden="true" />
+          <span>A {day === 6 ? 'szombati' : 'vasárnapi'} ételek pénteken érkeznek, mert a Teletál hétvégén nem szállít.</span>
+        </p>
+      )}
+      {budget !== null && custom?.generator && (
         <div className="picker-details">
           <span className="day-budget">
             <Flame size={18} aria-hidden="true" /> Max. {calories(budget)}
           </span>
         </div>
-      )}
-      {editing && picked && !custom && (
-        <p className="editing-note">Jelenlegi választás · {picked.dishes.map(dish => dish.menuName || dish.name).join(' + ')}</p>
       )}
       {done ? (
         <>
@@ -120,85 +101,17 @@ export function MealsScreen({
           </div>
           {issue && <p className="selection-issue completed-day-issue">{issue}</p>}
         </>
-      ) : custom ? (
+      ) : (
         <CustomDay
           plan={plan}
           day={day}
-          draft={custom}
+          draft={custom ?? emptyTray()}
           catalog={catalog}
           preferences={preferences}
           teletalWeek={teletalWeek}
           dispatch={dispatch}
           onOpenSettings={onOpenSettings}
         />
-      ) : deck ? (
-        <SwipeDeck
-          plan={plan}
-          day={day}
-          candidates={dayCandidates(catalog, day).filter(dish => menuDeck(dish) === deck.id)}
-          buildOptions={dishes => mealOptions(dishes, preferences, deck.id)}
-          target={budget}
-          teletalWeek={teletalWeek}
-          nouns={menuNouns}
-          empty={() => (
-            <>
-              <span className="section-icon">
-                <Utensils size={25} />
-              </span>
-              <h2>Nincs választható menü</h2>
-              <p>Válts menütípust, vagy ellenőrizd a szűrőket a beállításokban.</p>
-              <ActiveFilters preferences={preferences} onOpenSettings={onOpenSettings} />
-            </>
-          )}
-          onAction={(action, option) => dispatch({ type: 'decide', day, action, option })}
-        />
-      ) : (
-        <section className="menu-choices" aria-labelledby="menu-choices-title">
-          <h2 id="menu-choices-title">Mit eszel {daysOn[day - 1]}?</h2>
-          {weekendNote}
-          <ul>
-            {[
-              {
-                Icon: Utensils,
-                title: 'Teletál ebédmenü választása',
-                hint: 'Leves és főétel egy menüben',
-                onClick: () => setDeck(menuDecks[0]!),
-              },
-              {
-                Icon: Sun,
-                title: 'Teletál egész napos menü választása',
-                hint: 'Több étkezés egy csomagban, reggeltől estig',
-                onClick: () => setDeck(menuDecks[1]!),
-              },
-              {
-                Icon: ListChecks,
-                title: 'Saját menü összeállítása',
-                hint: 'Válogass fogásonként: leves, főétel, kiegészítők',
-                onClick: () => dispatch({ type: 'startCustom', day }),
-              },
-              {
-                Icon: Sparkles,
-                title: 'Menü generálása',
-                hint: 'Megadod, miből álljon, mi összerakjuk. Kérhetsz másikat is.',
-                // The seed makes each generated day different; the reducer itself stays free of randomness.
-                onClick: () => dispatch({ type: 'startGenerated', day, seed: Math.floor(Math.random() * 2 ** 32) }),
-              },
-            ].map(({ Icon, title, hint, onClick }) => (
-              <li key={title}>
-                <button type="button" className="menu-choice" onClick={onClick}>
-                  <span className="menu-choice-icon">
-                    <Icon size={22} aria-hidden="true" />
-                  </span>
-                  <span className="menu-choice-text">
-                    <strong>{title}</strong>
-                    <span>{hint}</span>
-                  </span>
-                  <ChevronRight size={18} aria-hidden="true" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
       )}
     </main>
   );

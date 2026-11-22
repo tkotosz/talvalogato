@@ -125,30 +125,41 @@ export interface MenuOption {
 }
 
 /** The components a custom day was built from, including ones left without a dish. */
+/** What a tray row holds: a Teletál set menu, lunch or full-day, or a dish of one course. */
+export type TrayCourse = 'menu' | CustomCourse;
+
 export interface CustomChoice {
-  courses: CustomCourse[];
+  /** The tray's rows by what they hold, including rows saved without a dish. */
+  courses: TrayCourse[];
   /** The user chose to go over the calorie limit for this day. */
   overLimit: boolean;
 }
 
-/** Where the custom-day flow is: the component selection, the menu overview, a component's deck, or a generated menu. */
-export type CustomStage = 'select' | 'overview' | CustomCourse | 'generated';
+/** Where a day's tray is: the tray itself, the deck or list of the row at this index, or an idea waiting to be kept. */
+export type CustomStage = 'overview' | number | 'generated';
 
-/** What a generated day needs to continue: the random sequence and how often each dish was offered, by dish ID. */
+/** A row on a day's tray, with its dish once picked. A tray can have any number of rows of the same kind. */
+export interface TrayRow {
+  course: TrayCourse;
+  dish?: Dish;
+}
+
+/** What an idea needs to continue: the random sequence, how often each dish was offered by dish ID, and its rows. */
 export interface Generator {
   seed: number;
   shown: Record<string, number>;
+  /** The indexes of the tray rows the idea fills, the rows that were empty when it started. */
+  rows: number[];
 }
 
-/** A custom day in progress. */
+/** A day being put together on its tray: rows of Teletál set menus and single dishes, each picked or still empty. */
 export interface CustomDraft {
-  courses: CustomCourse[];
+  /** The rows in menu order: breakfast first, then set menus, then the other courses. */
+  rows: TrayRow[];
   stage: CustomStage;
-  /** The dish picked for each component that has one. */
-  picks: Partial<Record<CustomCourse, Dish>>;
-  /** Components whose deck shows dishes beyond the calorie limit. */
-  overLimit: CustomCourse[];
-  /** Set when the app generates whole menus for this day instead of the user picking each dish. */
+  /** Row kinds whose decks and lists show dishes beyond the calorie limit. */
+  overLimit: TrayCourse[];
+  /** Set while an idea for the empty rows waits to be kept or replaced. */
   generator?: Generator;
 }
 
@@ -181,8 +192,6 @@ export interface Preferences {
   filterCodes: boolean;
   excludedCodes: string[];
   defaultDays: Day[];
-  /** The components ticked on the last custom day. */
-  customCourses: CustomCourse[];
   /** Every dish, or only the dishes Teletál marks vegetarian (vegan ones included) or vegan. */
   diet: 'all' | Diet;
   /** Leave out the dishes that contain an excluded allergen, and those whose allergens are unknown. */

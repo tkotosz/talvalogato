@@ -1,124 +1,190 @@
-import { useState } from 'react';
-import { Check, ChevronRight, Flame, Minus, Plus } from 'lucide-react';
-import { courseNames, extraCourses, isCourse, mainCourses } from '../../core/courses.ts';
-import { courseDeck, pickedDishes, remainingCalories, totalCalories } from '../../core/custom.ts';
+import { Check, ChevronRight, Eraser, Flame, Minus, Plus, Sparkles, X } from 'lucide-react';
+import {
+  canGenerate,
+  courseDeck,
+  pickedDishes,
+  remainingCalories,
+  rowChoiceCounts,
+  totalCalories,
+  trayCourseNames,
+  trayCourses,
+} from '../../core/custom.ts';
+import { allergenList, dishAllergens } from '../../core/filters.ts';
 import type { PlannerAction } from '../../core/planner.ts';
-import { calorieLimit, dayCandidates } from '../../core/planning.ts';
-import type { Dish, CustomCourse, CustomDraft, Day, Plan, Preferences, WeekKey } from '../../core/types.ts';
+import { calorieLimit, dayCandidates, splitDishName } from '../../core/planning.ts';
+import type { CustomDraft, Day, Dish, Plan, Preferences, TrayCourse, WeekKey } from '../../core/types.ts';
 import { ActiveFilters } from '../components/FilterNotes.tsx';
 import { GeneratedDeck } from '../components/GeneratedDeck.tsx';
 import { SwipeDeck } from '../components/SwipeDeck.tsx';
 import { calories, money } from '../format.ts';
 
-const courseNouns = { missing: 'ételhez', again: 'Ételek újranézése' };
+/** Rows picked by swiping, where choosing is the point; the other rows are picked from a list. */
+const swipedCourses: TrayCourse[] = ['menu', 'soup', 'main'];
+const nouns = (course: TrayCourse) =>
+  course === 'menu' ? { missing: 'menühöz', again: 'Menük újranézése' } : { missing: 'ételhez', again: 'Ételek újranézése' };
 
-/** Toggle buttons for a group of components. */
-function CourseChoices({
-  label,
-  courses,
-  selected,
-  onChange,
-}: {
-  label: string;
-  courses: CustomCourse[];
-  selected: CustomCourse[];
-  onChange(courses: CustomCourse[]): void;
-}) {
-  return (
-    <fieldset className="day-choices course-choices">
-      <legend>{label}</legend>
-      <div className="course-choices-grid">
-        {courses.map(course => {
-          const pressed = selected.includes(course);
-          return (
-            <button
-              key={course}
-              type="button"
-              aria-pressed={pressed}
-              onClick={() => onChange(pressed ? selected.filter(value => value !== course) : [...selected, course])}
-            >
-              {pressed ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
-              {courseNames[course]}
-            </button>
-          );
-        })}
-      </div>
-    </fieldset>
-  );
-}
+/** Names for running text, such as "teletál menü, ital". */
+const lowerNames = (courses: TrayCourse[]) => courses.map(course => trayCourseNames[course].toLocaleLowerCase('hu')).join(', ');
 
-/** Step 1 of a custom day: which components the menu has. */
-function CourseSelection({ draft, onDone }: { draft: CustomDraft; onDone(courses: CustomCourse[]): void }) {
-  const [selected, setSelected] = useState(draft.courses);
-  return (
-    <section className="custom-step">
-      <h2>Miből álljon a menü?</h2>
-      <CourseChoices label="Fogások" courses={mainCourses} selected={selected} onChange={setSelected} />
-      <CourseChoices label="Kiegészítők" courses={extraCourses} selected={selected} onChange={setSelected} />
-      <button type="button" className="button primary wide" disabled={!selected.length} onClick={() => onDone(selected)}>
-        Tovább
-      </button>
-    </section>
-  );
-}
-
-/** Step 2 of a custom day: each component with its dish; a row opens the component's deck. */
-function MenuOverview({
+/**
+ * The day's tray: its rows of set menus and dishes, the buttons that add empty rows, and what the rows add up to. A row
+ * opens its deck or list, and an idea fills every empty row.
+ */
+function Tray({
   draft,
+  candidates,
   preferences,
   saved,
   onOpen,
+  onAdd,
+  onEmpty,
+  onRemove,
+  onGenerate,
   onSave,
+  onOpenSettings,
 }: {
   draft: CustomDraft;
+  /** The day's dishes, to tell which kinds of rows have anything to offer. */
+  candidates: Dish[];
   preferences: Preferences;
-  /** The day already has a saved menu that this draft edits. */
+  /** The day already has a saved menu that this tray edits. */
   saved: boolean;
-  onOpen(stage: CustomDraft['stage']): void;
+  onOpen(row: number): void;
+  onAdd(course: TrayCourse): void;
+  /** Takes the dish off a row, keeping the row. */
+  onEmpty(row: number): void;
+  /** Takes an empty row off the tray. */
+  onRemove(row: number): void;
+  /** Asks for an idea for the empty rows. */
+  onGenerate(): void;
   onSave(): void;
+  onOpenSettings(): void;
 }) {
   const dishes = pickedDishes(draft);
   const total = totalCalories(dishes);
   const limit = preferences.limitCalories ? calorieLimit(preferences) : null;
   const overLimit = limit !== null && total !== null && total > limit;
+  const menuHasDessert = dishes.some(dish => !dish.course && dish.components?.some(course => course.kind === 'dessert'));
+  const empty = draft.rows.filter(row => !row.dish).map(row => row.course);
+  // A kind of row with nothing to offer today is not a dead end: its button is off, and a note says why.
+  const counts = rowChoiceCounts(candidates, preferences);
+  const filteredOut = trayCourses.filter(course => !counts.allowed[course] && counts.available[course]);
+  const missingToday = trayCourses.filter(course => !counts.available[course]);
   return (
     <section className="custom-step">
-      <h2>Saját menü</h2>
-      <p className="custom-hint">Koppints egy sorra az étel kiválasztásához vagy cseréjéhez.</p>
-      <ul className="custom-summary">
-        {draft.courses.map(course => {
-          const dish = draft.picks[course];
-          return (
-            <li key={course}>
-              <button type="button" onClick={() => onOpen(course)}>
-                <strong>{courseNames[course]}</strong>
-                <span className={dish ? undefined : 'custom-empty'}>{dish ? dish.name : 'Nincs kiválasztva'}</span>
-                <span>{dish ? calories(dish.kcal) : <ChevronRight size={16} aria-label="Kiválasztás" />}</span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-      <p className="custom-total" aria-live="polite">
-        <span>Összesen</span>
-        <strong>{dishes.length ? (total === null ? 'ismeretlen kcal' : calories(total)) : '–'}</strong>
-        <strong>{money(dishes.reduce((sum, dish) => sum + dish.price, 0))}</strong>
+      <h2>A nap menüje</h2>
+      <p className="custom-hint">
+        {draft.rows.length
+          ? 'Koppints egy sorra a választáshoz vagy a cseréhez.'
+          : 'Add hozzá, miből álljon a napod: Teletál menüt, levest, főételt vagy bármi mást, akár többet is.'}
       </p>
-      {limit !== null && (
-        <p className={overLimit ? 'over-limit-note' : 'custom-hint'}>
-          {overLimit ? `A menü ${calories(total! - limit)} kalóriával a kereted felett van.` : `Napi keret: ${calories(limit)}`}
-        </p>
+      {draft.rows.length > 0 && (
+        <ul className="custom-summary">
+          {draft.rows.map(({ course, dish }, index) => {
+            const label = trayCourseNames[course];
+            return (
+              <li key={index} className="tray-row">
+                <button type="button" onClick={() => onOpen(index)}>
+                  <strong>{label}</strong>
+                  <span className={dish ? undefined : 'custom-empty'} lang="hu">
+                    {!dish ? (
+                      'Nincs kiválasztva'
+                    ) : course === 'menu' ? (
+                      <>
+                        <span className="meal-code">{dish.code}</span> {dish.menuName}
+                        <small className="tray-menu-courses">{dish.name}</small>
+                      </>
+                    ) : (
+                      <>
+                        <span className="meal-code">{dish.code}</span> {dish.name}
+                      </>
+                    )}
+                  </span>
+                  <span>
+                    {dish ? `${calories(dish.kcal)} · ${money(dish.price)}` : <ChevronRight size={16} aria-label="Kiválasztás" />}
+                  </span>
+                </button>
+                {dish ? (
+                  <button
+                    type="button"
+                    className="tray-remove"
+                    aria-label={`${label} ürítése`}
+                    title="Ürítés"
+                    onClick={() => onEmpty(index)}
+                  >
+                    <Eraser size={17} aria-hidden="true" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="tray-remove"
+                    aria-label={`${label} eltávolítása`}
+                    title="Eltávolítás"
+                    onClick={() => onRemove(index)}
+                  >
+                    <X size={17} aria-hidden="true" />
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       )}
-      <button type="button" className="button primary wide" disabled={!dishes.length} onClick={onSave}>
-        {saved ? 'Változások mentése' : 'Mentés'}
-      </button>
+      {canGenerate(draft) && (
+        <div className="tray-idea">
+          <button type="button" className="button secondary" onClick={onGenerate}>
+            <Sparkles size={17} aria-hidden="true" /> Dobj egy ötletet
+          </button>
+          <p className="custom-hint">Kitöltjük az üres sorokat: {lowerNames(empty)}. Kérhetsz másikat is.</p>
+        </div>
+      )}
+      <div className="tray-add">
+        <h3>Hozzáadás</h3>
+        <div className="course-choices-grid">
+          {trayCourses.map(course => (
+            <button key={course} type="button" disabled={!counts.allowed[course]} onClick={() => onAdd(course)}>
+              <Plus size={16} aria-hidden="true" />
+              {trayCourseNames[course]}
+              {course === 'dessert' && menuHasDessert && <small>a menüben van</small>}
+            </button>
+          ))}
+        </div>
+        {filteredOut.length > 0 && (
+          <div className="tray-unavailable">
+            <p className="custom-hint">A beállításaid miatt ma nem választható: {lowerNames(filteredOut)}.</p>
+            <ActiveFilters preferences={preferences} onOpenSettings={onOpenSettings} />
+          </div>
+        )}
+        {missingToday.length > 0 && <p className="custom-hint">Ezen a napon nincs: {lowerNames(missingToday)}.</p>}
+      </div>
+      {draft.rows.length > 0 && (
+        <>
+          <p className="custom-total" aria-live="polite">
+            <span>Összesen</span>
+            <strong>
+              {dishes.length ? (total === null ? 'ismeretlen kcal' : calories(total)) : '–'} ·{' '}
+              {money(dishes.reduce((sum, dish) => sum + dish.price, 0))}
+            </strong>
+          </p>
+          {limit !== null && (
+            <p className={overLimit ? 'over-limit-note' : 'custom-hint'}>
+              {overLimit
+                ? `A menü ${calories(total! - limit)} kalóriával a kereted felett van.`
+                : `Napi keret: ${calories(limit)}`}
+            </p>
+          )}
+          <button type="button" className="button primary wide" disabled={!dishes.length} onClick={onSave}>
+            {saved ? 'Változások mentése' : 'Mentés'}
+          </button>
+        </>
+      )}
     </section>
   );
 }
 
 /**
- * The custom-day flow for the plan's day: the component selection, then the menu overview and one deck per component, or
- * on a generated day the generated menus.
+ * The day's tray and what it opens: the tray itself, the deck or list of one of its rows, or an idea waiting to be kept.
+ * A day without a tray yet shows an empty one; its first row starts it.
  */
 export function CustomDay({
   plan,
@@ -141,9 +207,6 @@ export function CustomDay({
   onOpenSettings(): void;
 }) {
   const { stage } = draft;
-  if (stage === 'select') {
-    return <CourseSelection draft={draft} onDone={courses => dispatch({ type: 'setCourses', day, courses })} />;
-  }
   if (stage === 'generated') {
     return (
       <GeneratedDeck
@@ -153,107 +216,204 @@ export function CustomDay({
         preferences={preferences}
         onAccept={() => dispatch({ type: 'acceptGenerated', day })}
         onReject={() => dispatch({ type: 'rejectGenerated', day })}
-        onChangeCourses={() => dispatch({ type: 'openStage', day, stage: 'select' })}
+        onLeave={() => dispatch({ type: 'cancelGenerated', day })}
         onOpenSettings={onOpenSettings}
       />
     );
   }
-  if (stage === 'overview') {
+  const row = typeof stage === 'number' ? draft.rows[stage] : undefined;
+  if (!row) {
     return (
-      <MenuOverview
+      <Tray
         draft={draft}
+        candidates={dayCandidates(catalog, day)}
         preferences={preferences}
-        saved={plan.slots[day]?.kind === 'custom'}
-        onOpen={next => dispatch({ type: 'openStage', day, stage: next })}
+        saved={Boolean(plan.slots[day])}
+        onOpen={index => dispatch({ type: 'openStage', day, stage: index })}
+        onAdd={course => dispatch({ type: 'addCourse', day, course })}
+        onEmpty={index => dispatch({ type: 'emptyCourse', day, row: index })}
+        onRemove={index => dispatch({ type: 'removeCourse', day, row: index })}
+        // The seed makes every idea different; the reducer itself stays free of randomness.
+        onGenerate={() => dispatch({ type: 'startGenerated', day, seed: Math.floor(Math.random() * 2 ** 32) })}
         onSave={() => dispatch({ type: 'saveCustom', day })}
+        onOpenSettings={onOpenSettings}
       />
     );
   }
-  if (!isCourse(stage)) return null;
-  return (
-    <CourseDeck
-      key={stage}
-      plan={plan}
-      day={day}
-      course={stage}
-      draft={draft}
-      catalog={catalog}
-      preferences={preferences}
-      teletalWeek={teletalWeek}
-      dispatch={dispatch}
-      onOpenSettings={onOpenSettings}
-    />
-  );
+  const props = {
+    plan,
+    day,
+    index: stage as number,
+    course: row.course,
+    draft,
+    catalog,
+    preferences,
+    teletalWeek,
+    dispatch,
+    onOpenSettings,
+  };
+  return swipedCourses.includes(row.course) ? <RowDeck key={stage} {...props} /> : <ExtraList key={stage} {...props} />;
 }
 
-function CourseDeck({
-  plan,
-  day,
-  course,
-  draft,
-  catalog,
-  preferences,
-  teletalWeek,
-  dispatch,
-  onOpenSettings,
-}: {
+interface RowProps {
   plan: Plan;
   day: Day;
-  course: CustomCourse;
+  /** The index of the open row on the tray. */
+  index: number;
+  course: TrayCourse;
   draft: CustomDraft;
   catalog: Dish[];
   preferences: Preferences;
   teletalWeek: WeekKey | null;
   dispatch(action: PlannerAction): void;
   onOpenSettings(): void;
+}
+
+/** The row's name, and what is left of the calorie limit for it. */
+function RowHeading({ course, remaining }: { course: TrayCourse; remaining: number | null }) {
+  return (
+    <div className="picker-details course-details">
+      <strong>{trayCourseNames[course]}</strong>
+      {remaining !== null && (
+        <span className="day-budget">
+          <Flame size={18} aria-hidden="true" /> Még {calories(Math.max(0, remaining))}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Why a row offers nothing: the calorie limit, with a way past it, or no dish today or the settings' filters. */
+function NothingToOffer({
+  course,
+  draft,
+  overLimitCount,
+  remaining,
+  preferences,
+  onShowOverLimit,
+  onOpenSettings,
+}: {
+  course: TrayCourse;
+  draft: CustomDraft;
+  overLimitCount: number;
+  remaining: number | null;
+  preferences: Preferences;
+  onShowOverLimit(): void;
+  onOpenSettings(): void;
 }) {
-  const candidates = dayCandidates(catalog, day).filter(dish => dish.course === course);
-  const remaining = remainingCalories(draft, preferences, course);
+  return overLimitCount > 0 && !draft.overLimit.includes(course) ? (
+    <>
+      <span className="section-icon">
+        <Minus size={25} />
+      </span>
+      <h2>Nincs a keretbe férő választás</h2>
+      <p>A kalóriakeretedből {calories(Math.max(0, remaining ?? 0))} maradt erre a sorra.</p>
+      <button type="button" className="button secondary" onClick={onShowOverLimit}>
+        Mutasd a kereten felülieket is
+      </button>
+    </>
+  ) : (
+    <>
+      <h2>Nincs választható {course === 'menu' ? 'menü' : 'étel'}</h2>
+      <p>Ebből ma nincs rendelhető, vagy a szűrőid mindet kizárják.</p>
+      <ActiveFilters preferences={preferences} onOpenSettings={onOpenSettings} />
+    </>
+  );
+}
+
+/** A set menu, soup or main: a swipe deck, where right puts the card on the row. */
+function RowDeck({ plan, day, index, course, draft, catalog, preferences, teletalWeek, dispatch, onOpenSettings }: RowProps) {
+  const remaining = remainingCalories(draft, preferences, index);
   return (
     <>
-      <div className="picker-details course-details">
-        <strong>{courseNames[course]}</strong>
-        {remaining !== null && (
-          <span className="day-budget">
-            <Flame size={18} aria-hidden="true" /> Még {calories(Math.max(0, remaining))}
-          </span>
-        )}
-      </div>
+      <RowHeading course={course} remaining={remaining} />
       <SwipeDeck
         plan={plan}
         day={day}
-        candidates={candidates}
-        buildOptions={loaded => courseDeck(loaded, course, draft, preferences).options}
+        candidates={dayCandidates(catalog, day)}
+        buildOptions={loaded => courseDeck(loaded, draft, index, preferences).options}
         target={remaining}
         teletalWeek={teletalWeek}
-        nouns={courseNouns}
-        empty={loaded => {
-          const { overLimitCount } = courseDeck(loaded, course, draft, preferences);
-          return overLimitCount > 0 && !draft.overLimit.includes(course) ? (
-            <>
-              <span className="section-icon">
-                <Minus size={25} />
-              </span>
-              <h2>Nincs a keretbe férő étel</h2>
-              <p>A kalóriakeretedből {calories(Math.max(0, remaining ?? 0))} maradt erre a fogásra.</p>
-              <button type="button" className="button secondary" onClick={() => dispatch({ type: 'showOverLimit', day })}>
-                Mutasd a kereten felülieket is
-              </button>
-            </>
-          ) : (
-            <>
-              <h2>Nincs választható étel</h2>
-              <p>Ebből ma nincs rendelhető étel, vagy a szűrőid mindet kizárják.</p>
-              <ActiveFilters preferences={preferences} onOpenSettings={onOpenSettings} />
-            </>
-          );
-        }}
+        nouns={nouns(course)}
+        empty={loaded => (
+          <NothingToOffer
+            course={course}
+            draft={draft}
+            overLimitCount={courseDeck(loaded, draft, index, preferences).overLimitCount}
+            remaining={remaining}
+            preferences={preferences}
+            onShowOverLimit={() => dispatch({ type: 'showOverLimit', day })}
+            onOpenSettings={onOpenSettings}
+          />
+        )}
         onAction={(action, option) =>
           action === 'right'
             ? option?.dishes[0] && dispatch({ type: 'pickCourse', day, dish: option.dishes[0] })
             : dispatch({ type: 'decide', day, action, option })
         }
       />
+    </>
+  );
+}
+
+/** An extra: a list of the day's dishes, where a tap puts one on the row. */
+function ExtraList({ day, index, course, draft, catalog, preferences, dispatch, onOpenSettings }: RowProps) {
+  const { options, remaining, overLimitCount } = courseDeck(dayCandidates(catalog, day), draft, index, preferences);
+  const picked = draft.rows[index]?.dish;
+  const canShowMore = overLimitCount > 0 && !draft.overLimit.includes(course);
+  return (
+    <>
+      <RowHeading course={course} remaining={remaining} />
+      {options.length ? (
+        <ul className="extra-list" aria-label={trayCourseNames[course]}>
+          {options.map(option => {
+            const dish = option.dishes[0]!;
+            const { title, description } = splitDishName(dish.name);
+            const allergens = dishAllergens(dish);
+            const chosen = picked?.id === dish.id;
+            return (
+              <li key={option.id}>
+                <button type="button" aria-pressed={chosen} onClick={() => dispatch({ type: 'pickCourse', day, dish })}>
+                  <span className="extra-text" lang="hu">
+                    <span className="extra-name">
+                      <span className="meal-code">{dish.code}</span> {title}
+                    </span>
+                    {description && <span className="extra-detail">{description}</span>}
+                    <span className="extra-detail">
+                      Allergének:{' '}
+                      {allergens === null ? 'nincs adat' : allergens.length ? allergenList(allergens) : 'nincs feltüntetve'}
+                    </span>
+                  </span>
+                  <span className="extra-numbers">
+                    <span>{calories(dish.kcal)}</span>
+                    <span>{money(dish.price)}</span>
+                  </span>
+                  <span className="extra-action" aria-hidden="true">
+                    {chosen ? <Check size={18} /> : <Plus size={18} />}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <div className="placeholder-card" role="status">
+          <NothingToOffer
+            course={course}
+            draft={draft}
+            overLimitCount={overLimitCount}
+            remaining={remaining}
+            preferences={preferences}
+            onShowOverLimit={() => dispatch({ type: 'showOverLimit', day })}
+            onOpenSettings={onOpenSettings}
+          />
+        </div>
+      )}
+      {options.length > 0 && canShowMore && (
+        <button type="button" className="button secondary wide" onClick={() => dispatch({ type: 'showOverLimit', day })}>
+          Mutasd a kereten felülieket is ({overLimitCount})
+        </button>
+      )}
     </>
   );
 }

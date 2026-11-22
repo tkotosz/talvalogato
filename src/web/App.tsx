@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Info, SlidersHorizontal, Smartphone, Utensils } from 'lucide-react';
-import { isCourse } from '../core/courses.ts';
 import { initialPlanner, plannerView, reducePlanner, type PlannerAction, type PlannerContext } from '../core/planner.ts';
 import type { Dish } from '../core/types.ts';
 import { upcomingWeeks } from '../core/weeks.ts';
@@ -90,7 +89,8 @@ export function App() {
   }, [step, week, pickerDay]);
 
   const customStage = showPicker && !view.dayDone ? view.custom?.stage : undefined;
-  const inCourseDeck = customStage !== undefined && isCourse(customStage);
+  // A row's deck or list is open: the stage is the row's index.
+  const inCourseDeck = typeof customStage === 'number';
   const canReset = view.hasSavedProgress;
   const dayAction: DayAction | null = !showPicker
     ? step !== 'meals' && canReset
@@ -104,24 +104,22 @@ export function App() {
           ? { label: 'Választás törlése', onClick: () => dispatch({ type: 'clearDay', day }) }
           : null;
 
-  // The meal picker moves through the days in calendar order; inside a custom day, Vissza steps back through its steps.
+  // The meal picker moves through the days in calendar order; a row's deck or list, or an idea, returns to the tray first.
   const { previousDay, nextDay } = view;
   const mealsNext =
     nextDay !== undefined
       ? { label: 'Következő nap', go: () => dispatch({ type: 'openDay', day: nextDay }) }
       : { label: 'Áttekintés', go: () => dispatch({ type: 'navigate', step: 'overview' }) };
   const mealsBack =
-    customStage !== undefined
+    customStage !== undefined && customStage !== 'overview'
       ? { label: 'Vissza', go: backInCustomDay }
       : previousDay !== undefined
         ? { label: 'Előző nap', go: () => dispatch({ type: 'openDay', day: previousDay }) }
         : { label: 'Vissza', go: () => dispatch({ type: 'navigate', step: 'week' }) };
 
   function backInCustomDay() {
-    if (inCourseDeck) return dispatch({ type: 'openStage', day: day!, stage: 'overview' });
-    if (customStage === 'overview' || customStage === 'generated')
-      return dispatch({ type: 'openStage', day: day!, stage: 'select' });
-    dispatch({ type: 'leaveCustom', day: day! });
+    if (customStage === 'generated') return dispatch({ type: 'cancelGenerated', day: day! });
+    dispatch({ type: 'openStage', day: day!, stage: 'overview' });
   }
 
   return (
@@ -182,7 +180,6 @@ export function App() {
           eligible={eligible}
           catalog={catalogItems}
           preferences={preferences}
-          editing={view.editing}
           done={view.dayDone}
           custom={view.custom}
           // The demo's dishes are invented, so they do not link to Teletál.
