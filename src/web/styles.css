@@ -1353,6 +1353,8 @@ fieldset.preference-section {
 
 .review {
   padding-top: 31px;
+  /* Less space under the total, so the overview fits on screen more often. */
+  padding-bottom: 6px;
 }
 .review-heading {
   display: flex;
