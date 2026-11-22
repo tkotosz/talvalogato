@@ -106,7 +106,7 @@ export function MealPhotos({
 function teletalLineUrl(week: WeekKey, { code, day }: Pick<Dish, 'code' | 'day'>): string | null {
   const weekNumber = /^\d{4}-W(\d{2})$/.exec(week)?.[1];
   if (!weekNumber || !dishCodePattern.test(code) || !Number.isInteger(day) || day < 1 || day > 7) return null;
-  return `https://www.teletal.hu/etlap/${Number(weekNumber)}#${code}_${day}`;
+  return `https://www.teletal.hu/etlap/${Number(weekNumber)}#${code}_${Number(day)}`;
 }
 
 /** The allergens Teletál lists for a card's dishes, with a link to check them on Teletál where there is one. */
