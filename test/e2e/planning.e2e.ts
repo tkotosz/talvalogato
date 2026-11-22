@@ -92,8 +92,8 @@ async function addRows(page: Page, ...rows: string[]) {
 }
 
 /**
- * Adds a Teletál menü row, picks the top set menu of its deck, saves the day, and moves on to the next day when there is
- * one. Or only moves on, leaving the day without a decision.
+ * Adds a Teletál menü row, picks the top set menu of its deck, and moves on to the next day when there is one, which saves
+ * the day; on the last day, leaving it later saves it. Or only moves on, leaving the day without a decision.
  */
 async function decide(page: Page, decision: 'Kiválasztom' | 'Következő nap') {
   if (decision === 'Következő nap') return nextDay(page);
@@ -103,9 +103,9 @@ async function decide(page: Page, decision: 'Kiválasztom' | 'Következő nap') 
   await waitForDeck(page);
   await page.getByRole('button', { name: 'Kiválasztom' }).click();
   await page.locator('.custom-summary', { hasText: 'Teletál menü' }).waitFor();
-  await page.getByRole('button', { name: 'Mentés', exact: true }).click();
+  if ((await page.locator('.step-bar').getByRole('button', { name: 'Következő nap' }).count()) === 0) return;
+  await nextDay(page);
   await page.locator(`.week-progress button[aria-label="${day}, étel kiválasztva"]`).waitFor({ timeout: 5_000 });
-  if ((await page.locator('.step-bar').getByRole('button', { name: 'Következő nap' }).count()) > 0) await nextDay(page);
 }
 
 test('a whole week across both decks reaches the overview and the cart link', async () => {
@@ -232,16 +232,17 @@ test('a set menu with an extra, a day built course by course with a removed row,
   await page.locator('.custom-summary', { hasText: 'Savanyúság' }).waitFor();
   await page.screenshot({ path: `${screenshots}tray-menu.png`, fullPage: true });
   const firstDay = (await currentDay(page))?.split(',')[0] ?? '';
-  await page.getByRole('button', { name: 'Mentés', exact: true }).click();
+  await page.getByRole('button', { name: 'Kész', exact: true }).click();
   await page.getByRole('button', { name: 'Nap szerkesztése' }).waitFor();
-  assert.ok((await currentDay(page))?.startsWith(`${firstDay}, étel kiválasztva`), 'Mentés saves and stays on the day');
+  assert.ok((await currentDay(page))?.startsWith(`${firstDay}, étel kiválasztva`), 'Kész saves and stays on the day');
   assert.match(await page.locator('.meal-card h2').innerText(), /kiegészítőkkel/);
   await nextDay(page);
 
-  // Course by course: soup and main rows are added, an extra too, and the soup row is emptied and removed.
+  // Course by course: soup and main rows are added, an extra too, and the soup row is emptied and removed. Going to
+  // the overview without Kész saves the day.
   await addRows(page, 'Leves', 'Főétel');
   assert.equal(await page.locator('.custom-summary .custom-empty').count(), 2);
-  assert.equal(await page.getByRole('button', { name: 'Mentés', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Kész', exact: true }).isDisabled(), true);
   await pickFromOverview(page, 'Leves');
   await pickFromOverview(page, 'Főétel');
   await addExtra(page, 'Desszert');
@@ -251,8 +252,6 @@ test('a set menu with an extra, a day built course by course with a removed row,
   await page.getByRole('button', { name: 'Leves eltávolítása' }).click();
   assert.equal(await page.locator('.tray-row').count(), 2, 'main and dessert');
   await page.screenshot({ path: `${screenshots}tray-courses.png`, fullPage: true });
-  await page.getByRole('button', { name: 'Mentés', exact: true }).click();
-  await page.getByRole('button', { name: 'Nap szerkesztése' }).waitFor();
 
   await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
   await page.locator('.review').waitFor();
@@ -261,7 +260,7 @@ test('a set menu with an extra, a day built course by course with a removed row,
   const custom = page.locator('.review-row', { hasText: 'Saját menü' });
   assert.equal(await custom.locator('.review-item').count(), 2, 'main and dessert');
 
-  // Editing swaps the main and saves.
+  // Editing swaps the main, and leaving the day saves it.
   await custom.click();
   await page.getByRole('button', { name: 'Nap szerkesztése' }).click();
   const mainBefore = await page.locator('.custom-summary button', { hasText: 'Főétel' }).first().innerText();
@@ -272,8 +271,6 @@ test('a set menu with an extra, a day built course by course with a removed row,
   await page.getByRole('button', { name: 'Kiválasztom' }).click();
   await page.locator('.custom-summary').waitFor();
   assert.notEqual(await page.locator('.custom-summary button', { hasText: 'Főétel' }).first().innerText(), mainBefore);
-  await page.getByRole('button', { name: 'Változások mentése' }).click();
-  await page.getByRole('button', { name: 'Nap szerkesztése' }).waitFor();
 
   await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
   await page.getByRole('button', { name: 'Kosárhoz adás' }).click();
@@ -309,7 +306,6 @@ test('a calorie limit hides what does not fit and lets the user go over for a co
   }
   await page.getByRole('button', { name: 'Kiválasztom' }).click();
   await page.locator('.custom-summary').waitFor();
-  await page.getByRole('button', { name: 'Mentés', exact: true }).click();
   await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
   const row = page.locator('.review-row', { hasText: 'Saját menü' });
   await row.waitFor();
@@ -358,8 +354,6 @@ test('an idea fills soup and main within the calorie limit, and a kept idea stay
   await page.locator('.custom-summary').waitFor();
   assert.equal(await page.locator('.tray-row').count(), 2);
   await addExtra(page, 'Ital');
-  await page.getByRole('button', { name: 'Mentés', exact: true }).click();
-  await page.getByRole('button', { name: 'Nap szerkesztése' }).waitFor();
   await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
   const row = page.locator('.review-row', { hasText: 'Saját menü' });
   await row.waitFor();
@@ -401,8 +395,6 @@ test('diet and allergen filters: decks follow the filters, and ordering reminds 
   await page.screenshot({ path: `${screenshots}diet-card.png`, fullPage: true });
   await page.getByRole('button', { name: 'Kiválasztom' }).click();
   await page.locator('.custom-summary').waitFor();
-  await page.getByRole('button', { name: 'Mentés', exact: true }).click();
-  await page.getByRole('button', { name: 'Nap szerkesztése' }).waitFor();
 
   // Before ordering, the overview and the cart dialog both ask to check the allergens on Teletál.
   await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();

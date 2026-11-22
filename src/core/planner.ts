@@ -61,6 +61,8 @@ export type PlannerAction =
   | { type: 'resetWeek' }
   | { type: 'openDay'; day: Day; edit?: boolean }
   | { type: 'clearDay'; day: Day }
+  // Kész on the tray; leaving the day saves the tray too
+  | { type: 'saveTray'; day: Day }
   | { type: 'decide'; day: Day; action: DeckAction; option?: MenuOption | null }
   | { type: 'savePreferences'; preferences: Preferences }
   // The day's tray: rows of Teletál set menus and single dishes, added empty, then filled from their deck or list
@@ -71,7 +73,6 @@ export type PlannerAction =
   | { type: 'emptyCourse'; day: Day; row: number }
   | { type: 'removeCourse'; day: Day; row: number }
   | { type: 'showOverLimit'; day: Day }
-  | { type: 'saveCustom'; day: Day }
   // Ideas: generated dishes for the tray's empty rows, to keep, replace or cancel
   | { type: 'startGenerated'; day: Day; seed: number }
   | { type: 'rejectGenerated'; day: Day }
@@ -205,15 +206,23 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
     return withPlan({ ...plan, custom: { ...plan.custom, [day]: next } });
   }
 
-  /** Saves the day's custom draft as its pick and shows the finished day. */
-  function saveCustom(day: Day): PlannerState {
-    const draft = plan?.custom[day];
-    if (!plan || !draft || day !== view.day || !eligible.includes(day)) return state;
-    const option = customOption(draft, state.preferences);
-    if (!option) return state;
+  /**
+   * Saves the tray of the day the meal picker shows, with Kész or before an action leaves that day. Its dishes become the day's pick;
+   * an idea not kept yet and empty rows are left out. A saved day being edited whose tray has no dishes left has no
+   * decision again. A new tray without dishes stays as it is, for later.
+   */
+  function saveTray(): PlannerState {
+    const day = view.day;
+    const draft = day === undefined ? undefined : plan?.custom[day];
+    if (state.step !== 'meals' || !plan || day === undefined || !draft || !eligible.includes(day)) return state;
+    const option = customOption(withoutGenerated(draft), state.preferences);
+    if (!option && state.editingDay !== day) return state;
+    const slots = { ...plan.slots };
     const custom = { ...plan.custom };
+    if (option) slots[day] = option;
+    else delete slots[day];
     delete custom[day];
-    return withPlan({ ...plan, day, slots: { ...plan.slots, [day]: option }, custom }, { editingDay: null });
+    return withPlan({ ...plan, slots, custom }, { editingDay: null });
   }
 
   /**
@@ -288,6 +297,14 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
     });
   }
 
+  // Leaving the meal picker's day saves its tray first, so the overview and the cart hold what the tray shows.
+  const leavesDay =
+    (action.type === 'navigate' && action.step !== state.step) || (action.type === 'openDay' && action.day !== view.day);
+  if (leavesDay) {
+    const saved = saveTray();
+    if (saved !== state) return reducePlanner(saved, action, context);
+  }
+
   switch (action.type) {
     case 'chooseWeek':
       return { ...state, selectedWeek: action.week };
@@ -317,6 +334,9 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
 
     case 'openDay':
       return openDay(action.day, action.edit === true);
+
+    case 'saveTray':
+      return action.day === view.day ? saveTray() : state;
 
     case 'clearDay': {
       // Removes the day's choice and any work in progress, so the day has no decision again.
@@ -391,9 +411,6 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
         if (!course || draft.overLimit.includes(course)) return null;
         return { ...draft, overLimit: [...draft.overLimit, course] };
       });
-
-    case 'saveCustom':
-      return saveCustom(action.day);
 
     case 'startGenerated':
       // An idea for every empty row on a tray of at least two rows.

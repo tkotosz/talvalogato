@@ -34,21 +34,19 @@ function Tray({
   draft,
   candidates,
   preferences,
-  saved,
   onOpen,
   onAdd,
   onEmpty,
   onRemove,
   onGenerate,
   onSave,
+  onClear,
   onOpenSettings,
 }: {
   draft: CustomDraft;
   /** The day's dishes, to tell which kinds of rows have anything to offer. */
   candidates: Dish[];
   preferences: Preferences;
-  /** The day already has a saved menu that this tray edits. */
-  saved: boolean;
   onOpen(row: number): void;
   onAdd(course: TrayCourse): void;
   /** Takes the dish off a row, keeping the row. */
@@ -57,7 +55,10 @@ function Tray({
   onRemove(row: number): void;
   /** Asks for an idea for the empty rows. */
   onGenerate(): void;
+  /** Saves the tray and shows the finished day. */
   onSave(): void;
+  /** Takes everything off the tray, and the day's saved menu with it. */
+  onClear(): void;
   onOpenSettings(): void;
 }) {
   const dishes = pickedDishes(draft);
@@ -173,9 +174,14 @@ function Tray({
                 : `Napi keret: ${calories(limit)}`}
             </p>
           )}
-          <button type="button" className="button primary wide" disabled={!dishes.length} onClick={onSave}>
-            {saved ? 'Változások mentése' : 'Mentés'}
-          </button>
+          <div className="tray-actions">
+            <button type="button" className="button secondary" onClick={onClear}>
+              Törlés
+            </button>
+            <button type="button" className="button primary" disabled={!dishes.length} onClick={onSave}>
+              Kész
+            </button>
+          </div>
         </>
       )}
     </section>
@@ -228,14 +234,14 @@ export function CustomDay({
         draft={draft}
         candidates={dayCandidates(catalog, day)}
         preferences={preferences}
-        saved={Boolean(plan.slots[day])}
         onOpen={index => dispatch({ type: 'openStage', day, stage: index })}
         onAdd={course => dispatch({ type: 'addCourse', day, course })}
         onEmpty={index => dispatch({ type: 'emptyCourse', day, row: index })}
         onRemove={index => dispatch({ type: 'removeCourse', day, row: index })}
         // The seed makes every idea different; the reducer itself stays free of randomness.
         onGenerate={() => dispatch({ type: 'startGenerated', day, seed: Math.floor(Math.random() * 2 ** 32) })}
-        onSave={() => dispatch({ type: 'saveCustom', day })}
+        onSave={() => dispatch({ type: 'saveTray', day })}
+        onClear={() => dispatch({ type: 'clearDay', day })}
         onOpenSettings={onOpenSettings}
       />
     );
