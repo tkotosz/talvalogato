@@ -69,14 +69,8 @@ export function defaultWeek(weeks: PublishedWeek[], now = new Date()): WeekKey {
 const shortDate = new Intl.DateTimeFormat('hu-HU', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 const longDate = new Intl.DateTimeFormat('hu-HU', { day: 'numeric', month: 'long', timeZone: 'UTC' });
 
-export function weekLabel(key: WeekKey): string {
-  const monday = mondayOfWeek(key);
-  if (!monday) return '';
-  return shortDate.formatRange(monday, addDays(monday, 6));
-}
-
 /**
- * The week for the week selector: its number and dates, such as "48. hét (november 23–29.)", or with short month names,
+ * The week as the week selector and the overview show it: its number and dates, such as "48. hét (november 23–29.)", or with short month names,
  * such as "48. hét (nov. 23–29.)". The week number identifies the year, so a week spanning New Year leaves it out.
  */
 export function weekOptionLabel(key: WeekKey, months: 'long' | 'short'): string {

@@ -1,10 +1,10 @@
 import { ChevronRight, ClipboardList, Copy } from 'lucide-react';
 import type { PlannerView } from '../../core/planner.ts';
 import { days, type OrderSummary } from '../../core/planning.ts';
-import type { Day, MenuOption, Preferences } from '../../core/types.ts';
+import type { Day, MenuOption } from '../../core/types.ts';
 import { menuCode } from '../components/CustomMenuCard.tsx';
-import { AllergenReminder } from '../components/FilterNotes.tsx';
-import { shortDayLabel, weekLabel } from '../../core/weeks.ts';
+import { OrderReminder } from '../components/FilterNotes.tsx';
+import { shortDayLabel, weekOptionLabel } from '../../core/weeks.ts';
 import { appName, calories, copyText, money } from '../format.ts';
 
 /** A menu in the overview: a title row with its code, then one row per item, all aligned on one grid. */
@@ -62,12 +62,10 @@ function SetMenuItems({ option }: { option: MenuOption }) {
 /** Step 3: the week's decisions and what will reach the cart. */
 export function OverviewScreen({
   view,
-  preferences,
   onNotice,
   onViewDay,
 }: {
   view: PlannerView;
-  preferences: Preferences;
   onNotice(message: string): void;
   onViewDay(day: Day): void;
 }) {
@@ -84,7 +82,7 @@ export function OverviewScreen({
 
   async function copyChecklist() {
     const checklist = [
-      appName + ' · ' + weekLabel(plan.week),
+      appName + ' · ' + weekOptionLabel(plan.week, 'short'),
       ...summary.map(({ day, label, option, status, issue }) => {
         if (!option) return label + ' – ' + status;
         const dishes =
@@ -117,7 +115,7 @@ export function OverviewScreen({
         <div>
           <h1>Heti választásaid</h1>
           <p>
-            {weekLabel(plan.week)} · {picks.length} napra választottál ételt
+            {weekOptionLabel(plan.week, 'short')} · {picks.length} napra választottál ételt
           </p>
         </div>
         <button
@@ -132,7 +130,7 @@ export function OverviewScreen({
           <span>Étellista másolása vágólapra</span>
         </button>
       </div>
-      <AllergenReminder preferences={preferences} />
+      <OrderReminder />
       <ol className="review-list">
         {summary.map(({ day, label, available, option, status, issue }) => {
           const contents = (
@@ -176,7 +174,7 @@ export function OverviewScreen({
         <p className="review-note">A megjelölt választások figyelmet igényelnek. A kosárba a többi választható tétel kerül.</p>
       )}
       <div className="review-total">
-        <span>{hasIssues ? 'Küldhető tételek összege' : 'Becsült összeg'}</span>
+        <span>{hasIssues ? 'Küldhető tételek összege' : 'Összesen'}</span>
         <strong>
           {kcal === null ? 'ismeretlen kcal' : calories(kcal)} · {money(total)}
         </strong>

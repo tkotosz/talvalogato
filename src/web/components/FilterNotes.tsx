@@ -1,5 +1,5 @@
 import { SlidersHorizontal, TriangleAlert } from 'lucide-react';
-import { activeFilters, allergenList } from '../../core/filters.ts';
+import { activeFilters } from '../../core/filters.ts';
 import type { Preferences } from '../../core/types.ts';
 
 /** For an empty deck: which settings leave dishes out, and a way to change them. Nothing without active filters. */
@@ -16,15 +16,14 @@ export function ActiveFilters({ preferences, onOpenSettings }: { preferences: Pr
   );
 }
 
-/** While the allergen filter is on: which allergens it leaves out, and that they must be checked on Teletál before ordering. */
-export function AllergenReminder({ preferences }: { preferences: Preferences }) {
-  if (!preferences.filterAllergens || !preferences.excludedAllergens.length) return null;
+/** Before ordering: the allergens and prices must be checked on Teletál, because they are copied from its pages. */
+export function OrderReminder() {
   return (
-    <p className="info-note allergen-reminder" role="note">
+    <p className="info-note order-reminder" role="note">
       <TriangleAlert size={18} aria-hidden="true" />
       <span>
-        <b>Allergénszűrő: {allergenList(preferences.excludedAllergens)}.</b> A szűrő a Teletál oldaláról automatikusan átvett
-        adatokon alapul, ezek hibásak vagy hiányosak lehetnek. Rendelés előtt ellenőrizd az ételek allergénjeit a Teletál oldalán.
+        <b>Figyelmeztetés:</b> a Teletál adatait nem valós időben szerezzük be, ezért elavultak, hibásak vagy hiányosak lehetnek.
+        Rendelés előtt ellenőrizd az ételek allergénjeit és árait a Teletál oldalán.
       </span>
     </p>
   );

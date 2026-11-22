@@ -6,9 +6,9 @@ import type { CartLine, Dish, Plan, Preferences } from '../../core/types.ts';
 import { eligibleDays } from '../../core/weeks.ts';
 import { maxCartLines, shortcutUrl, teletalWeekUrl } from '../cart-shortcut.ts';
 import { appName, copyText, shareLink } from '../format.ts';
-import { AllergenReminder } from './FilterNotes.tsx';
+import { OrderReminder } from './FilterNotes.tsx';
 
-function CartInstructions({ plan, lines, preferences }: { plan: Plan; lines: CartLine[]; preferences: Preferences }) {
+function CartInstructions({ plan, lines }: { plan: Plan; lines: CartLine[] }) {
   const url = teletalWeekUrl(plan, lines);
   const shortcut = shortcutUrl();
   const [copyStatus, setCopyStatus] = useState('');
@@ -72,7 +72,7 @@ function CartInstructions({ plan, lines, preferences }: { plan: Plan; lines: Car
           <p>Hagyd jóvá a tételeket. Utána megnyílik a Teletál-kosár, ahol ellenőrizheted és leadhatod a rendelést.</p>
         </li>
       </ol>
-      <AllergenReminder preferences={preferences} />
+      <OrderReminder />
       <a className="button primary wide" href={url} target="_blank" rel="noreferrer">
         <ShoppingBasket size={19} /> Heti étlap megnyitása a Teletálon
       </a>
@@ -135,7 +135,7 @@ export function CartDialogContent({
       {Object.keys(issues).length > 0 && (
         <p role="status">A kosárba csak a rendelhető és a beállításaidnak megfelelő tételek kerülnek.</p>
       )}
-      <CartInstructions plan={plan} lines={lines} preferences={preferences} />
+      <CartInstructions plan={plan} lines={lines} />
     </>
   );
 }
