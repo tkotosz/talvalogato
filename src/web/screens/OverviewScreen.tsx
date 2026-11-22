@@ -1,6 +1,6 @@
 import { ChevronRight, ClipboardList, Copy } from 'lucide-react';
 import type { PlannerView } from '../../core/planner.ts';
-import { days, type OrderSummary } from '../../core/planning.ts';
+import { days, menuCourseNames, type OrderSummary } from '../../core/planning.ts';
 import type { Day, MenuOption } from '../../core/types.ts';
 import { menuCode } from '../components/CustomMenuCard.tsx';
 import { OrderReminder } from '../components/FilterNotes.tsx';
@@ -31,14 +31,15 @@ function MenuItems({
   );
 }
 
-/** A custom day: its dishes with their Teletál codes. */
+/** A custom day: its dishes with their Teletál codes, a set menu's courses each on its own line under the menu's code. */
 function CustomItems({ option }: { option: MenuOption }) {
-  // A Teletál set menu among the dishes is named, with its courses after it.
-  const items = option.dishes.map(dish => ({
-    key: dish.id,
-    code: dish.code,
-    text: dish.course ? dish.name : `${dish.menuName}: ${dish.name}`,
-  }));
+  const items = option.dishes.flatMap((dish, index) =>
+    (dish.course ? [dish.name] : menuCourseNames(dish)).map((text, part) => ({
+      key: `${index}:${part}`,
+      code: dish.code,
+      text,
+    })),
+  );
   return <MenuItems code={menuCode(option)} title={option.title} items={items} />;
 }
 

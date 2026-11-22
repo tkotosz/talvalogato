@@ -11,6 +11,7 @@ import {
   restorePlan,
   restorePlans,
   restorePreferences,
+  menuCourseNames,
   splitDishName,
   startPlan,
   withDetails,
@@ -320,6 +321,16 @@ test("dish details keep the brief names of Teletál's menu page, with calories a
   assert.equal(singleDetails.name, 'Eszterházy pulykatokány, jázmin rizs');
   assert.equal(singleDetails.components?.[0]?.name, 'Eszterházy pulykatokány, jázmin rizs');
   assert.equal(withDetails(single, undefined).kcal, null);
+});
+
+test("a set menu's courses come from its details, or from its name until they load", () => {
+  const menu = { ...dishes[0]!, name: 'Babeleves (füstölt csülökkel) / Rántott csirkemell' };
+  assert.deepEqual(menuCourseNames({ ...menu, components: undefined }), ['Babeleves (füstölt csülökkel)', 'Rántott csirkemell']);
+  const components = [
+    { name: 'Babeleves', kcal: 300, photo: null },
+    { name: 'Rántott csirkemell', kcal: 700, photo: null },
+  ];
+  assert.deepEqual(menuCourseNames({ ...menu, components }), ['Babeleves', 'Rántott csirkemell']);
 });
 
 test('dish names split into a title and the parenthesized description', () => {

@@ -220,6 +220,12 @@ export function dayCandidates<T extends CatalogDish>(catalog: T[], day: Day): T[
   return catalog.filter(dish => dish.day === day || (day > 5 && dish.day === 5 && !ownCodes.has(dish.code)));
 }
 
+/** A set menu's courses: from its details, or from the name Teletál joins with " / " until they load. */
+export function menuCourseNames(dish: Dish): string[] {
+  if (dish.components?.length) return dish.components.map(course => course.name);
+  return dish.name.split(' / ');
+}
+
 /**
  * Splits a Teletál dish name such as "Mikulás puttonya (diós, töltött csirkemell), jázmin rizs" into a title without the
  * parenthesized parts, "Mikulás puttonya, jázmin rizs", and those parts as a description. A name without parentheses, or

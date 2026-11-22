@@ -11,7 +11,7 @@ import {
 } from '../../core/custom.ts';
 import { allergenList, dishAllergens } from '../../core/filters.ts';
 import type { PlannerAction } from '../../core/planner.ts';
-import { calorieLimit, dayCandidates, splitDishName } from '../../core/planning.ts';
+import { calorieLimit, dayCandidates, menuCourseNames, splitDishName } from '../../core/planning.ts';
 import type { CustomDraft, Day, Dish, Plan, Preferences, TrayCourse, WeekKey } from '../../core/types.ts';
 import { ActiveFilters } from '../components/FilterNotes.tsx';
 import { GeneratedDeck } from '../components/GeneratedDeck.tsx';
@@ -25,12 +25,6 @@ const nouns = (course: TrayCourse) =>
 
 /** Names for running text, such as "teletál menü, ital". */
 const lowerNames = (courses: TrayCourse[]) => courses.map(course => trayCourseNames[course].toLocaleLowerCase('hu')).join(', ');
-
-/** A set menu's courses, one per line: from its details, or from the name Teletál joins with " / " until they load. */
-function menuCourseNames(dish: Dish): string[] {
-  if (dish.components?.length) return dish.components.map(course => course.name);
-  return dish.name.split(' / ');
-}
 
 /**
  * The day's tray: its rows of set menus and dishes, the buttons that add empty rows, and what the rows add up to. A row
