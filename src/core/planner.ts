@@ -294,7 +294,11 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
 
     case 'setWeekDays': {
       const weekDays = { ...state.weekDays, [week]: action.days };
-      return plan ? withPlan({ ...plan, selectedDays: action.days }, { weekDays }) : { ...state, weekDays };
+      // The last choice with any day in it is preselected for weeks without a plan.
+      const preferences = action.days.length ? { ...state.preferences, defaultDays: action.days } : state.preferences;
+      return plan
+        ? withPlan({ ...plan, selectedDays: action.days }, { weekDays, preferences })
+        : { ...state, weekDays, preferences };
     }
 
     case 'navigate': {

@@ -191,6 +191,7 @@ export interface Preferences {
   tolerance: number;
   filterCodes: boolean;
   excludedCodes: string[];
+  /** The days last chosen on the week screen, preselected for a week without a plan. */
   defaultDays: Day[];
   /** Every dish, or only the dishes Teletál marks vegetarian (vegan ones included) or vegan. */
   diet: 'all' | Diet;

@@ -292,6 +292,8 @@ test('a calorie limit hides what does not fit and lets the user go over for a co
   await page.locator('#tolerance').fill('0');
   await page.getByRole('button', { name: 'Mentés' }).click();
   await page.locator('dialog[open]').waitFor({ state: 'detached' });
+  await page.getByText('Szűrők:').waitFor();
+  await page.screenshot({ path: `${screenshots}week-filters.png`, fullPage: true });
   await page.getByRole('button', { name: 'Válogatás indítása' }).click();
   await addRows(page, 'Leves', 'Főétel');
   await pickFromOverview(page, 'Leves');

@@ -164,6 +164,8 @@ export function App() {
           dispatch={dispatch}
           onRetryWeeks={published.retry}
           onRetryCatalog={catalog.retry}
+          preferences={preferences}
+          onOpenSettings={() => setDialog('preferences')}
         />
       ) : order ? (
         <OverviewScreen
