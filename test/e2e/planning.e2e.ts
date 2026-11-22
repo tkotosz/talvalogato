@@ -349,6 +349,55 @@ test('a generated day offers whole menus within the calorie limit, and Vissza re
   assert.deepEqual(errors, []);
 });
 
+test('diet and allergen filters: the notice comes first, decks follow the filters, and ordering reminds to check allergens', async () => {
+  const { page, errors } = await openPlanner();
+  await page.getByRole('button', { name: 'Beállítások' }).click();
+  await page.getByLabel('Vegán').check();
+  await page.getByLabel('Allergének kizárása').check();
+  const save = page.getByRole('button', { name: 'Mentés' });
+  assert.equal(await save.isDisabled(), true, 'the allergen notice must be confirmed before saving');
+  await page.getByLabel(/^Értem/).check();
+  // The demo has two vegan mains a day, and at most one of them has sesame.
+  await page.getByLabel('Szezámmag').check();
+  await page.screenshot({ path: `${screenshots}diet-settings.png`, fullPage: true });
+  await save.click();
+  await page.locator('dialog[open]').waitFor({ state: 'detached' });
+
+  // Teletál's set menus are not vegan, so the lunch deck is empty and names the filters.
+  await page.getByRole('button', { name: 'Válogatás indítása' }).click();
+  await page.getByRole('button', { name: 'Teletál ebédmenü választása' }).click();
+  await page.getByText('Bekapcsolt szűrők: vegán étrend; allergének: szezámmag.').waitFor();
+  await page.screenshot({ path: `${screenshots}diet-empty-deck.png`, fullPage: true });
+
+  await page.locator('.day-steps').getByRole('button', { name: 'Mit eszel?' }).click();
+  await page.getByRole('button', { name: 'Saját menü összeállítása' }).click();
+  await page.locator('.custom-step').getByRole('button', { name: 'Tovább' }).click();
+  await page.locator('.custom-summary button', { hasText: 'Főétel' }).click();
+  await waitForDeck(page);
+  const card = page.locator('.meal-card').first();
+  assert.equal(await card.locator('.tag-mark', { hasText: /^Vegán$/ }).count(), 1);
+  const allergens = await card.locator('.meal-allergens').innerText();
+  assert.match(allergens, /^Allergének a Teletál szerint:/);
+  assert.doesNotMatch(allergens, /szezámmag/);
+  const teletal = card.getByRole('link', { name: /Ellenőrzés a Teletálon/ });
+  assert.match((await teletal.getAttribute('href'))!, /^https:\/\/www\.teletal\.hu\/etlap\/\d+#VF\d_\d$/);
+  await page.screenshot({ path: `${screenshots}diet-card.png`, fullPage: true });
+  await page.getByRole('button', { name: 'Kiválasztom' }).click();
+  await page.locator('.custom-summary').waitFor();
+  await page.getByRole('button', { name: 'Mentés', exact: true }).click();
+  await page.getByRole('button', { name: 'Nap szerkesztése' }).waitFor();
+
+  // Before ordering, the overview and the cart dialog both ask to check the allergens on Teletál.
+  await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
+  await page.locator('.review .allergen-reminder', { hasText: 'Allergénszűrő: szezámmag.' }).waitFor();
+  await page.getByRole('button', { name: 'Kosárhoz adás' }).click();
+  const reminder = page.locator('dialog[open] .allergen-reminder');
+  await reminder.waitFor({ timeout: 30_000 });
+  const openMenu = page.locator('dialog[open] a.button.primary');
+  assert.ok((await reminder.boundingBox())!.y < (await openMenu.boundingBox())!.y, 'the reminder sits above the cart button');
+  assert.deepEqual(errors, []);
+});
+
 test('the demo says so and leaves out the cart', async () => {
   const { page, errors } = await openPlanner({ demo: true });
   assert.match(await page.locator('.demo-banner').innerText(), /Bemutató változat/);

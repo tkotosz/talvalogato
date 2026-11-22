@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Flame } from 'lucide-react';
 import { calorieLimit, restorePreferences, validCalorieBudget } from '../../core/planning.ts';
-import type { Preferences, WeekKey } from '../../core/types.ts';
+import type { Dish, Preferences, WeekKey } from '../../core/types.ts';
 import { calories } from '../format.ts';
 import { CodeFilter } from './CodeFilter.tsx';
 import { DayChoices } from './DayChoices.tsx';
+import { DietFilters } from './DietFilters.tsx';
 
 /** Preferences while being edited: a number field can be empty. */
 type Draft = Omit<Preferences, 'calories' | 'tolerance'> & { calories: number | ''; tolerance: number | '' };
@@ -14,22 +15,30 @@ const numberValue = (input: HTMLInputElement) => (input.value === '' ? '' : inpu
 export function PreferencesForm({
   preferences,
   week,
+  catalog,
+  demo,
   onSave,
 }: {
   preferences: Preferences;
   /** The week whose catalog lists the menu codes, or empty while weeks load. */
   week: WeekKey;
+  /** The week's dishes, to show how many the filters hide, or null while they load. */
+  catalog: Dish[] | null;
+  /** The menu is the invented demo. */
+  demo: boolean;
   onSave(preferences: Preferences): void;
 }) {
   const [draft, setDraft] = useState<Draft>(preferences);
   const change = <Key extends keyof Draft>(key: Key, value: Draft[Key]) => setDraft(current => ({ ...current, [key]: value }));
   const validBudget = validCalorieBudget(draft);
+  // The allergen filter needs the confirmed notice before it can be saved.
+  const canSave = (!draft.limitCalories || validBudget) && (!draft.filterAllergens || draft.allergenNoticeAccepted);
   return (
     <form
       className="preferences-form"
       onSubmit={event => {
         event.preventDefault();
-        if (!draft.limitCalories || validBudget) onSave(restorePreferences(draft));
+        if (canSave) onSave(restorePreferences(draft));
       }}
     >
       <DayChoices
@@ -100,8 +109,14 @@ export function PreferencesForm({
         ) : (
           <p role="status">A kódlista az elérhető hetek betöltése után jelenik meg.</p>
         ))}
+      <DietFilters
+        value={draft}
+        onChange={changes => setDraft(current => ({ ...current, ...changes }))}
+        catalog={catalog}
+        demo={demo}
+      />
       <div className="modal-actions">
-        <button type="submit" className="button primary" disabled={draft.limitCalories && !validBudget}>
+        <button type="submit" className="button primary" disabled={!canSave}>
           Mentés
         </button>
       </div>

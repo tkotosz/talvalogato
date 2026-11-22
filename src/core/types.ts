@@ -171,6 +171,9 @@ export interface Plan {
   custom: Record<Day, CustomDraft>;
 }
 
+/** A common dislike the settings offer, such as mushrooms or pork. */
+export type Dislike = 'mushroom' | 'pork' | 'beef' | 'lamb' | 'offal' | 'seafood' | 'spicy' | 'dill' | 'coriander';
+
 export interface Preferences {
   limitCalories: boolean;
   calories: number;
@@ -180,6 +183,18 @@ export interface Preferences {
   defaultDays: Day[];
   /** The components ticked on the last custom day. */
   customCourses: CustomCourse[];
+  /** Every dish, or only the dishes Teletál marks vegetarian (vegan ones included) or vegan. */
+  diet: 'all' | Diet;
+  /** Leave out the dishes that contain an excluded allergen, and those whose allergens are unknown. */
+  filterAllergens: boolean;
+  excludedAllergens: Allergen[];
+  /** The user confirmed the allergen notice; the allergen filter stays off without it. */
+  allergenNoticeAccepted: boolean;
+  /** Leave out the dishes whose names or ingredients mention a dislike. */
+  filterDislikes: boolean;
+  dislikes: Dislike[];
+  /** Words of the user's own, matched like the common dislikes. */
+  ownDislikes: string[];
 }
 
 export type MenuDeckId = 'lunch' | 'fullDay';

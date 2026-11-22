@@ -1,7 +1,8 @@
 import { Flame } from 'lucide-react';
+import { optionAllergens } from '../../core/filters.ts';
 import type { MenuOption } from '../../core/types.ts';
 import { calories, money } from '../format.ts';
-import { MealPhotos } from './MealCard.tsx';
+import { AllergenLine, MealPhotos } from './MealCard.tsx';
 
 /** A custom day, saved or generated: its dishes with their Teletál codes, and the totals. */
 export function CustomMenuCard({
@@ -42,6 +43,7 @@ export function CustomMenuCard({
             </li>
           ))}
         </ul>
+        <AllergenLine allergens={optionAllergens(option)} />
         <div className="meal-meta">
           <span className={`calorie-badge${overTarget ? ' over-target' : ''}`}>
             <Flame size={17} />

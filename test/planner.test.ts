@@ -9,7 +9,7 @@ import {
   type PlannerState,
 } from '../src/core/planner.ts';
 import { mealOptions, newPreferences } from '../src/core/planning.ts';
-import type { Day, Dish } from '../src/core/types.ts';
+import type { Allergen, Day, Dish } from '../src/core/types.ts';
 
 /** The week the tests plan. */
 const w48 = '2026-W48';
@@ -223,4 +223,51 @@ test('clearing a day removes its choice and any custom draft, and keeps the day 
   state = run(state, { type: 'startCustom', day: 3 }, { type: 'clearDay', day: 3 });
   assert.equal(state.plans[w48]!.custom[3], undefined);
   assert.equal(run(state, { type: 'clearDay', day: 5 }), state, 'only the open day can be cleared');
+});
+
+const milkFilter = {
+  ...newPreferences,
+  filterAllergens: true,
+  allergenNoticeAccepted: true,
+  excludedAllergens: ['milk' as const],
+};
+const withAllergens = (dish: Dish, allergens: Allergen[] | null): Dish => ({
+  ...dish,
+  components: [{ name: dish.name, kcal: 900, photo: null, allergens, ingredients: null }],
+});
+
+test('saved picks are checked against the current menu data, so a correction made after the pick flags the day', () => {
+  let state = run(
+    initialPlanner({}, newPreferences),
+    { type: 'navigate', step: 'meals' },
+    { type: 'decide', day: 3, action: 'right', option: pick(3) },
+    { type: 'savePreferences', preferences: milkFilter },
+    { type: 'navigate', step: 'overview' },
+  );
+  // The saved pick has no allergen data, and the current data now lists milk for the same line.
+  const corrected = catalog.map(dish => withAllergens(dish, dish.day === 3 ? ['milk'] : []));
+  assert.equal(plannerView(state, { ...context, catalog: corrected }).order?.issues[3], 'Allergént tartalmaz: tej');
+  const cleared = catalog.map(dish => withAllergens(dish, []));
+  assert.deepEqual(plannerView(state, { ...context, catalog: cleared }).order?.issues, {});
+  state = run(state, { type: 'savePreferences', preferences: newPreferences });
+  assert.deepEqual(plannerView(state, context).order?.issues, {});
+});
+
+test('a card the settings filter out cannot be picked, judged by the current menu data', () => {
+  const vegan = { ...newPreferences, diet: 'vegan' as const };
+  let state = run(initialPlanner({}, vegan), { type: 'navigate', step: 'meals' });
+  state = run(state, {
+    type: 'decide',
+    day: 3,
+    action: 'right',
+    option: { ...pick(3), dishes: [{ ...menu(3, 'P'), diet: 'vegan' }] },
+  });
+  assert.equal(state.plans[w48]?.slots[3], undefined, 'the current data has no vegan mark for the line');
+
+  const veganCatalog = catalog.map(dish => ({ ...dish, diet: 'vegan' as const }));
+  state = [{ type: 'decide', day: 3, action: 'right', option: pick(3) } as const].reduce(
+    (current, action) => reducePlanner(current, action, { ...context, catalog: veganCatalog }),
+    state,
+  );
+  assert.equal(state.plans[w48]?.slots[3]?.id, pick(3).id);
 });

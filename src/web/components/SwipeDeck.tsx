@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Bookmark, Check, RotateCcw, Utensils, X } from 'lucide-react';
 import { dayQueue, type DeckAction } from '../../core/planning.ts';
-import type { Day, Dish, MenuOption, Plan } from '../../core/types.ts';
+import type { Day, Dish, MenuOption, Plan, WeekKey } from '../../core/types.ts';
 import { number } from '../format.ts';
 import { MealCard } from './MealCard.tsx';
 import { SwipeCard, type SwipeCardHandle, type SwipeDirection } from './SwipeCard.tsx';
@@ -58,6 +58,7 @@ export function SwipeDeck({
   candidates,
   buildOptions,
   target,
+  teletalWeek,
   nouns,
   empty,
   onAction,
@@ -68,6 +69,8 @@ export function SwipeDeck({
   buildOptions(dishes: Dish[]): MenuOption[];
   /** Calories a card may have before it shows as over the target, or null. */
   target: number | null;
+  /** The week whose Teletál menu the cards link to, or null for no links. */
+  teletalWeek: WeekKey | null;
   nouns: DeckNouns;
   /** Shown when no card can be offered at all, given the candidates. */
   empty(dishes: Dish[]): ReactNode;
@@ -114,7 +117,7 @@ export function SwipeDeck({
                 if (direction !== 'down') act(direction);
               }}
             >
-              <MealCard option={top} target={target} />
+              <MealCard option={top} target={target} teletalWeek={teletalWeek} />
             </SwipeCard>
           </>
         )}

@@ -4,7 +4,8 @@ import { courseNames, extraCourses, isCourse, mainCourses } from '../../core/cou
 import { courseDeck, pickedDishes, remainingCalories, totalCalories } from '../../core/custom.ts';
 import type { PlannerAction } from '../../core/planner.ts';
 import { calorieLimit, dayCandidates } from '../../core/planning.ts';
-import type { Dish, CustomCourse, CustomDraft, Day, Plan, Preferences } from '../../core/types.ts';
+import type { Dish, CustomCourse, CustomDraft, Day, Plan, Preferences, WeekKey } from '../../core/types.ts';
+import { ActiveFilters } from '../components/FilterNotes.tsx';
 import { GeneratedDeck } from '../components/GeneratedDeck.tsx';
 import { SwipeDeck } from '../components/SwipeDeck.tsx';
 import { calories, money } from '../format.ts';
@@ -125,14 +126,19 @@ export function CustomDay({
   draft,
   catalog,
   preferences,
+  teletalWeek,
   dispatch,
+  onOpenSettings,
 }: {
   plan: Plan;
   day: Day;
   draft: CustomDraft;
   catalog: Dish[];
   preferences: Preferences;
+  /** The week whose Teletál menu the cards link to, or null for no links. */
+  teletalWeek: WeekKey | null;
   dispatch(action: PlannerAction): void;
+  onOpenSettings(): void;
 }) {
   const { stage } = draft;
   if (stage === 'select') {
@@ -148,6 +154,7 @@ export function CustomDay({
         onAccept={() => dispatch({ type: 'acceptGenerated', day })}
         onReject={() => dispatch({ type: 'rejectGenerated', day })}
         onChangeCourses={() => dispatch({ type: 'openStage', day, stage: 'select' })}
+        onOpenSettings={onOpenSettings}
       />
     );
   }
@@ -172,7 +179,9 @@ export function CustomDay({
       draft={draft}
       catalog={catalog}
       preferences={preferences}
+      teletalWeek={teletalWeek}
       dispatch={dispatch}
+      onOpenSettings={onOpenSettings}
     />
   );
 }
@@ -184,7 +193,9 @@ function CourseDeck({
   draft,
   catalog,
   preferences,
+  teletalWeek,
   dispatch,
+  onOpenSettings,
 }: {
   plan: Plan;
   day: Day;
@@ -192,7 +203,9 @@ function CourseDeck({
   draft: CustomDraft;
   catalog: Dish[];
   preferences: Preferences;
+  teletalWeek: WeekKey | null;
   dispatch(action: PlannerAction): void;
+  onOpenSettings(): void;
 }) {
   const candidates = dayCandidates(catalog, day).filter(dish => dish.course === course);
   const remaining = remainingCalories(draft, preferences, course);
@@ -212,6 +225,7 @@ function CourseDeck({
         candidates={candidates}
         buildOptions={loaded => courseDeck(loaded, course, draft, preferences).options}
         target={remaining}
+        teletalWeek={teletalWeek}
         nouns={courseNouns}
         empty={loaded => {
           const { overLimitCount } = courseDeck(loaded, course, draft, preferences);
@@ -230,6 +244,7 @@ function CourseDeck({
             <>
               <h2>Nincs választható étel</h2>
               <p>Ebből ma nincs rendelhető étel, vagy a szűrőid mindet kizárják.</p>
+              <ActiveFilters preferences={preferences} onOpenSettings={onOpenSettings} />
             </>
           );
         }}

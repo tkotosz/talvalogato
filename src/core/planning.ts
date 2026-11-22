@@ -1,4 +1,6 @@
+import { allAllergens, inAllergenOrder } from './allergens.ts';
 import { defaultCourses, normalizeCourses } from './courses.ts';
+import { allDislikes, dishIssue, ownDislikeWord } from './filters.ts';
 import { addDays, mondayOfWeek, todayInBudapest } from './weeks.ts';
 import type {
   CartLine,
@@ -34,8 +36,17 @@ export const newPreferences: Preferences = {
   excludedCodes: [],
   defaultDays: allDays,
   customCourses: defaultCourses,
+  diet: 'all',
+  filterAllergens: false,
+  excludedAllergens: [],
+  allergenNoticeAccepted: false,
+  filterDislikes: false,
+  dislikes: [],
+  ownDislikes: [],
 };
 export const dishCodePattern = /^[A-Z0-9][A-Z0-9-]{0,15}$/i;
+/** The most own dislikes the settings keep. */
+export const maxOwnDislikes = 20;
 
 /** Preference values as stored or typed in, before validation. */
 export type PreferenceInput = { [Key in keyof Preferences]?: unknown };
@@ -75,6 +86,7 @@ function normalizeDays(selection: unknown): Day[] {
 export function restorePreferences(values: PreferenceInput | null): Preferences {
   if (!values) return newPreferences;
   const validBudget = validCalorieBudget(values);
+  const allergenNoticeAccepted = values.allergenNoticeAccepted === true;
   const excludedCodes = Array.isArray(values.excludedCodes)
     ? [
         ...new Set(
@@ -92,6 +104,26 @@ export function restorePreferences(values: PreferenceInput | null): Preferences 
     excludedCodes,
     defaultDays: normalizeDays(values.defaultDays),
     customCourses: Array.isArray(values.customCourses) ? normalizeCourses(values.customCourses) : defaultCourses,
+    diet: values.diet === 'vegetarian' || values.diet === 'vegan' ? values.diet : 'all',
+    // The allergen filter needs the confirmed notice.
+    filterAllergens: values.filterAllergens === true && allergenNoticeAccepted,
+    excludedAllergens: Array.isArray(values.excludedAllergens)
+      ? inAllergenOrder(allAllergens.filter(allergen => (values.excludedAllergens as unknown[]).includes(allergen)))
+      : [],
+    allergenNoticeAccepted,
+    filterDislikes: values.filterDislikes === true,
+    dislikes: Array.isArray(values.dislikes)
+      ? allDislikes.filter(dislike => (values.dislikes as unknown[]).includes(dislike))
+      : [],
+    ownDislikes: Array.isArray(values.ownDislikes)
+      ? [
+          ...new Set(
+            values.ownDislikes
+              .map(word => (typeof word === 'string' ? ownDislikeWord(word) : null))
+              .filter(word => word !== null),
+          ),
+        ].slice(0, maxOwnDislikes)
+      : [],
   };
 }
 
@@ -207,9 +239,8 @@ export function matchesCalorieLimit(kcal: number | null, preferences: Preference
 }
 
 export function mealOptions(dishes: Dish[], preferences: Preferences, deck: MenuDeckId): MenuOption[] {
-  const excluded = new Set(preferences.filterCodes ? preferences.excludedCodes : []);
   const options: MenuOption[] = dishes
-    .filter(dish => menuDeck(dish) === deck && !excluded.has(dish.code) && matchesCalorieLimit(dish.kcal, preferences))
+    .filter(dish => menuDeck(dish) === deck && !dishIssue(dish, preferences) && matchesCalorieLimit(dish.kcal, preferences))
     .map(dish => ({
       id: dish.id,
       kind: 'menu',
@@ -231,18 +262,15 @@ export function selectionIssue(
   option: MenuOption,
   day: Day,
   eligible: Day[],
-  catalog: CatalogDish[],
+  catalog: Dish[],
   preferences: Preferences,
 ): string | null {
   const candidates = dayCandidates(catalog, day);
-  if (
-    !eligible.includes(day) ||
-    option.dishes.some(dish => !candidates.some(item => item.day === dish.day && item.code === dish.code))
-  ) {
-    return 'Már nem rendelhető';
-  }
-  if (preferences.filterCodes && option.dishes.some(dish => preferences.excludedCodes.includes(dish.code)))
-    return 'Kizárt Teletál-kód';
+  // Each picked dish as the current menu data has it, so a correction made after the pick counts.
+  const current = option.dishes.map(dish => candidates.find(item => item.day === dish.day && item.code === dish.code));
+  if (!eligible.includes(day) || current.some(dish => !dish)) return 'Már nem rendelhető';
+  const issue = current.map(dish => dishIssue(dish!, preferences)).find(Boolean);
+  if (issue) return issue;
   // A custom day the user chose to take over the limit still goes to the cart.
   if (!matchesCalorieLimit(option.kcal, preferences) && !option.custom?.overLimit)
     return Number.isFinite(option.kcal) ? 'Kalóriakereten felül' : 'Nincs kalóriaadat';
@@ -304,7 +332,7 @@ export interface OrderSummary {
   total: number;
 }
 
-export function orderSummary(plan: Plan, eligible: Day[], catalog: CatalogDish[], preferences: Preferences): OrderSummary {
+export function orderSummary(plan: Plan, eligible: Day[], catalog: Dish[], preferences: Preferences): OrderSummary {
   const issues: Record<Day, string> = {};
   const slots: Record<Day, MenuOption> = {};
   for (const [key, option] of Object.entries(plan.slots)) {

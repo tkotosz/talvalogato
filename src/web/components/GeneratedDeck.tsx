@@ -7,6 +7,7 @@ import { calorieLimit, dayCandidates } from '../../core/planning.ts';
 import type { CustomDraft, Day, Dish, Preferences } from '../../core/types.ts';
 import { calories } from '../format.ts';
 import { CustomMenuCard } from './CustomMenuCard.tsx';
+import { ActiveFilters } from './FilterNotes.tsx';
 import { useSwipeKeys } from './SwipeDeck.tsx';
 import { SwipeCard, type SwipeCardHandle, type SwipeDirection } from './SwipeCard.tsx';
 
@@ -25,6 +26,7 @@ export function GeneratedDeck({
   onAccept,
   onReject,
   onChangeCourses,
+  onOpenSettings,
 }: {
   day: Day;
   draft: CustomDraft;
@@ -33,6 +35,7 @@ export function GeneratedDeck({
   onAccept(): void;
   onReject(): void;
   onChangeCourses(): void;
+  onOpenSettings(): void;
 }) {
   const card = useRef<SwipeCardHandle>(null);
   const option = customOption(draft, preferences);
@@ -59,6 +62,7 @@ export function GeneratedDeck({
             <>
               <h2>Nincs választható étel</h2>
               <p>A kiválasztott fogásokból ma nincs rendelhető étel, vagy a szűrőid mindet kizárják.</p>
+              <ActiveFilters preferences={preferences} onOpenSettings={onOpenSettings} />
             </>
           )}
           <button type="button" className="button secondary" onClick={onChangeCourses}>

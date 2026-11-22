@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { ChevronRight, Flame, ListChecks, Sparkles, Sun, Truck, Utensils } from 'lucide-react';
 import type { PlannerAction } from '../../core/planner.ts';
 import { calorieLimit, dayCandidates, days, mealOptions, menuDeck, menuDecks, selectionIssue } from '../../core/planning.ts';
-import type { Dish, CustomDraft, Day, Plan, Preferences } from '../../core/types.ts';
+import type { Dish, CustomDraft, Day, Plan, Preferences, WeekKey } from '../../core/types.ts';
 import { CustomMenuCard } from '../components/CustomMenuCard.tsx';
+import { ActiveFilters } from '../components/FilterNotes.tsx';
 import { MealCard } from '../components/MealCard.tsx';
 import { SwipeDeck } from '../components/SwipeDeck.tsx';
 import { WeekProgress } from '../components/WeekProgress.tsx';
@@ -22,7 +23,9 @@ export function MealsScreen({
   editing,
   done,
   custom,
+  teletalWeek,
   dispatch,
+  onOpenSettings,
 }: {
   plan: Plan;
   day: Day;
@@ -33,7 +36,10 @@ export function MealsScreen({
   done: boolean;
   /** The day as a custom day in progress, if it is one. */
   custom: CustomDraft | null;
+  /** The week whose Teletál menu the cards link to, or null for no links, as in the demo. */
+  teletalWeek: WeekKey | null;
   dispatch(action: PlannerAction): void;
+  onOpenSettings(): void;
 }) {
   const [deck, setDeck] = useState<(typeof menuDecks)[number] | null>(null);
   const picked = plan.slots[day];
@@ -105,7 +111,7 @@ export function MealsScreen({
             {picked?.kind === 'custom' ? (
               <CustomMenuCard option={picked} target={budget} />
             ) : picked ? (
-              <MealCard option={picked} target={budget} />
+              <MealCard option={picked} target={budget} teletalWeek={teletalWeek} />
             ) : (
               <div className="placeholder-card">
                 <h2>Kihagytad ezt a napot</h2>
@@ -115,7 +121,16 @@ export function MealsScreen({
           {issue && <p className="selection-issue completed-day-issue">{issue}</p>}
         </>
       ) : custom ? (
-        <CustomDay plan={plan} day={day} draft={custom} catalog={catalog} preferences={preferences} dispatch={dispatch} />
+        <CustomDay
+          plan={plan}
+          day={day}
+          draft={custom}
+          catalog={catalog}
+          preferences={preferences}
+          teletalWeek={teletalWeek}
+          dispatch={dispatch}
+          onOpenSettings={onOpenSettings}
+        />
       ) : deck ? (
         <SwipeDeck
           plan={plan}
@@ -123,6 +138,7 @@ export function MealsScreen({
           candidates={dayCandidates(catalog, day).filter(dish => menuDeck(dish) === deck.id)}
           buildOptions={dishes => mealOptions(dishes, preferences, deck.id)}
           target={budget}
+          teletalWeek={teletalWeek}
           nouns={menuNouns}
           empty={() => (
             <>
@@ -131,6 +147,7 @@ export function MealsScreen({
               </span>
               <h2>Nincs választható menü</h2>
               <p>Válts menütípust, vagy ellenőrizd a szűrőket a beállításokban.</p>
+              <ActiveFilters preferences={preferences} onOpenSettings={onOpenSettings} />
             </>
           )}
           onAction={(action, option) => dispatch({ type: 'decide', day, action, option })}

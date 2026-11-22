@@ -1,3 +1,4 @@
+import { dishIssue } from './filters.ts';
 import { calorieLimit } from './planning.ts';
 import type { CustomCourse, CustomDraft, Dish, Generator, Preferences } from './types.ts';
 
@@ -19,14 +20,14 @@ export function nextRandom(seed: number): { value: number; seed: number } {
   return { value: ((mixed ^ (mixed >>> 14)) >>> 0) / 4_294_967_296, seed: next };
 }
 
-/** The dishes each course may use: code exclusions apply, and with a calorie limit only dishes with known calories. */
+/** The dishes each course may use: the settings' filters apply, and with a calorie limit only dishes with known calories. */
 function coursePools(candidates: Dish[], courses: CustomCourse[], preferences: Preferences): Map<CustomCourse, Dish[]> {
-  const excluded = new Set(preferences.filterCodes ? preferences.excludedCodes : []);
   const pools = new Map<CustomCourse, Dish[]>();
   for (const course of fillOrder) {
     if (!courses.includes(course)) continue;
     const pool = candidates.filter(
-      dish => dish.course === course && !excluded.has(dish.code) && (!preferences.limitCalories || Number.isFinite(dish.kcal)),
+      dish =>
+        dish.course === course && !dishIssue(dish, preferences) && (!preferences.limitCalories || Number.isFinite(dish.kcal)),
     );
     if (pool.length) pools.set(course, pool);
   }

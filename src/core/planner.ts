@@ -1,5 +1,6 @@
 import { isCourse, normalizeCourses } from './courses.ts';
 import { customOption, editCustom, remainingCalories, startCustom, withCourses } from './custom.ts';
+import { dishIssue } from './filters.ts';
 import { generateMenu, startGenerator } from './generate.ts';
 import {
   choose,
@@ -192,14 +193,17 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
     return withPlan({ ...plan, day, slots: { ...plan.slots, [day]: option }, custom }, { editingDay: null });
   }
 
-  /** Whether `dish` may fill the current course: still on the menu, not excluded, and within the limit unless the user allowed more. */
+  /**
+   * Whether `dish` may fill the current course: still on the menu, allowed by the settings as the current menu data has it,
+   * and within the limit unless the user allowed more.
+   */
   function canPick(draft: CustomDraft, dish: Dish): boolean {
     const course = draft.stage;
     const catalog = context.catalog;
     if (!catalog || dish.course !== course) return false;
-    if (!dayCandidates(catalog, view.day!).some(item => item.day === dish.day && item.code === dish.code)) return false;
+    const current = dayCandidates(catalog, view.day!).find(item => item.day === dish.day && item.code === dish.code);
     const { preferences } = state;
-    if (preferences.filterCodes && preferences.excludedCodes.includes(dish.code)) return false;
+    if (!current || dishIssue(current, preferences)) return false;
     const remaining = remainingCalories(draft, preferences, course);
     if (remaining === null) return true;
     return Number.isFinite(dish.kcal) && (dish.kcal! <= remaining || draft.overLimit.includes(course));
