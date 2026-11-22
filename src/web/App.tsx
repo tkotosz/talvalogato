@@ -132,7 +132,10 @@ export function App() {
             <span className="brand-icon">
               <Utensils size={20} />
             </span>
-            <span>{appName}</span>
+            <span className="brand-text">
+              <span>{appName}</span>
+              <span className="brand-version">{TALVALOGATO_VERSION}</span>
+            </span>
           </div>
           <div className="header-actions">
             <button type="button" className="quiet-button" aria-label="Beállítások" onClick={() => setDialog('preferences')}>
