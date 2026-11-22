@@ -358,7 +358,9 @@ test('diet and allergen filters: the notice comes first, decks follow the filter
   assert.equal(await save.isDisabled(), true, 'the allergen notice must be confirmed before saving');
   await page.getByLabel(/^Értem/).check();
   // The demo has two vegan mains a day, and at most one of them has sesame.
+  await page.getByRole('button', { name: /Kizárt allergének/ }).click();
   await page.getByLabel('Szezámmag').check();
+  await page.keyboard.press('Escape');
   await page.screenshot({ path: `${screenshots}diet-settings.png`, fullPage: true });
   await save.click();
   await page.locator('dialog[open]').waitFor({ state: 'detached' });

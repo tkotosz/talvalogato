@@ -4,6 +4,7 @@ import { allAllergens, allergenNames, inAllergenOrder } from '../../core/allerge
 import { allDislikes, dislikeRules, minDislikeLetters, ownDislikeWord } from '../../core/filters.ts';
 import { maxOwnDislikes } from '../../core/planning.ts';
 import type { Preferences } from '../../core/types.ts';
+import { MultiSelect } from './MultiSelect.tsx';
 
 /** The settings this part of the form edits. */
 export type DietSettings = Pick<
@@ -16,43 +17,6 @@ const dietNames: Record<Preferences['diet'], string> = {
   vegetarian: 'Vegetáriánus',
   vegan: 'Vegán',
 };
-
-/** A grid of checkboxes that edits a list of keys. */
-function Checklist<Key extends string>({
-  label,
-  keys,
-  names,
-  selected,
-  onChange,
-}: {
-  label: string;
-  keys: Key[];
-  names: Record<Key, string>;
-  selected: Key[];
-  onChange(selected: Key[]): void;
-}) {
-  return (
-    <fieldset className="preference-checklist">
-      <legend className="visually-hidden">{label}</legend>
-      {keys.map(key => (
-        <label key={key}>
-          <input
-            type="checkbox"
-            checked={selected.includes(key)}
-            onChange={event =>
-              onChange(
-                event.target.checked
-                  ? keys.filter(item => item === key || selected.includes(item))
-                  : selected.filter(item => item !== key),
-              )
-            }
-          />
-          {names[key]}
-        </label>
-      ))}
-    </fieldset>
-  );
-}
 
 /**
  * The diet, allergen and dislike filters of the settings. The allergen filter can only be saved once the user confirmed that
@@ -127,32 +91,31 @@ export function DietFilters({
               Rendelés előtt ellenőrizd az allergéneket a Teletál oldalán is. Az allergénadat nélküli ételeket elrejtjük.
             </p>
           ) : (
-            <div className="allergen-notice" role="note">
-              <TriangleAlert size={19} aria-hidden="true" />
-              <div>
-                <p>
-                  Az allergénadatokat a Tálválogató automatikusan veszi át a Teletál oldaláról, ezért elavultak vagy hibásak
-                  lehetnek.
+            <>
+              <div className="allergen-notice" role="note">
+                <p className="allergen-notice-title">
+                  <TriangleAlert size={16} aria-hidden="true" /> Mielőtt bekapcsolod
                 </p>
                 <p>
+                  Az allergénadatokat automatikusan vesszük át a Teletál oldaláról, ezért hibásak vagy elavultak lehetnek.
                   Nyomokban akkor is lehet allergén egy ételben, ha nincs feltüntetve: a Teletál maga is jelzi, hogy egyes ételei
-                  a többivel közös konyhán készülnek, így a keresztszennyeződés nem zárható ki.
+                  közös konyhán készülnek. Az allergénadat nélküli ételeket elrejtjük.
+                  {demo && ' A bemutató ételei és allergénjei kitaláltak.'}
                 </p>
-                <p>Az allergénadat nélküli ételeket elrejtjük. Rendelés előtt minden ételt ellenőrizz a Teletál oldalán.</p>
-                {demo && <p>A bemutató ételei és allergénjei kitaláltak.</p>}
-                <label className="allergen-confirm">
-                  <input
-                    type="checkbox"
-                    checked={value.allergenNoticeAccepted}
-                    onChange={event => onChange({ allergenNoticeAccepted: event.target.checked })}
-                  />
-                  Értem, rendelés előtt ellenőrzöm az allergéneket a Teletál oldalán.
-                </label>
               </div>
-            </div>
+              <label className="allergen-confirm">
+                <input
+                  type="checkbox"
+                  checked={value.allergenNoticeAccepted}
+                  onChange={event => onChange({ allergenNoticeAccepted: event.target.checked })}
+                />
+                Értem, rendelés előtt ellenőrzöm az allergéneket a Teletál oldalán.
+              </label>
+            </>
           )}
-          <Checklist
+          <MultiSelect
             label="Kizárt allergének"
+            placeholder="Válassz allergéneket"
             keys={allAllergens}
             names={allergenNames}
             selected={value.excludedAllergens}
@@ -174,8 +137,9 @@ export function DietFilters({
           <p className="preference-hint">
             Szavakat keres az ételek nevében és összetevőiben, ezért nem helyettesíti az allergénszűrőt.
           </p>
-          <Checklist
+          <MultiSelect
             label="Gyakori kerülendő összetevők"
+            placeholder="Válassz a listából"
             keys={allDislikes}
             names={dislikeNames}
             selected={value.dislikes}
