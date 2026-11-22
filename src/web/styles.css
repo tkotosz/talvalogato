@@ -2109,24 +2109,6 @@ button.code-group-title:hover {
   padding: 0;
   list-style: none;
 }
-.custom-summary button {
-  display: grid;
-  grid-template-columns: 6.5em minmax(0, 1fr) auto;
-  gap: 8px;
-  align-items: baseline;
-  width: 100%;
-  padding: 11px 12px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--paper);
-  color: var(--ink);
-  text-align: start;
-}
-.custom-summary button > span:last-child,
-.custom-summary .meal-code {
-  color: var(--muted);
-  font-size: 0.86rem;
-}
 .course-details strong {
   color: var(--ink);
   font-size: 1.05rem;
@@ -2168,42 +2150,102 @@ button.code-group-title:hover {
   font-size: 0.84rem;
 }
 
-/* The day's tray: rows with a remove button, buttons that add extras, and the extras list */
+/*
+ * The day's tray: each row a frame with the part that opens its deck or list and, inside the frame, the dish's eraser
+ * and portions under it or an empty row's remove button at its top right; then the buttons that add rows, and the
+ * extras list.
+ */
 .tray-row {
   display: flex;
   gap: 6px;
 }
-.tray-row > button:first-child {
+.tray-row-card {
+  position: relative;
   flex: 1;
   min-width: 0;
-  width: auto;
-}
-.custom-summary button > span {
-  overflow-wrap: break-word;
-}
-.custom-summary .tray-remove {
-  display: grid;
-  grid-template-columns: 1fr;
-  flex: none;
-  place-items: center;
-  width: 44px;
-  padding: 0;
-  color: var(--muted);
-}
-/* A row's portions, between the row and its eraser, on the row's first line. */
-.tray-quantity {
   display: flex;
-  flex: none;
-  align-self: flex-start;
-  align-items: center;
-  height: 44px;
+  flex-direction: column;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--paper);
 }
-.custom-summary .tray-quantity button {
+.tray-row-open {
+  flex: 1;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'label numbers'
+    'name name';
+  row-gap: 3px;
+  column-gap: 8px;
+  align-items: center;
+  align-content: start;
+  width: 100%;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  text-align: start;
+}
+.tray-label {
+  grid-area: label;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.tray-name {
+  grid-area: name;
+  font-weight: 620;
+  overflow-wrap: break-word;
+}
+.tray-numbers {
+  grid-area: numbers;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.custom-summary .meal-code {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+/* The eraser at the left end, away from the stepper's minus, so a near miss does not clear the dish. */
+.tray-row-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 0 6px 6px;
+}
+.tray-action {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--page);
+  color: var(--muted);
+}
+/* An empty row's remove button, where a dish's calories and price would be; the row's text keeps clear of it. */
+.tray-remove-row {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+.tray-row-card-empty .tray-row-open {
+  padding-right: 48px;
+}
+/* A row's portions, at the end of its footer line. */
+.tray-quantity {
+  display: flex;
+  align-items: center;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--page);
+}
+.tray-quantity button {
+  display: grid;
   place-items: center;
   width: 34px;
   height: 100%;
@@ -2212,7 +2254,7 @@ button.code-group-title:hover {
   background: transparent;
   color: var(--green);
 }
-.custom-summary .tray-quantity button:disabled {
+.tray-quantity button:disabled {
   color: var(--line);
 }
 .tray-quantity output {
@@ -2238,10 +2280,7 @@ button.code-group-title:hover {
 }
 /* A set menu row is two rows tall, like the tray's least height. */
 .tray-row-menu {
-  min-height: 143px;
-}
-.tray-row-menu > button:first-child {
-  align-content: start;
+  min-height: 140px;
 }
 .tray-add {
   margin-top: 16px;
@@ -2334,28 +2373,6 @@ button.code-group-title:hover {
 .menu-choice:disabled .menu-choice-count {
   color: var(--muted);
 }
-/* A tray row: its type small on top with the calories, the dish across the whole row below. */
-.custom-summary .tray-row > button:first-child {
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas:
-    'label numbers'
-    'name name';
-  row-gap: 3px;
-  align-items: center;
-}
-.custom-summary .tray-row > button:first-child > strong {
-  grid-area: label;
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-.custom-summary .tray-row > button:first-child > span:nth-child(2) {
-  grid-area: name;
-  font-weight: 620;
-}
-.custom-summary .tray-row > button:first-child > span:last-child {
-  grid-area: numbers;
-}
 
 .custom-dish-menu {
   display: block;
@@ -2402,17 +2419,6 @@ button.code-group-title:hover {
   flex: none;
 }
 
-/* On phones the stepper leaves a row too narrow for its label and numbers side by side: the numbers go under the dish. */
-@media (max-width: 650px) {
-  .custom-summary .tray-row > button:first-child {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'label'
-      'name'
-      'numbers';
-  }
-}
-
 /* The tray's Törlés and Kész, side by side */
 .tray-actions {
   display: grid;
@@ -2426,7 +2432,7 @@ button.code-group-title:hover {
 .tray-rows {
   display: flex;
   flex-direction: column;
-  min-height: 143px;
+  min-height: 140px;
   margin-top: 12px;
 }
 .tray-rows > .custom-summary {
