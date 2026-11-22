@@ -170,6 +170,16 @@ test('day choices apply to the plan of the same week and are kept per week other
   assert.deepEqual(plannerView(state, context).selectedDays, [1, 2]);
 });
 
+test('the last day choice with any day in it is preselected for weeks without a plan', () => {
+  let state = run(initialPlanner({}, newPreferences), { type: 'setWeekDays', days: [2, 4] });
+  assert.deepEqual(state.preferences.defaultDays, [2, 4]);
+  state = run(state, { type: 'chooseWeek', week: '2026-W49' });
+  assert.deepEqual(plannerView(state, context).selectedDays, [2, 4]);
+  state = run(state, { type: 'setWeekDays', days: [] });
+  assert.deepEqual(state.preferences.defaultDays, [2, 4]);
+  assert.deepEqual(plannerView(state, context).selectedDays, []);
+});
+
 test('resetting the week keeps its day choices, clears its decisions and returns to the week screen', () => {
   const state = run(
     initialPlanner({}, newPreferences),

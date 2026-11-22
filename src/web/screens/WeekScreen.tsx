@@ -1,6 +1,7 @@
-import { CalendarDays, Check, ChevronDown, Soup, Utensils } from 'lucide-react';
+import { CalendarDays, Check, ChevronDown, SlidersHorizontal, Soup, Utensils } from 'lucide-react';
+import { activeFilters } from '../../core/filters.ts';
 import type { PlannerAction, PlannerView } from '../../core/planner.ts';
-import type { Dish, PublishedWeek, WeekKey } from '../../core/types.ts';
+import type { Dish, Preferences, PublishedWeek, WeekKey } from '../../core/types.ts';
 import { weekOptionLabel } from '../../core/weeks.ts';
 import { DayChoices } from '../components/DayChoices.tsx';
 import { sinceLabel } from '../format.ts';
@@ -18,6 +19,8 @@ export function WeekScreen({
   dispatch,
   onRetryWeeks,
   onRetryCatalog,
+  preferences,
+  onOpenSettings,
 }: {
   view: PlannerView;
   weeks: PublishedWeek[];
@@ -30,6 +33,8 @@ export function WeekScreen({
   dispatch(action: PlannerAction): void;
   onRetryWeeks(): void;
   onRetryCatalog(): void;
+  preferences: Preferences;
+  onOpenSettings(): void;
 }) {
   const { week, availableDays, selectedDays, eligible } = view;
   // Measured: full month names fit the selector from about 420px; phones get short ones.
@@ -103,6 +108,7 @@ export function WeekScreen({
               onChange={days => dispatch({ type: 'setWeekDays', days })}
             />
           )}
+          <FilterSummary preferences={preferences} onOpenSettings={onOpenSettings} />
           {weekError && (
             <div className="form-error" role="alert">
               {weekError}
@@ -132,5 +138,27 @@ export function WeekScreen({
         {!demo && ' Az étlap és az ételek képei a Teletál tulajdonai.'}
       </p>
     </main>
+  );
+}
+
+/** The filters the settings turn on, so a first-time user finds the settings and a returning one sees what applies. */
+function FilterSummary({ preferences, onOpenSettings }: { preferences: Preferences; onOpenSettings(): void }) {
+  const filters = activeFilters(preferences);
+  return (
+    <div className="filter-summary">
+      <SlidersHorizontal size={18} aria-hidden="true" />
+      <p>
+        {filters.length ? (
+          <>
+            <b>Szűrők:</b> {filters.join('; ')}.
+          </>
+        ) : (
+          'Diéta, kalóriakeret, allergének és kerülendő összetevők szerint is szűrhetsz.'
+        )}
+      </p>
+      <button type="button" className="text-button" onClick={onOpenSettings}>
+        {filters.length ? 'Módosítás' : 'Beállítás'}
+      </button>
+    </div>
   );
 }
