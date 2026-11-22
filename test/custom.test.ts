@@ -5,10 +5,14 @@ import {
   customOption,
   dishOption,
   emptyTray,
+  groupedDishes,
+  pickedDishes,
+  remainingCalories,
   rowChoiceCounts,
   totalCalories,
   trayCourses,
   withCourse,
+  withQuantity,
 } from '../src/core/custom.ts';
 import {
   initialPlanner,
@@ -18,7 +22,7 @@ import {
   type PlannerContext,
   type PlannerState,
 } from '../src/core/planner.ts';
-import { cartLines, moneyLeft, newPreferences, orderSummary, restorePlan } from '../src/core/planning.ts';
+import { calorieLimit, cartLines, moneyLeft, newPreferences, orderSummary, restorePlan } from '../src/core/planning.ts';
 import type { Allergen, CustomCourse, CustomDraft, Day, Dish, Preferences } from '../src/core/types.ts';
 
 /** The week the tests plan. */
@@ -152,9 +156,80 @@ test('a kind of row can be on the tray any number of times, and the same dish tw
       ['NF1', 2],
     ],
   );
-  // Editing restores every row, the empty soup included.
+  // Editing restores every row, the empty soup included; the same drink twice comes back as one row of two portions.
   state = run(state, { type: 'openDay', day: 3, edit: true });
-  assert.deepEqual(dishes(state), [null, 'I1', 'I2', 'NF1', 'NF1']);
+  assert.deepEqual(dishes(state), [null, 'I1', 'I2', 'NF1']);
+  assert.equal(draft(state).rows[3]!.quantity, 2);
+});
+
+test('a row orders up to nine portions of its dish, counted in the totals, the limit and the cart', () => {
+  let state = pickAll(customDay(), soup);
+  assert.equal(run(state, { type: 'setQuantity', day: 3, row: 1, quantity: 2 }), state, 'a row without a dish has no portions');
+  state = run(state, { type: 'setQuantity', day: 3, row: 0, quantity: 3 });
+  assert.equal(draft(state).rows[0]!.quantity, 3);
+  assert.equal(run(state, { type: 'setQuantity', day: 3, row: 0, quantity: 12 }).plans[w48]!.custom[3]!.rows[0]!.quantity, 9);
+  assert.equal(
+    run(state, { type: 'setQuantity', day: 3, row: 0, quantity: 1 }).plans[w48]!.custom[3]!.rows[0]!.quantity,
+    undefined,
+    'one portion leaves the field out',
+  );
+
+  // Another soup keeps the portions; emptying the row resets them.
+  const otherSoup = catalog.find(item => item.course === 'soup' && item.id !== soup.id)!;
+  const replaced = run(state, { type: 'openStage', day: 3, stage: 0 }, { type: 'pickCourse', day: 3, dish: otherSoup });
+  assert.equal(draft(replaced).rows[0]!.quantity, 3);
+  assert.equal(draft(run(state, { type: 'emptyCourse', day: 3, row: 0 })).rows[0]!.quantity, undefined);
+
+  // Every portion counts: what is left of the limit is shared by the portions of the row being picked.
+  assert.equal(totalCalories(pickedDishes(draft(state))), soup.kcal! * 3);
+  assert.equal(remainingCalories(draft(state), limited, 1), calorieLimit(limited) - soup.kcal! * 3);
+  assert.equal(remainingCalories(withQuantity(draft(state), 0, 1), limited, 0), calorieLimit(limited));
+
+  state = run(state, { type: 'navigate', step: 'overview' });
+  const saved = state.plans[w48]!.slots[3]!;
+  assert.equal(saved.price, soup.price * 3);
+  assert.deepEqual(
+    cartLines({ slots: { 3: saved } }).map(({ code, quantity }) => [code, quantity]),
+    [[soup.code, 3]],
+  );
+});
+
+test('a set menu with portions is saved as a combined day named after the menu', () => {
+  let state = run(meals(), { type: 'addCourse', day: 3, course: 'menu' });
+  state = run(state, { type: 'openStage', day: 3, stage: 0 }, { type: 'pickCourse', day: 3, dish: setMenu });
+  state = run(state, { type: 'setQuantity', day: 3, row: 0, quantity: 2 }, { type: 'navigate', step: 'overview' });
+  const saved = state.plans[w48]!.slots[3]!;
+  assert.equal(saved.kind, 'custom');
+  assert.equal(saved.title, setMenu.menuName);
+  assert.deepEqual(
+    groupedDishes(saved.dishes).map(({ dish, quantity }) => [dish.code, quantity]),
+    [[setMenu.code, 2]],
+  );
+  state = run(state, { type: 'openDay', day: 3, edit: true });
+  assert.deepEqual(draft(state).rows, [{ course: 'menu', dish: setMenu, quantity: 2 }]);
+});
+
+test('saved portions are kept only when valid and on a row with a dish', () => {
+  const plan = restorePlan({
+    id: 'p',
+    week: w48,
+    custom: {
+      3: {
+        rows: [
+          { course: 'soup', dish: soup, quantity: 4 },
+          { course: 'main', dish: main, quantity: 0 },
+          { course: 'drink', quantity: 3 },
+          { course: 'pickle', dish: pickle, quantity: 2.5 },
+        ],
+        stage: 'overview',
+        overLimit: [],
+      },
+    } as never,
+  });
+  assert.deepEqual(
+    plan.custom[3]!.rows.map(row => row.quantity),
+    [4, undefined, undefined, undefined],
+  );
 });
 
 test('picking dishes returns to the tray, and the day is saved when the user leaves it', () => {

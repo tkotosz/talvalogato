@@ -236,12 +236,19 @@ test('a set menu with an extra, a day built course by course with a removed row,
   await page.screenshot({ path: `${screenshots}tray-extra-list.png`, fullPage: true });
   await page.locator('.extra-list button').first().click();
   await page.locator('.custom-summary', { hasText: 'Savanyúság' }).waitFor();
+  // Two portions of the pickle: its row's stepper, then the total and the finished day count both.
+  const pickleRow = page.locator('.tray-row', { hasText: 'Savanyúság' });
+  const totalBefore = await page.locator('.custom-total strong').innerText();
+  await pickleRow.getByRole('button', { name: 'Eggyel több adag' }).click();
+  await pickleRow.locator('output', { hasText: '2' }).waitFor();
+  assert.notEqual(await page.locator('.custom-total strong').innerText(), totalBefore, 'the total counts both portions');
   await page.screenshot({ path: `${screenshots}tray-menu.png`, fullPage: true });
   const firstDay = (await currentDay(page))?.split(',')[0] ?? '';
   await page.getByRole('button', { name: 'Kész', exact: true }).click();
   await page.getByRole('button', { name: 'Nap szerkesztése' }).waitFor();
   assert.ok((await currentDay(page))?.startsWith(`${firstDay}, étel kiválasztva`), 'Kész saves and stays on the day');
   assert.match(await page.locator('.meal-card h2').innerText(), /kiegészítőkkel/);
+  assert.match(await page.locator('.meal-card .course-list').innerText(), /2 × /);
   await nextDay(page);
 
   // Course by course: soup and main rows are added, an extra too, and the soup row is emptied and removed. Going to
@@ -289,7 +296,9 @@ test('a set menu with an extra, a day built course by course with a removed row,
   const link = page.locator('dialog[open] a.button.primary');
   await link.waitFor({ timeout: 30_000 });
   const encoded = (await link.getAttribute('href'))!.split('#talvalogato=')[1]!;
-  assert.equal(JSON.parse(Buffer.from(encoded, 'base64url').toString()).lines.length, 4, 'a set menu and three dishes');
+  const cartLinks: [number, string, number][] = JSON.parse(Buffer.from(encoded, 'base64url').toString()).lines;
+  assert.equal(cartLinks.length, 4, 'a set menu and three dishes');
+  assert.deepEqual(cartLinks.map(([, , quantity]) => quantity).sort(), [1, 1, 1, 2], 'the pickle goes to the cart twice');
   assert.deepEqual(errors, []);
 });
 

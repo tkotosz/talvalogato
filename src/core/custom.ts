@@ -1,6 +1,6 @@
 import { allCourses, courseNames } from './courses.ts';
 import { dishIssue } from './filters.ts';
-import { calorieLimit, menuDeck } from './planning.ts';
+import { calorieLimit, maxQuantity, menuDeck } from './planning.ts';
 import type { CustomChoice, CustomDraft, Dish, MenuOption, Preferences, TrayCourse, TrayRow } from './types.ts';
 
 /**
@@ -11,6 +11,20 @@ export const trayCourses: TrayCourse[] = ['breakfast', 'menu', ...allCourses.fil
 
 /** The names of the tray rows. */
 export const trayCourseNames: Record<TrayCourse, string> = { ...courseNames, menu: 'Teletál menü' };
+
+/** The portions a row orders. */
+export function rowQuantity(row: TrayRow): number {
+  return row.quantity ?? 1;
+}
+
+/** The row with `quantity` portions, kept between 1 and `maxQuantity`; one portion leaves the field out. */
+function withRowQuantity(row: TrayRow, quantity: number): TrayRow {
+  const kept = Math.min(Math.max(Math.round(quantity), 1), maxQuantity);
+  if (kept > 1) return { ...row, quantity: kept };
+  const single = { ...row };
+  delete single.quantity;
+  return single;
+}
 
 /** An empty tray: no rows yet. A day opens on it. */
 export function emptyTray(): CustomDraft {
@@ -32,7 +46,7 @@ export function withCourse(draft: CustomDraft, course: TrayCourse): CustomDraft 
   return { ...draft, rows: inTrayOrder([...draft.rows, { course }]), stage: 'overview' };
 }
 
-/** The tray with the row at `index` emptied: the row stays for another dish or an idea. */
+/** The tray with the row at `index` emptied: the row stays for another dish or an idea, with one portion. */
 export function withoutDish(draft: CustomDraft, index: number): CustomDraft {
   const rows = draft.rows.map((row, at) => (at === index ? { course: row.course } : row));
   return { ...draft, rows, stage: 'overview' };
@@ -43,10 +57,18 @@ export function withoutRow(draft: CustomDraft, index: number): CustomDraft {
   return { ...draft, rows: draft.rows.filter((_, at) => at !== index), stage: 'overview' };
 }
 
-/** The tray with `dish` on the row at `index`. */
+/** The tray with `dish` on the row at `index`, keeping the row's portions. */
 export function withPick(draft: CustomDraft, index: number, dish: Dish): CustomDraft {
-  const rows = draft.rows.map((row, at) => (at === index ? { course: row.course, dish } : row));
+  const rows = draft.rows.map((row, at) => (at === index ? { ...row, dish } : row));
   return { ...draft, rows, stage: 'overview' };
+}
+
+/** The tray with `quantity` portions on the row at `index`, or unchanged when the row has no dish. */
+export function withQuantity(draft: CustomDraft, index: number, quantity: number): CustomDraft {
+  const row = draft.rows[index];
+  if (!row?.dish) return draft;
+  const rows = draft.rows.map((current, at) => (at === index ? withRowQuantity(current, quantity) : current));
+  return { ...draft, rows };
 }
 
 /** The indexes of the rows on the tray that have no dish yet. */
@@ -67,9 +89,20 @@ export function ideaFilled(draft: Pick<CustomDraft, 'rows' | 'generator'>): bool
   return (draft.generator?.rows ?? []).some(index => draft.rows[index]?.dish !== undefined);
 }
 
-/** The dishes on the tray, in tray order. */
+/** The dishes on the tray, in tray order, each as many times as its row has portions. */
 export function pickedDishes(draft: Pick<CustomDraft, 'rows'>): Dish[] {
-  return draft.rows.flatMap(row => (row.dish ? [row.dish] : []));
+  return draft.rows.flatMap(row => (row.dish ? Array<Dish>(rowQuantity(row)).fill(row.dish) : []));
+}
+
+/** Dishes with the same dish next to each other counted as one entry with its portions, for listing a saved day. */
+export function groupedDishes(dishes: Dish[]): { dish: Dish; quantity: number }[] {
+  const groups: { dish: Dish; quantity: number }[] = [];
+  for (const dish of dishes) {
+    const last = groups.at(-1);
+    if (last && last.dish.id === dish.id) last.quantity += 1;
+    else groups.push({ dish, quantity: 1 });
+  }
+  return groups;
 }
 
 /** Calories of the dishes, or null when any of them has no calorie data. */
@@ -82,11 +115,15 @@ export function totalCalories(dishes: Dish[]): number | null {
   return Math.round(total * 10) / 10;
 }
 
-/** What is left of the day's calorie limit for the row at `index`, after everything else on the tray; null without a limit. */
+/**
+ * What is left of the day's calorie limit for one portion on the row at `index`, after everything else on the tray; null
+ * without a limit.
+ */
 export function remainingCalories(draft: CustomDraft, preferences: Preferences, index: number): number | null {
   if (!preferences.limitCalories) return null;
   const others = pickedDishes({ rows: draft.rows.filter((_, at) => at !== index) });
-  return Math.round((calorieLimit(preferences) - (totalCalories(others) ?? 0)) * 10) / 10;
+  const portions = draft.rows[index] ? rowQuantity(draft.rows[index]) : 1;
+  return Math.round(((calorieLimit(preferences) - (totalCalories(others) ?? 0)) / portions) * 10) / 10;
 }
 
 /** What the dishes cost together. */
@@ -95,12 +132,14 @@ export function totalPrice(dishes: Dish[]): number {
 }
 
 /**
- * What is left of `money`, the forints the weekly spending limit leaves for the day, for the row at `index` after
- * everything else on the tray; null without a limit.
+ * What is left of `money`, the forints the weekly spending limit leaves for the day, for one portion of the row at
+ * `index` after everything else on the tray; null without a limit. Every portion of the row has to fit.
  */
 export function remainingMoney(draft: CustomDraft, index: number, money: number | null): number | null {
   if (money === null) return null;
-  return money - totalPrice(pickedDishes({ rows: draft.rows.filter((_, at) => at !== index) }));
+  const others = totalPrice(pickedDishes({ rows: draft.rows.filter((_, at) => at !== index) }));
+  const portions = draft.rows[index] ? rowQuantity(draft.rows[index]) : 1;
+  return Math.floor((money - others) / portions);
 }
 
 export function dishOption(dish: Dish): MenuOption {
@@ -162,13 +201,15 @@ export function courseDeck(
 }
 
 /**
- * The day the tray saves, or null while it holds no dish. A set menu alone is saved as that menu, like a pick from its
- * deck; anything else is saved as a combined day, with every row's kind, so editing restores the empty rows too.
+ * The day the tray saves, or null while it holds no dish. One portion of a set menu alone is saved as that menu, like a
+ * pick from its deck; anything else is saved as a combined day, each portion a dish, with every row's kind, so editing
+ * restores the empty rows too.
  */
 export function customOption(draft: CustomDraft, preferences: Preferences): MenuOption | null {
   const dishes = pickedDishes(draft);
   if (!dishes.length) return null;
-  const menus = dishes.filter(dish => !dish.course);
+  const menus = [...new Map(dishes.filter(dish => !dish.course).map(dish => [dish.id, dish])).values()];
+  const extras = dishes.filter(dish => dish.course);
   if (menus.length === 1 && dishes.length === 1) return dishOption(menus[0]!);
   const kcal = totalCalories(dishes);
   const custom: CustomChoice = {
@@ -181,22 +222,28 @@ export function customOption(draft: CustomDraft, preferences: Preferences): Menu
     dishes,
     kcal,
     price: totalPrice(dishes),
-    title: menus.length === 1 ? `${menus[0]!.menuName} kiegészítőkkel` : 'Saját menü',
+    title: menus.length !== 1 ? 'Saját menü' : extras.length ? `${menus[0]!.menuName} kiegészítőkkel` : menus[0]!.menuName,
     photo: dishes.find(dish => dish.photo)?.photo ?? null,
     custom,
   };
 }
 
 /**
- * A tray that edits a saved day: a row for each dish, a Teletál set menu on a set-menu row, and empty rows for the kinds
- * saved without a dish.
+ * A tray that edits a saved day: a row for each dish with its portions, a Teletál set menu on a set-menu row, and empty
+ * rows for the kinds saved without a dish. Portions of a dish saved on separate rows come back as one row.
  */
 export function editCustom(option: MenuOption): CustomDraft {
-  const rows: TrayRow[] = option.dishes.map(dish => ({ course: dish.course ?? 'menu', dish }));
-  // Each saved kind beyond its dishes was an empty row.
-  const filled = [...rows];
+  const rows: TrayRow[] = [];
+  for (const dish of option.dishes) {
+    const last = rows.at(-1);
+    if (last && last.dish?.id === dish.id && rowQuantity(last) < maxQuantity)
+      rows[rows.length - 1] = withRowQuantity(last, rowQuantity(last) + 1);
+    else rows.push({ course: dish.course ?? 'menu', dish });
+  }
+  // Each saved kind beyond its portions was an empty row.
+  const filled = rows.flatMap(row => Array<TrayCourse>(rowQuantity(row)).fill(row.course));
   for (const course of option.custom?.courses ?? []) {
-    const match = filled.findIndex(row => row.course === course);
+    const match = filled.indexOf(course);
     if (match >= 0) filled.splice(match, 1);
     else rows.push({ course });
   }

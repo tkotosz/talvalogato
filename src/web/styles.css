@@ -2190,6 +2190,37 @@ button.code-group-title:hover {
   padding: 0;
   color: var(--muted);
 }
+/* A row's portions, between the row and its eraser, on the row's first line. */
+.tray-quantity {
+  display: flex;
+  flex: none;
+  align-self: flex-start;
+  align-items: center;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+}
+.custom-summary .tray-quantity button {
+  display: grid;
+  grid-template-columns: 1fr;
+  place-items: center;
+  width: 34px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--green);
+}
+.custom-summary .tray-quantity button:disabled {
+  color: var(--line);
+}
+.tray-quantity output {
+  min-width: 1.2em;
+  text-align: center;
+  font-weight: 700;
+  color: var(--ink);
+}
 .tray-menu {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -2304,7 +2335,7 @@ button.code-group-title:hover {
   color: var(--muted);
 }
 /* A tray row: its type small on top with the calories, the dish across the whole row below. */
-.custom-summary button:not(.tray-remove) {
+.custom-summary .tray-row > button:first-child {
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
     'label numbers'
@@ -2312,17 +2343,17 @@ button.code-group-title:hover {
   row-gap: 3px;
   align-items: center;
 }
-.custom-summary button:not(.tray-remove) > strong {
+.custom-summary .tray-row > button:first-child > strong {
   grid-area: label;
   color: var(--muted);
   font-size: 0.8rem;
   font-weight: 700;
 }
-.custom-summary button:not(.tray-remove) > span:nth-child(2) {
+.custom-summary .tray-row > button:first-child > span:nth-child(2) {
   grid-area: name;
   font-weight: 620;
 }
-.custom-summary button:not(.tray-remove) > span:last-child {
+.custom-summary .tray-row > button:first-child > span:last-child {
   grid-area: numbers;
 }
 
@@ -2369,6 +2400,17 @@ button.code-group-title:hover {
 }
 .filter-summary .text-button {
   flex: none;
+}
+
+/* On phones the stepper leaves a row too narrow for its label and numbers side by side: the numbers go under the dish. */
+@media (max-width: 650px) {
+  .custom-summary .tray-row > button:first-child {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'label'
+      'name'
+      'numbers';
+  }
 }
 
 /* The tray's Törlés and Kész, side by side */
