@@ -223,7 +223,6 @@ export function App() {
           <PreferencesForm
             preferences={preferences}
             week={week}
-            catalog={catalogItems}
             demo={demo}
             onSave={value => {
               dispatch({ type: 'savePreferences', preferences: value });
