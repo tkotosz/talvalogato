@@ -106,7 +106,8 @@ export function DietFilters({
         </p>
         {value.diet === 'vegan' && (
           <p className="preference-hint">
-            A Teletál menüi nem vegánok, ezért vegán étrenddel a Saját menü és a Menü generálása kínál választást.
+            A Teletál a vegán jelölést a Vega & vegán szekció leveseire és főételeire teszi, a menüire nem. Ezeket a Saját menü és
+            a Menü generálása kínálja.
           </p>
         )}
       </fieldset>
