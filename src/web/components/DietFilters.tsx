@@ -18,8 +18,35 @@ const dietNames: Record<Preferences['diet'], string> = {
   vegan: 'Vegán',
 };
 
+/** The diet choice of the settings, by Teletál's vegetarian and vegan marks. */
+export function DietChoice({ value, onChange }: { value: Preferences['diet']; onChange(diet: Preferences['diet']): void }) {
+  return (
+    <fieldset className="preference-section">
+      <legend>Étrend</legend>
+      <div className="preference-options">
+        {(['all', 'vegetarian', 'vegan'] as const).map(diet => (
+          <label key={diet}>
+            <input type="radio" name="diet" checked={value === diet} onChange={() => onChange(diet)} />
+            {dietNames[diet]}
+          </label>
+        ))}
+      </div>
+      <p className="preference-hint">
+        A Teletál jelölései alapján. Nem allergiaszűrő: a vegán jelölés nem zárja ki, hogy egy étel nyomokban tejet vagy tojást
+        tartalmazzon.
+      </p>
+      {value === 'vegan' && (
+        <p className="preference-hint">
+          A Teletál a vegán jelölést a Vega & vegán szekció leveseire és főételeire teszi, a menüire nem. Ezeket a Saját menü és a
+          Menü generálása kínálja.
+        </p>
+      )}
+    </fieldset>
+  );
+}
+
 /**
- * The diet, allergen and dislike filters of the settings. The allergen filter can only be saved once the user confirmed that
+ * The allergen and dislike filters of the settings. The allergen filter can only be saved once the user confirmed that
  * the allergen data must be checked on Teletál.
  */
 export function DietFilters({
@@ -54,28 +81,6 @@ export function DietFilters({
 
   return (
     <>
-      <fieldset className="preference-section">
-        <legend>Étrend</legend>
-        <div className="preference-options">
-          {(['all', 'vegetarian', 'vegan'] as const).map(diet => (
-            <label key={diet}>
-              <input type="radio" name="diet" checked={value.diet === diet} onChange={() => onChange({ diet })} />
-              {dietNames[diet]}
-            </label>
-          ))}
-        </div>
-        <p className="preference-hint">
-          A Teletál jelölései alapján. Nem allergiaszűrő: a vegán jelölés nem zárja ki, hogy egy étel nyomokban tejet vagy tojást
-          tartalmazzon.
-        </p>
-        {value.diet === 'vegan' && (
-          <p className="preference-hint">
-            A Teletál a vegán jelölést a Vega & vegán szekció leveseire és főételeire teszi, a menüire nem. Ezeket a Saját menü és
-            a Menü generálása kínálja.
-          </p>
-        )}
-      </fieldset>
-
       <label className="preference-toggle">
         <input
           type="checkbox"

@@ -5,7 +5,7 @@ import type { Preferences, WeekKey } from '../../core/types.ts';
 import { calories } from '../format.ts';
 import { CodeFilter } from './CodeFilter.tsx';
 import { DayChoices } from './DayChoices.tsx';
-import { DietFilters } from './DietFilters.tsx';
+import { DietChoice, DietFilters } from './DietFilters.tsx';
 
 /** Preferences while being edited: a number field can be empty. */
 type Draft = Omit<Preferences, 'calories' | 'tolerance'> & { calories: number | ''; tolerance: number | '' };
@@ -43,6 +43,7 @@ export function PreferencesForm({
         selected={draft.defaultDays}
         onChange={value => change('defaultDays', value)}
       />
+      <DietChoice value={draft.diet} onChange={diet => change('diet', diet)} />
       <label className="preference-toggle">
         <input type="checkbox" checked={draft.limitCalories} onChange={event => change('limitCalories', event.target.checked)} />
         Napi kalóriakeret
