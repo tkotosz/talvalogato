@@ -1,7 +1,8 @@
 import { ChevronRight, ClipboardList, Copy } from 'lucide-react';
 import type { PlannerView } from '../../core/planner.ts';
 import { days, type OrderSummary } from '../../core/planning.ts';
-import type { Day, MenuOption } from '../../core/types.ts';
+import type { Day, MenuOption, Preferences } from '../../core/types.ts';
+import { AllergenReminder } from '../components/FilterNotes.tsx';
 import { shortDayLabel, weekLabel } from '../../core/weeks.ts';
 import { appName, calories, copyText, money } from '../format.ts';
 
@@ -55,10 +56,12 @@ function SetMenuItems({ option }: { option: MenuOption }) {
 /** Step 3: the week's decisions and what will reach the cart. */
 export function OverviewScreen({
   view,
+  preferences,
   onNotice,
   onViewDay,
 }: {
   view: PlannerView;
+  preferences: Preferences;
   onNotice(message: string): void;
   onViewDay(day: Day): void;
 }) {
@@ -122,6 +125,7 @@ export function OverviewScreen({
           <span>Étellista másolása vágólapra</span>
         </button>
       </div>
+      <AllergenReminder preferences={preferences} />
       <ol className="review-list">
         {summary.map(({ day, label, available, option, status, issue }) => {
           const contents = (

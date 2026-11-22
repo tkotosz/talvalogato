@@ -1,4 +1,5 @@
 import { allCourses, normalizeCourses } from './courses.ts';
+import { dishIssue } from './filters.ts';
 import { calorieLimit } from './planning.ts';
 import type { CustomChoice, CustomCourse, CustomDraft, Dish, MenuOption, Preferences } from './types.ts';
 
@@ -59,12 +60,11 @@ export interface CourseDeck {
 }
 
 /**
- * The cards for one component. Code exclusions apply as in the set-menu decks. With a calorie limit only dishes with known
- * calories are offered, and those over the remaining limit only after the user asks for them.
+ * The cards for one component. The settings' filters apply as in the set-menu decks. With a calorie limit only dishes with
+ * known calories are offered, and those over the remaining limit only after the user asks for them.
  */
 export function courseDeck(dishes: Dish[], course: CustomCourse, draft: CustomDraft, preferences: Preferences): CourseDeck {
-  const excluded = new Set(preferences.filterCodes ? preferences.excludedCodes : []);
-  const candidates = dishes.filter(dish => dish.course === course && !excluded.has(dish.code));
+  const candidates = dishes.filter(dish => dish.course === course && !dishIssue(dish, preferences));
   const remaining = remainingCalories(draft, preferences, course);
   if (remaining === null) return { options: candidates.map(dishOption), remaining, overLimitCount: 0 };
 

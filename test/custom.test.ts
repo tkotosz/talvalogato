@@ -10,7 +10,7 @@ import {
   type PlannerState,
 } from '../src/core/planner.ts';
 import { cartLines, newPreferences, orderSummary, restorePreferences } from '../src/core/planning.ts';
-import type { CustomCourse, Day, Dish, Preferences } from '../src/core/types.ts';
+import type { Allergen, CustomCourse, Day, Dish, Preferences } from '../src/core/types.ts';
 
 /** The week the tests plan. */
 const w48 = '2026-W48';
@@ -231,4 +231,29 @@ test('skipping the whole day ends a custom day in progress', () => {
   const state = run(customDay(), { type: 'setCourses', day: 3, courses: ['soup'] }, { type: 'decide', day: 3, action: 'skip' });
   assert.equal(state.plans[w48]!.slots[3], null);
   assert.equal(state.plans[w48]!.custom[3], undefined);
+});
+
+test('a component deck leaves out filtered dishes, and a dish the current data marks with an excluded allergen cannot be picked', () => {
+  const noMilk: Preferences = {
+    ...newPreferences,
+    filterAllergens: true,
+    allergenNoticeAccepted: true,
+    excludedAllergens: ['milk'],
+  };
+  const labeled = (item: Dish, allergens: Allergen[] | null): Dish => ({
+    ...item,
+    components: [{ name: item.name, kcal: item.kcal ?? 0, photo: null, allergens, ingredients: null }],
+  });
+  const current = catalog.map(item => labeled(item, item.code === 'I1' ? ['milk'] : item.code === 'I2' ? null : []));
+  const deck = courseDeck(current, 'main', { ...draft(customDay(noMilk)), stage: 'main' }, noMilk);
+  assert.deepEqual(
+    deck.options.map(option => option.dishes[0]?.code),
+    [],
+    'milk and unknown allergens both leave the deck',
+  );
+
+  const state = run(customDay(noMilk), { type: 'openStage', day: 3, stage: 'main' });
+  const withCurrent = (action: PlannerAction) => reducePlanner(state, action, { ...context, catalog: current });
+  // The dish as the user's card had it claims no allergens; the current data says milk.
+  assert.equal(withCurrent({ type: 'pickCourse', day: 3, dish: labeled(main, []) }), state);
 });

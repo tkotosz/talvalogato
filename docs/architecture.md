@@ -28,6 +28,7 @@ browser                                   Cloudflare      │ fetch
 `src/core` holds plain types and functions with no browser, Node or Worker dependencies.
 - `weeks.ts` handles ISO weeks and Budapest dates.
 - `planning.ts` holds the rules for decks, limits, decisions, and cart lines.
+- `filters.ts` holds the rules of the settings' filters: the diet, the allergens to leave out, disliked ingredients and the code exclusions. Every deck, pick and order check uses the same function.
 - `custom.ts` holds the rules for menus built course by course.
 - `planner.ts` holds the planning flow as `reducePlanner(state, action, context)`, with `plannerView(state, context)` deriving everything the screens show. The context carries what the core cannot know itself: the published weeks, the active week's dishes, and the current time.
 

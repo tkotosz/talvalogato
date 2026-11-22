@@ -168,7 +168,12 @@ export function App() {
           onRetryCatalog={catalog.retry}
         />
       ) : order ? (
-        <OverviewScreen view={view} onNotice={setNotice} onViewDay={value => dispatch({ type: 'openDay', day: value })} />
+        <OverviewScreen
+          view={view}
+          preferences={preferences}
+          onNotice={setNotice}
+          onViewDay={value => dispatch({ type: 'openDay', day: value })}
+        />
       ) : showPicker ? (
         <MealsScreen
           key={week + ':' + day + ':' + view.editing}
@@ -180,7 +185,10 @@ export function App() {
           editing={view.editing}
           done={view.dayDone}
           custom={view.custom}
+          // The demo's dishes are invented, so they do not link to Teletál.
+          teletalWeek={demo ? null : week}
           dispatch={dispatch}
+          onOpenSettings={() => setDialog('preferences')}
         />
       ) : (
         <StatusScreen
@@ -215,6 +223,8 @@ export function App() {
           <PreferencesForm
             preferences={preferences}
             week={week}
+            catalog={catalogItems}
+            demo={demo}
             onSave={value => {
               dispatch({ type: 'savePreferences', preferences: value });
               closeDialog();

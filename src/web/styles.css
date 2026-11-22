@@ -637,6 +637,188 @@ main {
 .preferences-dialog .code-filter-results {
   max-height: min(32dvh, 365px);
 }
+/* Diet, allergen and dislike filters */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.preference-section {
+  border: 0;
+  padding: 0 0 12px;
+  margin: 12px 0 0;
+  min-inline-size: 0;
+}
+fieldset.preference-section {
+  border-bottom: 1px solid var(--line);
+}
+.preference-section legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 0.91rem;
+  font-weight: 700;
+}
+.preference-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.preference-options label,
+.preference-checklist label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.preference-options input,
+.preference-checklist input,
+.allergen-confirm input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  flex: none;
+  accent-color: var(--green);
+}
+.preference-checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 128px), 1fr));
+  gap: 6px;
+  border: 0;
+  padding: 0;
+  margin: 10px 0 0;
+  min-inline-size: 0;
+}
+.preference-hint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+.allergen-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid #ecd29b;
+  border-radius: 12px;
+  background: #fff6df;
+  color: #6a4512;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+.allergen-notice svg {
+  flex: none;
+  margin-top: 1px;
+}
+.allergen-notice p + p {
+  margin-top: 6px;
+}
+.allergen-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 10px;
+  color: var(--ink);
+  font-weight: 700;
+  cursor: pointer;
+}
+.allergen-confirm input {
+  margin-top: 2px;
+}
+.own-dislike {
+  margin-top: 12px;
+}
+.own-dislike label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.own-dislike-field {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.own-dislike-field input {
+  flex: 1 1 120px;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+}
+.own-dislike-field .button {
+  flex: none;
+  min-height: 42px;
+  padding-inline: 12px;
+}
+.own-dislikes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+}
+.own-dislikes li {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 2px 2px 11px;
+  border-radius: 20px;
+  background: #edf6dd;
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+.own-dislikes button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.meal-allergens {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+.meal-allergens > span {
+  color: var(--ink);
+  font-weight: 650;
+}
+.meal-allergens a {
+  color: var(--green);
+  font-weight: 650;
+  white-space: nowrap;
+}
+.meal-allergens a svg {
+  vertical-align: -1px;
+}
+.tag-mark {
+  background: #e8f5c6;
+}
+.active-filters {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+.review .allergen-reminder {
+  margin-top: 4px;
+}
 
 /* Every step shares the step tabs' column (plus the side padding). */
 .setup,

@@ -1,8 +1,12 @@
 # Tálválogató
 
-Tálválogató is an installable planner for Teletál. Choose a delivery week, then plan each day with a Teletál lunch or full-day menu, or build your own menu course by course, swiping through the dishes. Review the week and send it to the Teletál cart. The settings dialog saves a calorie limit and menu-code exclusions across weeks. Each Teletál menu, and each dish of your own menu, uses one order line.
+Tálválogató is an installable planner for Teletál. Choose a delivery week, then plan each day with a Teletál lunch or full-day menu, or build your own menu course by course, swiping through the dishes. Review the week and send it to the Teletál cart. The settings dialog saves a calorie limit, menu-code exclusions, a vegetarian or vegan diet, allergens to leave out and disliked ingredients across weeks. Each Teletál menu, and each dish of your own menu, uses one order line.
 
 Tálválogató is an unofficial app and is not affiliated with Teletál Ételfutár Kft. The published site is a demo: its menus are invented, and it sends nothing to the Teletál cart.
+
+## Allergens
+
+Tálválogató copies the allergens, ingredients and diet marks from Teletál's pages automatically, so they can be outdated or wrong. Traces of an allergen are possible even when it is not listed: Teletál itself says that some of its dishes share a kitchen with the others, so cross-contamination cannot be excluded. The allergen filter hides the dishes for which Teletál lists an excluded allergen, and the dishes without allergen data; it does not make a dish safe. Check every dish on Teletál before ordering. In the demo, the dishes and their allergens are invented.
 
 ## Run locally
 
