@@ -262,7 +262,13 @@ test('a set menu with an extra, a day built course by course with a removed row,
   await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
   await page.locator('.review').waitFor();
   const withExtra = page.locator('.review-row', { hasText: 'kiegészítőkkel' });
-  assert.equal(await withExtra.locator('.review-item').count(), 2, 'the set menu and the pickle');
+  // The set menu's courses each get a line, like a day of only a set menu, then the pickle.
+  const extraItems = await withExtra.locator('.review-item').allInnerTexts();
+  assert.ok(extraItems.length >= 3, 'the set menu courses and the pickle');
+  assert.ok(
+    extraItems.every(item => !item.includes(' / ')),
+    'no courses joined on one line',
+  );
   const custom = page.locator('.review-row', { hasText: 'Saját menü' });
   assert.equal(await custom.locator('.review-item').count(), 2, 'main and dessert');
 
