@@ -9,7 +9,7 @@ import { MultiSelect } from './MultiSelect.tsx';
 /** The settings this part of the form edits. */
 export type DietSettings = Pick<
   Preferences,
-  'diet' | 'filterAllergens' | 'excludedAllergens' | 'allergenNoticeAccepted' | 'filterDislikes' | 'dislikes' | 'ownDislikes'
+  'diet' | 'filterAllergens' | 'excludedAllergens' | 'filterDislikes' | 'dislikes' | 'ownDislikes'
 >;
 
 const dietNames: Record<Preferences['diet'], string> = {
@@ -46,8 +46,8 @@ export function DietChoice({ value, onChange }: { value: Preferences['diet']; on
 }
 
 /**
- * The allergen and dislike filters of the settings. The allergen filter can only be saved once the user confirmed that
- * the allergen data must be checked on Teletál.
+ * The allergen and dislike filters of the settings. The allergen filter shows a notice that its data must be checked on
+ * Teletál.
  */
 export function DietFilters({
   value,
@@ -61,9 +61,6 @@ export function DietFilters({
 }) {
   const [ownWord, setOwnWord] = useState('');
   const [ownWordError, setOwnWordError] = useState('');
-  // The full notice stays while the settings are open, so ticking Értem does not make it vanish; once saved, a short
-  // reminder replaces it.
-  const [showFullNotice] = useState(!value.allergenNoticeAccepted);
   const dislikeNames = Object.fromEntries(allDislikes.map(dislike => [dislike, dislikeRules[dislike].name])) as Record<
     (typeof allDislikes)[number],
     string
@@ -91,33 +88,17 @@ export function DietFilters({
       </label>
       {value.filterAllergens && (
         <div className="preference-section">
-          {!showFullNotice ? (
-            <p className="preference-hint">
-              Rendelés előtt ellenőrizd az allergéneket a Teletál oldalán is. Az allergénadat nélküli ételeket elrejtjük.
+          <div className="allergen-notice" role="note">
+            <p className="allergen-notice-title">
+              <TriangleAlert size={16} aria-hidden="true" /> Fontos
             </p>
-          ) : (
-            <>
-              <div className="allergen-notice" role="note">
-                <p className="allergen-notice-title">
-                  <TriangleAlert size={16} aria-hidden="true" /> Mielőtt bekapcsolod
-                </p>
-                <p>
-                  Az allergénadatokat automatikusan vesszük át a Teletál oldaláról, ezért hibásak vagy elavultak lehetnek.
-                  Nyomokban akkor is lehet allergén egy ételben, ha nincs feltüntetve: a Teletál maga is jelzi, hogy egyes ételei
-                  közös konyhán készülnek. Az allergénadat nélküli ételeket elrejtjük.
-                  {demo && ' A bemutató ételei és allergénjei kitaláltak.'}
-                </p>
-              </div>
-              <label className="allergen-confirm">
-                <input
-                  type="checkbox"
-                  checked={value.allergenNoticeAccepted}
-                  onChange={event => onChange({ allergenNoticeAccepted: event.target.checked })}
-                />
-                Értem, rendelés előtt ellenőrzöm az allergéneket a Teletál oldalán.
-              </label>
-            </>
-          )}
+            <p>
+              Az allergénadatokat automatikusan vesszük át a Teletál oldaláról, ezért hibásak vagy elavultak lehetnek. Nyomokban
+              akkor is lehet allergén egy ételben, ha nincs feltüntetve: a Teletál maga is jelzi, hogy egyes ételei közös konyhán
+              készülnek. Az allergénadat nélküli ételeket elrejtjük. Rendelés előtt ellenőrizd az allergéneket a Teletál oldalán.
+              {demo && ' A bemutató ételei és allergénjei kitaláltak.'}
+            </p>
+          </div>
           <MultiSelect
             label="Kizárt allergének"
             placeholder="Válassz allergéneket"

@@ -188,8 +188,6 @@ export interface Preferences {
   /** Leave out the dishes that contain an excluded allergen, and those whose allergens are unknown. */
   filterAllergens: boolean;
   excludedAllergens: Allergen[];
-  /** The user confirmed the allergen notice; the allergen filter stays off without it. */
-  allergenNoticeAccepted: boolean;
   /** Leave out the dishes whose names or ingredients mention a dislike. */
   filterDislikes: boolean;
   dislikes: Dislike[];

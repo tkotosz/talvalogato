@@ -349,20 +349,17 @@ test('a generated day offers whole menus within the calorie limit, and Vissza re
   assert.deepEqual(errors, []);
 });
 
-test('diet and allergen filters: the notice comes first, decks follow the filters, and ordering reminds to check allergens', async () => {
+test('diet and allergen filters: decks follow the filters, and ordering reminds to check allergens', async () => {
   const { page, errors } = await openPlanner();
   await page.getByRole('button', { name: 'Beállítások' }).click();
   await page.getByLabel('Vegán').check();
   await page.getByLabel('Allergének kizárása').check();
-  const save = page.getByRole('button', { name: 'Mentés' });
-  assert.equal(await save.isDisabled(), true, 'the allergen notice must be confirmed before saving');
-  await page.getByLabel(/^Értem/).check();
   // The demo has two vegan mains a day, and at most one of them has sesame.
   await page.getByRole('button', { name: /Kizárt allergének/ }).click();
   await page.getByLabel('Szezámmag').check();
   await page.keyboard.press('Escape');
   await page.screenshot({ path: `${screenshots}diet-settings.png`, fullPage: true });
-  await save.click();
+  await page.getByRole('button', { name: 'Mentés' }).click();
   await page.locator('dialog[open]').waitFor({ state: 'detached' });
 
   // Teletál's set menus are not vegan, so the lunch deck is empty and names the filters.
