@@ -123,7 +123,7 @@ test('generation reports an empty choice and a limit the lightest dishes exceed'
   assert.equal(generationProblem(catalog, ['cold'], newPreferences), 'empty');
   assert.equal(generationProblem(catalog, ['soup', 'main'], limited), null);
   const tight = { ...limited, calories: 600, tolerance: 0 };
-  assert.equal(generationProblem(catalog, ['soup', 'main', 'dessert'], tight), 'limit');
+  assert.equal(generationProblem(catalog, ['soup', 'main', 'dessert'], tight), 'calories');
   assert.deepEqual(generateMenu(catalog, ['soup', 'main', 'dessert'], tight, startGenerator(1)).dishes, [
     undefined,
     undefined,
@@ -220,7 +220,7 @@ test('an idea fills only the empty rows and fits the calories the rest of the tr
   const state = generatedDay(limited, 7, ...pickMain(mains[3]!));
   assert.deepEqual(draft(state).generator?.rows, [0]);
   assert.deepEqual(codes(state), ['A3', 'I4']);
-  assert.equal(generationProblem(catalog, ['soup'], limited, 1000), 'limit');
+  assert.equal(generationProblem(catalog, ['soup'], limited, 1000), 'calories');
 });
 
 test('Vissza from an idea returns to the tray as it was, and a tray without empty rows gets no idea', () => {
@@ -352,4 +352,45 @@ test('an idea fills a set-menu row with a lunch menu, and with a full-day menu o
   };
   for (let seed = 0; seed < 5; seed++) assert.equal(draft(ideaWith([lunchMenu, fullDay], seed)).rows[0]?.dish?.code, 'M1');
   assert.equal(draft(ideaWith([fullDay])).rows[0]?.dish?.code, 'Z10');
+});
+
+test('with a calorie limit and a spending limit an idea finds the dishes that fit both together', () => {
+  // The lightest dishes are the dearest and the cheapest are the heaviest; only the two middle ones fit both limits.
+  const priced = (code: string, course: CustomCourse, kcal: number, price: number): Dish => ({
+    ...dish(code, course, kcal),
+    price,
+  });
+  const pairs = [
+    priced('AL', 'soup', 100, 3000),
+    priced('AC', 'soup', 500, 500),
+    priced('AB', 'soup', 300, 1500),
+    priced('IL', 'main', 200, 3000),
+    priced('IC', 'main', 800, 500),
+    priced('IB', 'main', 500, 1500),
+  ];
+  const both = { ...newPreferences, limitCalories: true, calories: 900, tolerance: 0 };
+  assert.equal(generationProblem(pairs, ['soup', 'main'], both, 0, 3200), null);
+  for (let seed = 0; seed < 20; seed++) {
+    const { dishes } = generateMenu(pairs, ['soup', 'main'], both, startGenerator(seed), 0, 3200);
+    assert.deepEqual(
+      dishes.map(item => item?.code),
+      ['AB', 'IB'],
+    );
+  }
+  assert.equal(generationProblem(pairs, ['soup', 'main'], both, 0, 2900), 'money');
+  assert.equal(generationProblem(pairs, ['soup', 'main'], both, 650, 3200), 'calories');
+  assert.equal(generationProblem(pairs, ['soup', 'main'], newPreferences, 0, 999), 'money');
+  assert.equal(generationProblem(pairs, ['soup', 'main'], newPreferences, 0, 1000), null);
+});
+
+test('an idea fits the money the weekly spending limit leaves after the rest of the tray', () => {
+  // Every dish costs 1,000 Ft: the soup on the tray and an idea for the main fit 2,000 Ft, not 1,500 Ft.
+  const pickSoup: PlannerAction[] = [
+    { type: 'openStage', day: 3, stage: 0 },
+    { type: 'pickCourse', day: 3, dish: soups[0]! },
+  ];
+  const spending = (weeklyBudget: number) => ({ ...newPreferences, limitSpending: true, weeklyBudget });
+  assert.deepEqual(codes(generatedDay(spending(2000), 7, ...pickSoup))[0], 'A1');
+  assert.notEqual(codes(generatedDay(spending(2000), 7, ...pickSoup))[1], null);
+  assert.deepEqual(codes(generatedDay(spending(1500), 7, ...pickSoup)), ['A1', null]);
 });

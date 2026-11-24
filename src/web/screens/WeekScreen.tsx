@@ -153,7 +153,7 @@ function FilterSummary({ preferences, onOpenSettings }: { preferences: Preferenc
             <b>Szűrők:</b> {filters.join('; ')}.
           </>
         ) : (
-          'Diéta, kalóriakeret, allergének és kerülendő összetevők szerint is szűrhetsz.'
+          'Diéta, kalória- és költségkeret, allergének és kerülendő összetevők szerint is szűrhetsz.'
         )}
       </p>
       <button type="button" className="text-button" onClick={onOpenSettings}>

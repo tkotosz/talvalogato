@@ -31,6 +31,8 @@ export const newPreferences: Preferences = {
   limitCalories: false,
   calories: 2000,
   tolerance: 10,
+  limitSpending: false,
+  weeklyBudget: 15_000,
   filterCodes: false,
   excludedCodes: [],
   defaultDays: allDays,
@@ -76,6 +78,11 @@ export function validCalorieBudget({ calories, tolerance }: PreferenceInput): bo
   );
 }
 
+/** Whether a weekly spending limit can be saved: a whole number of forints above zero. */
+export function validWeeklyBudget({ weeklyBudget }: PreferenceInput): boolean {
+  return typeof weeklyBudget === 'number' && Number.isSafeInteger(weeklyBudget) && weeklyBudget >= 1;
+}
+
 function normalizeDays(selection: unknown): Day[] {
   return Array.isArray(selection) ? allDays.filter(day => selection.includes(day)) : allDays;
 }
@@ -83,6 +90,7 @@ function normalizeDays(selection: unknown): Day[] {
 export function restorePreferences(values: PreferenceInput | null): Preferences {
   if (!values) return newPreferences;
   const validBudget = validCalorieBudget(values);
+  const validSpending = validWeeklyBudget(values);
   const excludedCodes = Array.isArray(values.excludedCodes)
     ? [
         ...new Set(
@@ -96,6 +104,8 @@ export function restorePreferences(values: PreferenceInput | null): Preferences 
     limitCalories: validBudget && values.limitCalories === true,
     calories: validBudget ? (values.calories as number) : newPreferences.calories,
     tolerance: validBudget ? (values.tolerance as number) : newPreferences.tolerance,
+    limitSpending: validSpending && values.limitSpending === true,
+    weeklyBudget: validSpending ? (values.weeklyBudget as number) : newPreferences.weeklyBudget,
     filterCodes: values.filterCodes === true,
     excludedCodes,
     defaultDays: normalizeDays(values.defaultDays),
@@ -289,6 +299,16 @@ export function menuDeck(dish: CatalogDish & Partial<Dish>): MenuDeckId | null {
 
 export function matchesCalorieLimit(kcal: number | null, preferences: Preferences): boolean {
   return !preferences.limitCalories || (Number.isFinite(kcal) && kcal! >= 0 && kcal! <= calorieLimit(preferences));
+}
+
+/**
+ * What the weekly spending limit leaves for `day`: the limit less the picks saved for the week's other orderable days,
+ * or null without a limit. It is below zero when the other days already go over.
+ */
+export function moneyLeft(plan: Pick<Plan, 'slots'>, day: Day, eligible: Day[], preferences: Preferences): number | null {
+  if (!preferences.limitSpending) return null;
+  const others = eligible.filter(other => other !== day);
+  return preferences.weeklyBudget - others.reduce((sum, other) => sum + (plan.slots[other]?.price ?? 0), 0);
 }
 
 export function selectionIssue(

@@ -326,6 +326,41 @@ test('a calorie limit hides what does not fit and lets the user go over for a co
   assert.deepEqual(errors, []);
 });
 
+test('a weekly spending limit shows what is left, hides what does not fit, and still lets the week go to the cart', async () => {
+  const { page, errors } = await openPlanner();
+  const text = async (selector: string) => (await page.locator(selector).innerText()).replace(/\s/g, '');
+  await page.getByRole('button', { name: 'Beállítások' }).click();
+  await page.getByLabel('Heti költségkeret').check();
+  // Every demo soup costs at least 850 Ft and every main at least 1,690 Ft, so no main fits next to a soup.
+  await page.locator('#weekly-budget').fill('2500');
+  await page.getByRole('button', { name: 'Mentés' }).click();
+  await page.locator('dialog[open]').waitFor({ state: 'detached' });
+  assert.match(await text('.filter-summary'), /hetiköltségkeret/);
+  await page.getByRole('button', { name: 'Válogatás indítása' }).click();
+  assert.match(await text('.week-spending'), /^Eddig0Ft·még2500Ftahetikeretből$/);
+
+  await addRows(page, 'Leves', 'Főétel');
+  await pickFromOverview(page, 'Leves');
+  await page.locator('.custom-summary button', { hasText: 'Főétel' }).first().click();
+  await waitForDeck(page);
+  await page.getByRole('heading', { name: 'Nincs a keretbe férő választás' }).waitFor();
+  assert.match(await text('.placeholder-card'), /hetiköltségkeretedből/);
+  await page.getByRole('button', { name: 'Mutasd a kereten felülieket is' }).click();
+  await waitForDeck(page);
+  assert.equal(await page.locator('.swipe-card .price-badge.over-target').count(), 1);
+  await page.screenshot({ path: `${screenshots}spending-deck.png`, fullPage: true });
+  await page.getByRole('button', { name: 'Kiválasztom' }).click();
+  await page.locator('.custom-summary').waitFor();
+  assert.match(await text('.week-spending'), /Ft-talahetikeretfelett$/);
+
+  await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
+  await page.locator('.review').waitFor();
+  assert.match(await text('.review-spending'), /hetiköltségkereted\(2500Ft\)felettvagy/);
+  await page.screenshot({ path: `${screenshots}spending-overview.png`, fullPage: true });
+  assert.equal(await page.getByRole('button', { name: 'Kosárhoz adás' }).isDisabled(), false);
+  assert.deepEqual(errors, []);
+});
+
 test('an idea fills soup and main within the calorie limit, and a kept idea stays on the tray', async () => {
   const { page, errors } = await openPlanner();
   await page.getByRole('button', { name: 'Beállítások' }).click();

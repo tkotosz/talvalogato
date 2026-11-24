@@ -58,6 +58,7 @@ export function SwipeDeck({
   candidates,
   buildOptions,
   target,
+  priceTarget,
   teletalWeek,
   nouns,
   empty,
@@ -69,6 +70,8 @@ export function SwipeDeck({
   buildOptions(dishes: Dish[]): MenuOption[];
   /** Calories a card may have before it shows as over the target, or null. */
   target: number | null;
+  /** Forints a card may cost before it shows as over what the spending limit leaves, or null. */
+  priceTarget: number | null;
   /** The week whose Teletál menu the cards link to, or null for no links. */
   teletalWeek: WeekKey | null;
   nouns: DeckNouns;
@@ -117,7 +120,7 @@ export function SwipeDeck({
                 if (direction !== 'down') act(direction);
               }}
             >
-              <MealCard option={top} target={target} teletalWeek={teletalWeek} />
+              <MealCard option={top} target={target} priceTarget={priceTarget} teletalWeek={teletalWeek} />
             </SwipeCard>
           </>
         )}
