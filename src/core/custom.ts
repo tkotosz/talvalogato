@@ -59,6 +59,14 @@ export function canGenerate(draft: Pick<CustomDraft, 'rows'>): boolean {
   return draft.rows.length >= 2 && emptyRows(draft).length > 0;
 }
 
+/**
+ * Whether the idea in progress put a dish on any of the rows it fills. It fills none when a limit leaves no room or the
+ * settings exclude every dish, even while the rest of the tray has dishes.
+ */
+export function ideaFilled(draft: Pick<CustomDraft, 'rows' | 'generator'>): boolean {
+  return (draft.generator?.rows ?? []).some(index => draft.rows[index]?.dish !== undefined);
+}
+
 /** The dishes on the tray, in tray order. */
 export function pickedDishes(draft: Pick<CustomDraft, 'rows'>): Dish[] {
   return draft.rows.flatMap(row => (row.dish ? [row.dish] : []));
