@@ -1,5 +1,5 @@
 import { ChevronRight, Flame, Truck, Wallet } from 'lucide-react';
-import { emptyTray, pickedDishes, totalPrice, trayCourseNames } from '../../core/custom.ts';
+import { emptyTray, pickedDishes, totalCalories, totalPrice, trayCourseNames } from '../../core/custom.ts';
 import type { PlannerAction } from '../../core/planner.ts';
 import { calorieLimit, days, moneyLeft, selectionIssue } from '../../core/planning.ts';
 import type { CustomDraft, Day, Dish, Plan, Preferences, WeekKey } from '../../core/types.ts';
@@ -41,6 +41,7 @@ export function MealsScreen({
   const dayMoney = moneyLeft(plan, day, eligible, preferences);
   // The open tray counts in place of the day's saved pick, so the line follows every change on it.
   const dayPrice = custom ? totalPrice(pickedDishes(custom)) : (picked?.price ?? 0);
+  const dayKcal = custom ? totalCalories(pickedDishes(custom)) : picked ? picked.kcal : 0;
   // The breadcrumb, while the tray has opened a row or an idea.
   const crumbs: { label: string; onClick?: () => void }[] = [];
   if (custom?.generator) {
@@ -54,6 +55,7 @@ export function MealsScreen({
   return (
     <main className="picker" aria-label={`Napi válogatás · ${days[day - 1]}`}>
       <WeekProgress plan={{ ...plan, day }} eligible={eligible} onSelect={value => dispatch({ type: 'openDay', day: value })} />
+      {budget !== null && <DayCalories eaten={dayKcal} limit={budget} />}
       {dayMoney !== null && (
         <WeekSpending spent={preferences.weeklyBudget - dayMoney + dayPrice} limit={preferences.weeklyBudget} />
       )}
@@ -85,13 +87,6 @@ export function MealsScreen({
           <span>A {day === 6 ? 'szombati' : 'vasárnapi'} ételek pénteken érkeznek, mert a Teletál hétvégén nem szállít.</span>
         </p>
       )}
-      {budget !== null && custom?.generator && (
-        <div className="picker-details">
-          <span className="day-budget">
-            <Flame size={18} aria-hidden="true" /> Max. {calories(budget)}
-          </span>
-        </div>
-      )}
       {done ? (
         <>
           <div className="deck">
@@ -121,6 +116,22 @@ export function MealsScreen({
         />
       )}
     </main>
+  );
+}
+
+/** The day's calories so far, against the daily calorie limit; `eaten` is null when a dish has no calorie data. */
+function DayCalories({ eaten, limit }: { eaten: number | null; limit: number }) {
+  const over = eaten !== null && eaten > limit;
+  return (
+    <p className={over ? 'day-calories over' : 'day-calories'} aria-live="polite">
+      <Flame size={17} aria-hidden="true" />
+      <span>
+        {eaten === null
+          ? `Egy étel kalóriája ismeretlen · napi keret ${calories(limit)}`
+          : `Ma ${calories(eaten)} · ` +
+            (over ? `${calories(eaten - limit)}-val a napi keret felett` : `még ${calories(limit - eaten)} a napi keretből`)}
+      </span>
+    </p>
   );
 }
 

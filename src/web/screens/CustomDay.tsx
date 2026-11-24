@@ -187,11 +187,8 @@ function Tray({
           {dishes.length ? (total === null ? 'ismeretlen kcal' : calories(total)) : '–'} · {money(totalPrice(dishes))}
         </strong>
       </p>
-      {limit !== null && (
-        <p className={overLimit ? 'over-limit-note' : 'custom-hint'}>
-          {overLimit ? `A menü ${calories(total! - limit)} kalóriával a kereted felett van.` : `Napi keret: ${calories(limit)}`}
-        </p>
-      )}
+      {/* The calorie line above the tray shows the limit; the note stays for a menu over it. */}
+      {overLimit && <p className="over-limit-note">A menü {calories(total! - limit)} kalóriával a kereted felett van.</p>}
       <div className="tray-actions">
         <button type="button" className="button secondary" disabled={!draft.rows.length} onClick={onClear}>
           Törlés

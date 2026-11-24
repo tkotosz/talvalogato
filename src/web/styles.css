@@ -1037,6 +1037,7 @@ fieldset.preference-section {
 .row-budgets .day-budget {
   margin-inline-start: 0;
 }
+.day-calories,
 .week-spending {
   display: flex;
   align-items: center;
@@ -1047,11 +1048,17 @@ fieldset.preference-section {
   font-weight: 650;
   overflow-wrap: anywhere;
 }
+.day-calories svg,
 .week-spending svg {
   flex: none;
 }
+.day-calories.over,
 .week-spending.over {
   color: #754c16;
+}
+/* The two limit lines read as one block. */
+.day-calories + .week-spending {
+  margin-top: -10px;
 }
 .deck {
   margin: 0 auto;

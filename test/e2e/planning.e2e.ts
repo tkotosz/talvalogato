@@ -304,6 +304,8 @@ test('a calorie limit hides what does not fit and lets the user go over for a co
   await page.getByText('Szűrők:').waitFor();
   await page.screenshot({ path: `${screenshots}week-filters.png`, fullPage: true });
   await page.getByRole('button', { name: 'Válogatás indítása' }).click();
+  const text = async (selector: string) => (await page.locator(selector).innerText()).replace(/\s/g, '');
+  assert.match(await text('.day-calories'), /^Ma0kcal·még700kcalanapikeretből$/);
   await addRows(page, 'Leves', 'Főétel');
   await pickFromOverview(page, 'Leves');
 
@@ -318,6 +320,7 @@ test('a calorie limit hides what does not fit and lets the user go over for a co
   }
   await page.getByRole('button', { name: 'Kiválasztom' }).click();
   await page.locator('.custom-summary').waitFor();
+  assert.match(await text('.day-calories'), nothingFits ? /kcal-valanapikeretfelett$/ : /^Ma\d+kcal·még\d+kcalanapikeretből$/);
   await page.locator('.step-progress').getByRole('button', { name: 'Áttekintés' }).click();
   const row = page.locator('.review-row', { hasText: 'Saját menü' });
   await row.waitFor();
