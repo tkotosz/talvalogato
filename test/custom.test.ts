@@ -8,6 +8,7 @@ import {
   groupedDishes,
   pickedDishes,
   remainingCalories,
+  remainingMoney,
   rowChoiceCounts,
   totalCalories,
   trayCourses,
@@ -184,6 +185,10 @@ test('a row orders up to nine portions of its dish, counted in the totals, the l
   assert.equal(totalCalories(pickedDishes(draft(state))), soup.kcal! * 3);
   assert.equal(remainingCalories(draft(state), limited, 1), calorieLimit(limited) - soup.kcal! * 3);
   assert.equal(remainingCalories(withQuantity(draft(state), 0, 1), limited, 0), calorieLimit(limited));
+  // The same for money: three portions of the soup leave a third of the forints for each.
+  assert.equal(remainingMoney(draft(state), 1, 5000), 5000 - soup.price * 3);
+  assert.equal(remainingMoney(draft(state), 0, 5000), Math.floor(5000 / 3));
+  assert.equal(remainingMoney(withQuantity(draft(state), 0, 1), 0, 5000), 5000);
 
   state = run(state, { type: 'navigate', step: 'overview' });
   const saved = state.plans[w48]!.slots[3]!;
