@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { customOption, ideaFilled } from '../src/core/custom.ts';
 import { generateMenu, generationProblem, nextRandom, startGenerator } from '../src/core/generate.ts';
 import {
   initialPlanner,
@@ -393,4 +394,18 @@ test('an idea fits the money the weekly spending limit leaves after the rest of 
   assert.deepEqual(codes(generatedDay(spending(2000), 7, ...pickSoup))[0], 'A1');
   assert.notEqual(codes(generatedDay(spending(2000), 7, ...pickSoup))[1], null);
   assert.deepEqual(codes(generatedDay(spending(1500), 7, ...pickSoup)), ['A1', null]);
+});
+
+test('an idea that fills no row next to dishes already on the tray has nothing to keep', () => {
+  const pickSoup: PlannerAction[] = [
+    { type: 'openStage', day: 3, stage: 0 },
+    { type: 'pickCourse', day: 3, dish: soups[0]! },
+  ];
+  const spending = (weeklyBudget: number) => ({ ...newPreferences, limitSpending: true, weeklyBudget });
+  assert.equal(ideaFilled(draft(generatedDay(spending(2000), 7, ...pickSoup))), true);
+  // The soup alone is a menu, but the idea added nothing to it, so the idea screen shows why instead of a card.
+  const state = generatedDay(spending(1500), 7, ...pickSoup);
+  assert.equal(ideaFilled(draft(state)), false);
+  assert.notEqual(customOption(draft(state), spending(1500)), null);
+  assert.equal(run(state, { type: 'acceptGenerated', day: 3 }), state);
 });

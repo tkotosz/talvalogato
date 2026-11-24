@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { Check, ListChecks, RefreshCw, Utensils } from 'lucide-react';
-import { customOption, pickedDishes, totalCalories, totalPrice, trayCourseNames } from '../../core/custom.ts';
+import { customOption, ideaFilled, pickedDishes, totalCalories, totalPrice, trayCourseNames } from '../../core/custom.ts';
 import { generationProblem } from '../../core/generate.ts';
 import { calorieLimit, dayCandidates } from '../../core/planning.ts';
 import type { CustomDraft, Day, Dish, Preferences } from '../../core/types.ts';
@@ -47,8 +47,9 @@ export function GeneratedDeck({
   useSwipeKeys(card, option !== null, keys);
   const limit = preferences.limitCalories ? calorieLimit(preferences) : null;
 
-  if (!option) {
-    // Without a menu to show, nothing was filled: everything on the tray was there before the idea.
+  // An idea that filled no row has nothing to keep, even when the rest of the tray has dishes.
+  if (!option || !ideaFilled(draft)) {
+    // Nothing was filled: everything on the tray was there before the idea.
     const kept = pickedDishes(draft);
     const left = dayMoney === null ? null : dayMoney - totalPrice(kept);
     const problem = generationProblem(
