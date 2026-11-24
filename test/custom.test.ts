@@ -18,7 +18,7 @@ import {
   type PlannerContext,
   type PlannerState,
 } from '../src/core/planner.ts';
-import { cartLines, newPreferences, orderSummary, restorePlan } from '../src/core/planning.ts';
+import { cartLines, moneyLeft, newPreferences, orderSummary, restorePlan } from '../src/core/planning.ts';
 import type { Allergen, CustomCourse, CustomDraft, Day, Dish, Preferences } from '../src/core/types.ts';
 
 /** The week the tests plan. */
@@ -239,7 +239,7 @@ test('Nem kérek and emptying keep a row, removing takes it off, and a tray with
 test('a set-menu row offers lunch and full-day menus; a menu alone is saved as the menu, with extras as one day', () => {
   let state = run(meals(), { type: 'addCourse', day: 3, course: 'menu' });
   assert.deepEqual(
-    courseDeck(catalog, draft(state), 0, newPreferences).options.map(option => option.id),
+    courseDeck(catalog, draft(state), 0, newPreferences, null).options.map(option => option.id),
     [setMenu.id, fullDayMenu.id],
   );
   state = run(state, { type: 'openStage', day: 3, stage: 0 }, { type: 'pickCourse', day: 3, dish: setMenu });
@@ -281,7 +281,7 @@ test('with a calorie limit the set menu that fills what is left best comes first
   const limitedMenus = [setMenu, fullDayMenu, lightMenu];
   const tray = withCourse(emptyTray(), 'menu');
   assert.deepEqual(
-    courseDeck(limitedMenus, tray, 0, limited).options.map(option => option.dishes[0]!.code),
+    courseDeck(limitedMenus, tray, 0, limited, null).options.map(option => option.dishes[0]!.code),
     ['Z10', 'M1', 'M3'],
   );
 });
@@ -307,7 +307,7 @@ test('trays saved in earlier shapes open as rows, a set menu after any breakfast
 test('a calorie limit offers only dishes that fit what is left, hides unknown calories, and lets the user go over', () => {
   let state = pickDish(customDay(limited), bigSoup);
   state = run(state, { type: 'openStage', day: 3, stage: 1 });
-  const mains = courseDeck(catalog, draft(state), 1, limited);
+  const mains = courseDeck(catalog, draft(state), 1, limited, null);
   assert.equal(mains.remaining, 600);
   assert.deepEqual(mains.options, []);
   assert.equal(mains.overLimitCount, 2);
@@ -315,13 +315,13 @@ test('a calorie limit offers only dishes that fit what is left, hides unknown ca
 
   state = run(state, { type: 'showOverLimit', day: 3 });
   assert.deepEqual(
-    courseDeck(catalog, draft(state), 1, limited).options.map(option => option.id),
+    courseDeck(catalog, draft(state), 1, limited, null).options.map(option => option.id),
     [main.id, bigMain.id],
   );
   state = run(state, { type: 'pickCourse', day: 3, dish: main }, { type: 'addCourse', day: 3, course: 'dessert' });
   state = run(state, { type: 'addCourse', day: 3, course: 'drink' });
-  assert.deepEqual(courseDeck(catalog, draft(state), 2, limited).options, []);
-  assert.deepEqual(courseDeck(catalog, draft(state), 3, limited).options, [], 'drinks without calorie data are hidden');
+  assert.deepEqual(courseDeck(catalog, draft(state), 2, limited, null).options, []);
+  assert.deepEqual(courseDeck(catalog, draft(state), 3, limited, null).options, [], 'drinks without calorie data are hidden');
   state = run(state, { type: 'navigate', step: 'overview' });
 
   const saved = state.plans[w48]!.slots[3]!;
@@ -339,16 +339,16 @@ test('dishes that fit come first, smallest overshoot next, and code exclusions a
   const tray = { ...emptyTray(), overLimit: ['dessert' as const] };
   const withSoup: CustomDraft = { ...tray, rows: [{ course: 'soup', dish: dish('A9', 'soup', 800) }, { course: 'dessert' }] };
   assert.deepEqual(
-    courseDeck(catalog, withSoup, 1, limited).options.map(option => option.dishes[0]!.code),
+    courseDeck(catalog, withSoup, 1, limited, null).options.map(option => option.dishes[0]!.code),
     ['S2', 'S1'],
   );
   const excluding = { ...newPreferences, filterCodes: true, excludedCodes: ['A1'] };
   assert.deepEqual(
-    courseDeck(catalog, withCourse(tray, 'soup'), 0, excluding).options.map(option => option.dishes[0]!.code),
+    courseDeck(catalog, withCourse(tray, 'soup'), 0, excluding, null).options.map(option => option.dishes[0]!.code),
     ['A2'],
   );
   assert.deepEqual(
-    courseDeck(catalog, withCourse(tray, 'drink'), 0, newPreferences).options.map(option => option.kcal),
+    courseDeck(catalog, withCourse(tray, 'drink'), 0, newPreferences, null).options.map(option => option.kcal),
     [null],
   );
 });
@@ -409,7 +409,7 @@ test('a row leaves out filtered dishes, and a dish the current data marks with a
   });
   const current = catalog.map(item => labeled(item, item.code === 'I1' ? ['milk'] : item.code === 'I2' ? null : []));
   assert.deepEqual(
-    courseDeck(current, draft(customDay(noMilk)), 1, noMilk).options.map(option => option.dishes[0]?.code),
+    courseDeck(current, draft(customDay(noMilk)), 1, noMilk, null).options.map(option => option.dishes[0]?.code),
     [],
     'milk and unknown allergens both leave the deck',
   );
@@ -425,4 +425,60 @@ test('each kind of row counts its choices under the settings, and what the day o
   const { allowed, available } = rowChoiceCounts(day3, { ...newPreferences, diet: 'vegan' });
   assert.deepEqual(available, { breakfast: 0, menu: 2, soup: 2, main: 2, cold: 1, pickle: 1, bread: 0, dessert: 2, drink: 1 });
   assert.deepEqual(allowed, { breakfast: 0, menu: 0, soup: 0, main: 0, cold: 0, pickle: 0, bread: 0, dessert: 0, drink: 0 });
+});
+
+test('a weekly spending limit offers what the other days and the rest of the tray leave, and lets the user go over', () => {
+  const spending: Preferences = { ...newPreferences, limitSpending: true, weeklyBudget: 4000 };
+  const thursdaySoup = catalog.find(item => item.day === 4)!;
+  // Thursday takes two 1,000 Ft soups, which leaves Wednesday 2,000 Ft.
+  let state = run(
+    initialPlanner({}, spending),
+    { type: 'navigate', step: 'meals' },
+    { type: 'openDay', day: 4 },
+    { type: 'addCourse', day: 4, course: 'soup' },
+    { type: 'openStage', day: 4, stage: 0 },
+    { type: 'pickCourse', day: 4, dish: thursdaySoup },
+    { type: 'addCourse', day: 4, course: 'soup' },
+    { type: 'openStage', day: 4, stage: 1 },
+    { type: 'pickCourse', day: 4, dish: thursdaySoup },
+    { type: 'openDay', day: 3 },
+    { type: 'addCourse', day: 3, course: 'soup' },
+    { type: 'addCourse', day: 3, course: 'main' },
+  );
+  const { eligible } = plannerView(state, context);
+  const wednesday = () => moneyLeft(state.plans[w48]!, 3, eligible, spending);
+  assert.equal(wednesday(), 2000);
+  assert.deepEqual(rowChoiceCounts(catalog, spending), rowChoiceCounts(catalog, newPreferences), 'every kind can be added');
+
+  state = run(state, { type: 'openStage', day: 3, stage: 0 }, { type: 'pickCourse', day: 3, dish: soup });
+  state = run(state, { type: 'openStage', day: 3, stage: 1 });
+  const mains = courseDeck(catalog, draft(state), 1, spending, wednesday());
+  assert.equal(mains.money, 1200);
+  assert.deepEqual(
+    mains.options.map(option => option.id),
+    [bigMain.id],
+  );
+  assert.equal(mains.overLimitCount, 1);
+  assert.equal(run(state, { type: 'pickCourse', day: 3, dish: main }), state, 'a dish over the limit cannot be picked unasked');
+
+  state = run(state, { type: 'showOverLimit', day: 3 });
+  assert.deepEqual(
+    courseDeck(catalog, draft(state), 1, spending, wednesday()).options.map(option => option.id),
+    [bigMain.id, main.id],
+  );
+  state = run(state, { type: 'pickCourse', day: 3, dish: main }, { type: 'navigate', step: 'overview' });
+
+  // Going over is the user's call: the order keeps every day.
+  const order = orderSummary(state.plans[w48]!, eligible, catalog, spending);
+  assert.deepEqual(order.issues, {});
+  assert.equal(order.total, 4800);
+});
+
+test('the calorie limit and the spending limit together offer only dishes within both', () => {
+  const both: Preferences = { ...limited, limitSpending: true, weeklyBudget: 1900 };
+  const state = run(customDay(both), { type: 'openStage', day: 3, stage: 0 }, { type: 'pickCourse', day: 3, dish: soup });
+  // 800 kcal and 1,100 Ft are left: the 700 kcal main costs 2,000 Ft and the 1,000 Ft main has 1,400 kcal.
+  const mains = courseDeck(catalog, draft(state), 1, both, 1900);
+  assert.deepEqual(mains.options, []);
+  assert.equal(mains.overLimitCount, 2);
 });

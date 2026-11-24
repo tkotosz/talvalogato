@@ -145,6 +145,10 @@ test('the dish issue names the first filter that leaves the dish out, and the ac
     'kerülendő összetevők: gomba, olíva',
   ]);
   assert.deepEqual(activeFilters(newPreferences), []);
+  assert.deepEqual(activeFilters({ ...newPreferences, limitCalories: true, limitSpending: true }), [
+    'napi kalóriakeret',
+    'heti költségkeret',
+  ]);
 });
 
 test('restored preferences keep known filter values', () => {

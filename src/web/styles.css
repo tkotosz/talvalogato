@@ -1027,6 +1027,32 @@ fieldset.preference-section {
 .day-budget svg {
   flex: none;
 }
+.row-budgets {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-inline-start: auto;
+}
+.row-budgets .day-budget {
+  margin-inline-start: 0;
+}
+.week-spending {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: -4px 0 14px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.week-spending svg {
+  flex: none;
+}
+.week-spending.over {
+  color: #754c16;
+}
 .deck {
   margin: 0 auto;
   position: relative;
@@ -1230,6 +1256,12 @@ fieldset.preference-section {
 .calorie-badge.over-target {
   background: #fff1d5;
   color: #754c16;
+}
+.price-badge.over-target {
+  background: #fff1d5;
+  color: #754c16;
+  border-radius: 8px;
+  padding: 6px 9px;
 }
 .swipe-intent {
   position: absolute;
@@ -1513,6 +1545,12 @@ button.review-row:hover {
 .review-total > strong {
   font-size: 1.4rem;
   letter-spacing: -0.035em;
+}
+.review-spending {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  text-align: end;
 }
 
 dialog {

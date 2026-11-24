@@ -1,10 +1,10 @@
 import { useRef } from 'react';
 import { Check, ListChecks, RefreshCw, Utensils } from 'lucide-react';
-import { customOption, pickedDishes, totalCalories, trayCourseNames } from '../../core/custom.ts';
+import { customOption, pickedDishes, totalCalories, totalPrice, trayCourseNames } from '../../core/custom.ts';
 import { generationProblem } from '../../core/generate.ts';
 import { calorieLimit, dayCandidates } from '../../core/planning.ts';
 import type { CustomDraft, Day, Dish, Preferences } from '../../core/types.ts';
-import { calories } from '../format.ts';
+import { calories, money } from '../format.ts';
 import { CustomMenuCard } from './CustomMenuCard.tsx';
 import { ActiveFilters } from './FilterNotes.tsx';
 import { useSwipeKeys } from './SwipeDeck.tsx';
@@ -22,6 +22,7 @@ export function GeneratedDeck({
   draft,
   catalog,
   preferences,
+  money: dayMoney,
   onAccept,
   onReject,
   onLeave,
@@ -31,6 +32,8 @@ export function GeneratedDeck({
   draft: CustomDraft;
   catalog: Dish[];
   preferences: Preferences;
+  /** What the weekly spending limit leaves for the day, or null without a limit. */
+  money: number | null;
   onAccept(): void;
   onReject(): void;
   /** Back to the tray as it was before the idea. */
@@ -47,11 +50,13 @@ export function GeneratedDeck({
   if (!option) {
     // Without a menu to show, nothing was filled: everything on the tray was there before the idea.
     const kept = pickedDishes(draft);
+    const left = dayMoney === null ? null : dayMoney - totalPrice(kept);
     const problem = generationProblem(
       dayCandidates(catalog, day),
       filled.map(index => draft.rows[index]!.course),
       preferences,
       totalCalories(kept) ?? 0,
+      left,
     );
     return (
       <div className="deck">
@@ -59,12 +64,20 @@ export function GeneratedDeck({
           <span className="section-icon">
             <Utensils size={25} />
           </span>
-          {problem === 'limit' ? (
+          {problem === 'calories' ? (
             <>
               <h2>Nincs a keretbe férő menü</h2>
               <p>
                 A legkönnyebb ételek is túllépnék a napi keretedet ({calories(limit)}) a menü többi része mellett. Válassz magad,
                 vagy emeld a keretet a beállításokban.
+              </p>
+            </>
+          ) : problem === 'money' ? (
+            <>
+              <h2>Nincs a keretbe férő menü</h2>
+              <p>
+                A heti költségkeretedből {money(Math.max(0, left ?? 0))} maradt a menü többi része mellett, és ebből nem jön ki
+                ötlet. Válassz magad, vagy emeld a keretet a beállításokban.
               </p>
             </>
           ) : (

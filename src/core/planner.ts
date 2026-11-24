@@ -7,7 +7,9 @@ import {
   fitsRow,
   pickedDishes,
   remainingCalories,
+  remainingMoney,
   totalCalories,
+  totalPrice,
   withCourse,
   withoutDish,
   withoutRow,
@@ -18,6 +20,7 @@ import { generateMenu, startGenerator } from './generate.ts';
 import {
   choose,
   dayCandidates,
+  moneyLeft,
   orderSummary,
   selectionIssue,
   startPlan,
@@ -197,6 +200,11 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
     return withPlan(next, { step: 'meals', editingDay: edit ? day : null });
   }
 
+  /** What the weekly spending limit leaves for the meal picker's day, or null without a limit. */
+  function dayMoney(): number | null {
+    return view.day === undefined ? null : moneyLeft(view.plan, view.day, eligible, state.preferences);
+  }
+
   /** The plan with the current day's custom draft replaced, or the state unchanged when the action does not apply. */
   function withDraft(day: Day, update: (draft: CustomDraft) => CustomDraft | null): PlannerState {
     const draft = plan?.custom[day];
@@ -227,7 +235,7 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
 
   /**
    * Whether `dish` may fill the current course: still on the menu, allowed by the settings as the current menu data has it,
-   * and within the limit unless the user allowed more.
+   * and within the calorie and spending limits unless the user allowed more.
    */
   function canPick(draft: CustomDraft, dish: Dish): boolean {
     const index = draft.stage;
@@ -239,22 +247,26 @@ export function reducePlanner(state: PlannerState, action: PlannerAction, contex
     const { preferences } = state;
     if (!current || dishIssue(current, preferences)) return false;
     const remaining = remainingCalories(draft, preferences, index);
-    if (remaining === null) return true;
-    return Number.isFinite(dish.kcal) && (dish.kcal! <= remaining || draft.overLimit.includes(course));
+    if (remaining !== null && !Number.isFinite(dish.kcal)) return false;
+    const money = remainingMoney(draft, index, dayMoney());
+    const fits = (remaining === null || dish.kcal! <= remaining) && (money === null || dish.price <= money);
+    return fits || draft.overLimit.includes(course);
   }
 
   /**
-   * The tray with newly generated dishes on the rows the generator fills, within the calories the rest of the tray leaves,
-   * or null when no menu is being generated.
+   * The tray with newly generated dishes on the rows the generator fills, within the calories and the forints the rest of
+   * the tray leaves, or null when no menu is being generated.
    */
   function withGeneratedMenu(draft: CustomDraft): CustomDraft | null {
     if (!draft.generator || !context.catalog) return null;
     const filled = draft.generator.rows;
     const kept = withoutGenerated(draft);
     const used = totalCalories(pickedDishes(kept)) ?? 0;
+    const forDay = dayMoney();
+    const money = forDay === null ? null : forDay - totalPrice(pickedDishes(kept));
     const candidates = dayCandidates(context.catalog, view.day!);
     const courses = filled.map(index => kept.rows[index]!.course);
-    const generated = generateMenu(candidates, courses, state.preferences, draft.generator, used);
+    const generated = generateMenu(candidates, courses, state.preferences, draft.generator, used, money);
     const rows = kept.rows.map((row, index) => {
       const dish = filled.includes(index) ? generated.dishes[filled.indexOf(index)] : undefined;
       return dish ? { course: row.course, dish } : row;

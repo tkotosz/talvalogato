@@ -1,11 +1,13 @@
-import { Check, ChevronRight, Eraser, Flame, Minus, Plus, Sparkles, Utensils, X } from 'lucide-react';
+import { Check, ChevronRight, Eraser, Flame, Minus, Plus, Sparkles, Utensils, Wallet, X } from 'lucide-react';
 import {
   canGenerate,
   courseDeck,
   pickedDishes,
   remainingCalories,
+  remainingMoney,
   rowChoiceCounts,
   totalCalories,
+  totalPrice,
   trayCourseNames,
   trayCourses,
 } from '../../core/custom.ts';
@@ -182,8 +184,7 @@ function Tray({
       <p className="custom-total" aria-live="polite">
         <span>Összesen</span>
         <strong>
-          {dishes.length ? (total === null ? 'ismeretlen kcal' : calories(total)) : '–'} ·{' '}
-          {money(dishes.reduce((sum, dish) => sum + dish.price, 0))}
+          {dishes.length ? (total === null ? 'ismeretlen kcal' : calories(total)) : '–'} · {money(totalPrice(dishes))}
         </strong>
       </p>
       {limit !== null && (
@@ -213,6 +214,7 @@ export function CustomDay({
   draft,
   catalog,
   preferences,
+  money: dayMoney,
   teletalWeek,
   dispatch,
   onOpenSettings,
@@ -222,6 +224,8 @@ export function CustomDay({
   draft: CustomDraft;
   catalog: Dish[];
   preferences: Preferences;
+  /** What the weekly spending limit leaves for the day, or null without a limit. */
+  money: number | null;
   /** The week whose Teletál menu the cards link to, or null for no links. */
   teletalWeek: WeekKey | null;
   dispatch(action: PlannerAction): void;
@@ -235,6 +239,7 @@ export function CustomDay({
         draft={draft}
         catalog={catalog}
         preferences={preferences}
+        money={dayMoney}
         onAccept={() => dispatch({ type: 'acceptGenerated', day })}
         onReject={() => dispatch({ type: 'rejectGenerated', day })}
         onLeave={() => dispatch({ type: 'cancelGenerated', day })}
@@ -269,6 +274,7 @@ export function CustomDay({
     draft,
     catalog,
     preferences,
+    dayMoney,
     teletalWeek,
     dispatch,
     onOpenSettings,
@@ -285,31 +291,43 @@ interface RowProps {
   draft: CustomDraft;
   catalog: Dish[];
   preferences: Preferences;
+  /** What the weekly spending limit leaves for the day, or null without a limit. */
+  dayMoney: number | null;
   teletalWeek: WeekKey | null;
   dispatch(action: PlannerAction): void;
   onOpenSettings(): void;
 }
 
-/** The row's name, and what is left of the calorie limit for it. */
-function RowHeading({ course, remaining }: { course: TrayCourse; remaining: number | null }) {
+/** The row's name, and what is left of the calorie limit and the spending limit for it. */
+function RowHeading({ course, remaining, money: left }: { course: TrayCourse; remaining: number | null; money: number | null }) {
   return (
     <div className="picker-details course-details">
       <strong>{trayCourseNames[course]}</strong>
-      {remaining !== null && (
-        <span className="day-budget">
-          <Flame size={18} aria-hidden="true" /> Még {calories(Math.max(0, remaining))}
+      {(remaining !== null || left !== null) && (
+        <span className="row-budgets">
+          {remaining !== null && (
+            <span className="day-budget">
+              <Flame size={18} aria-hidden="true" /> Még {calories(Math.max(0, remaining))}
+            </span>
+          )}
+          {left !== null && (
+            <span className="day-budget">
+              <Wallet size={18} aria-hidden="true" /> Még {money(Math.max(0, left))}
+            </span>
+          )}
         </span>
       )}
     </div>
   );
 }
 
-/** Why a row offers nothing: the calorie limit, with a way past it, or no dish today or the settings' filters. */
+/** Why a row offers nothing: a limit, with a way past it, or no dish today or the settings' filters. */
 function NothingToOffer({
   course,
   draft,
   overLimitCount,
   remaining,
+  money: left,
   preferences,
   onShowOverLimit,
   onOpenSettings,
@@ -318,6 +336,7 @@ function NothingToOffer({
   draft: CustomDraft;
   overLimitCount: number;
   remaining: number | null;
+  money: number | null;
   preferences: Preferences;
   onShowOverLimit(): void;
   onOpenSettings(): void;
@@ -328,7 +347,8 @@ function NothingToOffer({
         <Minus size={25} />
       </span>
       <h2>Nincs a keretbe férő választás</h2>
-      <p>A kalóriakeretedből {calories(Math.max(0, remaining ?? 0))} maradt erre a sorra.</p>
+      {remaining !== null && <p>A kalóriakeretedből {calories(Math.max(0, remaining))} maradt erre a sorra.</p>}
+      {left !== null && <p>A heti költségkeretedből {money(Math.max(0, left))} maradt erre a sorra.</p>}
       <button type="button" className="button secondary" onClick={onShowOverLimit}>
         Mutasd a kereten felülieket is
       </button>
@@ -343,25 +363,40 @@ function NothingToOffer({
 }
 
 /** A set menu, soup or main: a swipe deck, where right puts the card on the row. */
-function RowDeck({ plan, day, index, course, draft, catalog, preferences, teletalWeek, dispatch, onOpenSettings }: RowProps) {
+function RowDeck({
+  plan,
+  day,
+  index,
+  course,
+  draft,
+  catalog,
+  preferences,
+  dayMoney,
+  teletalWeek,
+  dispatch,
+  onOpenSettings,
+}: RowProps) {
   const remaining = remainingCalories(draft, preferences, index);
+  const left = remainingMoney(draft, index, dayMoney);
   return (
     <>
-      <RowHeading course={course} remaining={remaining} />
+      <RowHeading course={course} remaining={remaining} money={left} />
       <SwipeDeck
         plan={plan}
         day={day}
         candidates={dayCandidates(catalog, day)}
-        buildOptions={loaded => courseDeck(loaded, draft, index, preferences).options}
+        buildOptions={loaded => courseDeck(loaded, draft, index, preferences, dayMoney).options}
         target={remaining}
+        priceTarget={left}
         teletalWeek={teletalWeek}
         nouns={nouns(course)}
         empty={loaded => (
           <NothingToOffer
             course={course}
             draft={draft}
-            overLimitCount={courseDeck(loaded, draft, index, preferences).overLimitCount}
+            overLimitCount={courseDeck(loaded, draft, index, preferences, dayMoney).overLimitCount}
             remaining={remaining}
+            money={left}
             preferences={preferences}
             onShowOverLimit={() => dispatch({ type: 'showOverLimit', day })}
             onOpenSettings={onOpenSettings}
@@ -378,13 +413,18 @@ function RowDeck({ plan, day, index, course, draft, catalog, preferences, teleta
 }
 
 /** An extra: a list of the day's dishes, where a tap puts one on the row. */
-function ExtraList({ day, index, course, draft, catalog, preferences, dispatch, onOpenSettings }: RowProps) {
-  const { options, remaining, overLimitCount } = courseDeck(dayCandidates(catalog, day), draft, index, preferences);
+function ExtraList({ day, index, course, draft, catalog, preferences, dayMoney, dispatch, onOpenSettings }: RowProps) {
+  const {
+    options,
+    remaining,
+    money: left,
+    overLimitCount,
+  } = courseDeck(dayCandidates(catalog, day), draft, index, preferences, dayMoney);
   const picked = draft.rows[index]?.dish;
   const canShowMore = overLimitCount > 0 && !draft.overLimit.includes(course);
   return (
     <>
-      <RowHeading course={course} remaining={remaining} />
+      <RowHeading course={course} remaining={remaining} money={left} />
       {options.length ? (
         <ul className="extra-list" aria-label={trayCourseNames[course]}>
           {options.map(option => {
@@ -424,6 +464,7 @@ function ExtraList({ day, index, course, draft, catalog, preferences, dispatch, 
             draft={draft}
             overLimitCount={overLimitCount}
             remaining={remaining}
+            money={left}
             preferences={preferences}
             onShowOverLimit={() => dispatch({ type: 'showOverLimit', day })}
             onOpenSettings={onOpenSettings}

@@ -43,31 +43,88 @@ function fillPlan(candidates: Dish[], courses: TrayCourse[], preferences: Prefer
     .filter(({ pool }) => pool.length > 0);
 }
 
-const lowestCalories = (pool: Dish[]) => Math.min(...pool.map(dish => dish.kcal ?? 0));
+/** Calories and price added up, as far as a limit asks about them; the other is left at zero. */
+interface Totals {
+  kcal: number;
+  price: number;
+}
 
-/** Why no menu can be generated: nothing to choose from, or even the lightest dishes go over the calorie limit. */
-export type GenerationProblem = 'empty' | 'limit';
+/** Which totals a limit asks about. */
+interface Measured {
+  kcal: boolean;
+  price: boolean;
+}
 
-/** Whether an idea can fill rows of `courses`. `used` is the calories already on the day's tray, which it must fit next to. */
+/**
+ * The lowest totals one dish from each pool can add up to: every pairing of calories and price that no other choice of
+ * dishes beats in both. A limit on both can be met exactly when one of these pairings meets it, which the lightest
+ * dishes and the cheapest dishes on their own cannot tell, as they may be different dishes.
+ */
+function lowestTotals(pools: Dish[][], measured: Measured): Totals[] {
+  let lowest: Totals[] = [{ kcal: 0, price: 0 }];
+  for (const pool of pools) {
+    const sums = lowest.flatMap(sum =>
+      pool.map(dish => ({
+        kcal: sum.kcal + (measured.kcal ? (dish.kcal ?? 0) : 0),
+        price: sum.price + (measured.price ? dish.price : 0),
+      })),
+    );
+    // Sorted by calories, a pairing is kept only when it is cheaper than every lighter one.
+    sums.sort((a, b) => a.kcal - b.kcal || a.price - b.price);
+    lowest = [];
+    for (const sum of sums) if (!lowest.length || sum.price < lowest.at(-1)!.price) lowest.push(sum);
+  }
+  return lowest;
+}
+
+/** Why no menu can be generated: nothing to choose from, or even the lightest or cheapest dishes go over a limit. */
+export type GenerationProblem = 'empty' | 'calories' | 'money';
+
+/** What an idea has room for: calories under the daily limit and forints under the weekly one, null for no limit. */
+interface Room {
+  kcal: number | null;
+  money: number | null;
+}
+
+function roomFor(preferences: Preferences, used: number, money: number | null): Room {
+  return { kcal: preferences.limitCalories ? calorieLimit(preferences) - used : null, money };
+}
+
+const fitsRoom = (totals: Totals, room: Room) =>
+  (room.kcal === null || totals.kcal <= room.kcal) && (room.money === null || totals.price <= room.money);
+
+const measuredBy = (room: Room): Measured => ({ kcal: room.kcal !== null, price: room.money !== null });
+
+/**
+ * Whether an idea can fill rows of `courses`. `used` is the calories already on the day's tray, which it must fit next
+ * to; `money` is the forints the weekly spending limit leaves for the rows it fills, or null without a limit.
+ */
 export function generationProblem(
   candidates: Dish[],
   courses: TrayCourse[],
   preferences: Preferences,
   used = 0,
+  money: number | null = null,
 ): GenerationProblem | null {
   const plan = fillPlan(candidates, courses, preferences);
   if (!plan.length) return 'empty';
-  if (!preferences.limitCalories) return null;
-  const lightest = plan.reduce((sum, { pool }) => sum + lowestCalories(pool), 0);
-  return used + lightest > calorieLimit(preferences) ? 'limit' : null;
+  const room = roomFor(preferences, used, money);
+  const lowest = lowestTotals(
+    plan.map(({ pool }) => pool),
+    measuredBy(room),
+  );
+  if (lowest.some(totals => fitsRoom(totals, room))) return null;
+  // The calories stand in the way when they alone leave no room; otherwise the money does.
+  return room.kcal !== null && !lowest.some(totals => totals.kcal <= room.kcal!) ? 'calories' : 'money';
 }
 
 /**
  * A dish for each row of `courses` that has dishes today, by position.
  * Among the dishes that fit, it takes one of those shown least so far, so a rejected idea is followed by different dishes
- * and two rows of the same course get different dishes while there are any. With a calorie limit each row keeps room for
- * the lightest dishes of the rows still to fill, so the idea always fits when any can, next to the `used` calories already
- * on the tray. Fills nothing when `generationProblem` reports a problem.
+ * and two rows of the same course get different dishes while there are any. With a calorie limit or a spending limit
+ * each row keeps room for the rows still to fill, so the idea always fits when any can, next to the `used` calories
+ * already on the tray and within `money`, the forints left for these rows. Fills nothing when `generationProblem`
+ * reports a problem.
  */
 export function generateMenu(
   candidates: Dish[],
@@ -75,18 +132,27 @@ export function generateMenu(
   preferences: Preferences,
   generator: Generator,
   used = 0,
+  money: number | null = null,
 ): { dishes: (Dish | undefined)[]; generator: Generator } {
   const dishes: (Dish | undefined)[] = courses.map(() => undefined);
-  if (generationProblem(candidates, courses, preferences, used)) return { dishes, generator };
+  if (generationProblem(candidates, courses, preferences, used, money)) return { dishes, generator };
   const plan = fillPlan(candidates, courses, preferences);
-  const limit = preferences.limitCalories ? calorieLimit(preferences) : null;
+  const room = roomFor(preferences, used, money);
+  const measured = measuredBy(room);
   const shown = { ...generator.shown };
   let seed = generator.seed;
-  let total = used;
+  let total: Totals = { kcal: 0, price: 0 };
 
   plan.forEach(({ row, pool }, index) => {
-    const reserved = plan.slice(index + 1).reduce((sum, later) => sum + lowestCalories(later.pool), 0);
-    const fitting = limit === null ? pool : pool.filter(dish => total + dish.kcal! + reserved <= limit);
+    const rest = lowestTotals(
+      plan.slice(index + 1).map(later => later.pool),
+      measured,
+    );
+    const fitting = pool.filter(dish =>
+      rest.some(later =>
+        fitsRoom({ kcal: total.kcal + (dish.kcal ?? 0) + later.kcal, price: total.price + dish.price + later.price }, room),
+      ),
+    );
     const fewest = Math.min(...fitting.map(dish => shown[dish.id] ?? 0));
     const freshest = fitting.filter(dish => (shown[dish.id] ?? 0) === fewest);
     const random = nextRandom(seed);
@@ -94,7 +160,7 @@ export function generateMenu(
     const dish = freshest[Math.floor(random.value * freshest.length)]!;
     dishes[row] = dish;
     shown[dish.id] = fewest + 1;
-    total += dish.kcal ?? 0;
+    total = { kcal: total.kcal + (dish.kcal ?? 0), price: total.price + dish.price };
   });
   return { dishes, generator: { ...generator, seed, shown } };
 }

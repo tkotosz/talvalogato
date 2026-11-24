@@ -135,10 +135,13 @@ export function AllergenLine({ allergens, teletalUrl }: { allergens: Allergen[] 
 export function MealCard({
   option,
   target,
+  priceTarget = null,
   teletalWeek = null,
 }: {
   option: MenuOption;
   target: number | null;
+  /** Forints a card may cost before its price shows as over what the weekly spending limit leaves, or null. */
+  priceTarget?: number | null;
   teletalWeek?: WeekKey | null;
 }) {
   const { title, components = [], dishes, kcal, price } = option;
@@ -210,7 +213,9 @@ export function MealCard({
             <Flame size={17} />
             {calories(kcal)}
           </span>
-          <span>{money(price)}</span>
+          <span className={priceTarget !== null && price > priceTarget ? 'price-badge over-target' : 'price-badge'}>
+            {money(price)}
+          </span>
         </div>
       </div>
     </article>

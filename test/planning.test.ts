@@ -6,6 +6,7 @@ import {
   dayCandidates,
   dayQueue,
   menuDeck,
+  moneyLeft,
   newPreferences,
   orderSummary,
   restorePlan,
@@ -364,4 +365,27 @@ test('saved plans are restored per week, the previous single plan carries over, 
   });
   assert.deepEqual(restorePlans(stored, JSON.parse(JSON.stringify(ended)), now)['2026-W46'], undefined, 'the saved plans win');
   assert.deepEqual(restorePlans(null, null, now), {});
+});
+
+test('a weekly spending limit is restored only as a whole number of forints', () => {
+  const limited = { ...newPreferences, limitSpending: true, weeklyBudget: 12_000 };
+  assert.deepEqual(restorePreferences(limited), limited);
+  for (const weeklyBudget of [0, -5, 1.5, '12000', null])
+    assert.deepEqual(restorePreferences({ ...limited, weeklyBudget }), newPreferences);
+  assert.deepEqual(restorePreferences({ ...newPreferences, limitSpending: 'yes' }), newPreferences);
+  const { limitSpending, weeklyBudget, ...older } = newPreferences;
+  assert.deepEqual(restorePreferences(older), { ...older, limitSpending, weeklyBudget });
+});
+
+test('the weekly spending limit leaves a day what the other orderable days do not spend', () => {
+  const option = options(dishes, 'lunch')[0]!;
+  const priced = (price: number) => ({ ...option, price });
+  const plan = { slots: { 1: priced(3000), 2: null, 3: priced(2500), 6: priced(4000) } };
+  const limited = { ...newPreferences, limitSpending: true, weeklyBudget: 10_000 };
+  const eligible = [1, 2, 3, 4, 5];
+  // Saturday is not orderable, so its pick does not count; the day's own pick does not count against itself.
+  assert.equal(moneyLeft(plan, 1, eligible, limited), 7500);
+  assert.equal(moneyLeft(plan, 4, eligible, limited), 4500);
+  assert.equal(moneyLeft(plan, 4, eligible, { ...limited, weeklyBudget: 5000 }), -500);
+  assert.equal(moneyLeft(plan, 4, eligible, newPreferences), null);
 });

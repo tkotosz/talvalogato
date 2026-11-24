@@ -81,6 +81,20 @@ export function remainingCalories(draft: CustomDraft, preferences: Preferences, 
   return Math.round((calorieLimit(preferences) - (totalCalories(others) ?? 0)) * 10) / 10;
 }
 
+/** What the dishes cost together. */
+export function totalPrice(dishes: Dish[]): number {
+  return dishes.reduce((sum, dish) => sum + dish.price, 0);
+}
+
+/**
+ * What is left of `money`, the forints the weekly spending limit leaves for the day, for the row at `index` after
+ * everything else on the tray; null without a limit.
+ */
+export function remainingMoney(draft: CustomDraft, index: number, money: number | null): number | null {
+  if (money === null) return null;
+  return money - totalPrice(pickedDishes({ rows: draft.rows.filter((_, at) => at !== index) }));
+}
+
 export function dishOption(dish: Dish): MenuOption {
   return {
     id: dish.id,
@@ -95,33 +109,48 @@ export function dishOption(dish: Dish): MenuOption {
 }
 
 export interface CourseDeck {
-  /** Dishes in Teletál's order, those that fit the remaining limit first, then any shown beyond it by calories. */
+  /** Dishes in Teletál's order, those that fit the remaining limits first, then any shown beyond them. */
   options: MenuOption[];
   /** Calories left for this row under the limit, or null without a limit. */
   remaining: number | null;
-  /** Dishes for the row that exceed the remaining limit; the user can choose to see them. */
+  /** Forints left for this row under the weekly spending limit, or null without a limit. */
+  money: number | null;
+  /** Dishes for the row that exceed a remaining limit; the user can choose to see them. */
   overLimitCount: number;
 }
 
 /**
  * The dishes offered for the row at `index`, as a deck or a list. The settings' filters apply. With a calorie limit only
- * dishes with known calories are offered, set menus closest to the remaining limit first, and those over the remaining
- * limit only after the user asks.
+ * dishes with known calories are offered, set menus closest to the remaining limit first. `money` is what the weekly
+ * spending limit leaves for the day, or null without one. Dishes over a remaining limit come only after the user asks.
  */
-export function courseDeck(dishes: Dish[], draft: CustomDraft, index: number, preferences: Preferences): CourseDeck {
+export function courseDeck(
+  dishes: Dish[],
+  draft: CustomDraft,
+  index: number,
+  preferences: Preferences,
+  money: number | null,
+): CourseDeck {
   const course = draft.rows[index]?.course;
   const candidates = course ? dishes.filter(dish => fitsRow(dish, course) && !dishIssue(dish, preferences)) : [];
   const remaining = remainingCalories(draft, preferences, index);
-  if (remaining === null) return { options: candidates.map(dishOption), remaining, overLimitCount: 0 };
+  const moneyRemaining = remainingMoney(draft, index, money);
+  if (remaining === null && moneyRemaining === null)
+    return { options: candidates.map(dishOption), remaining, money: null, overLimitCount: 0 };
 
-  const known = candidates.filter(dish => Number.isFinite(dish.kcal));
-  const fitting = known.filter(dish => dish.kcal! <= remaining);
+  const known = remaining === null ? candidates : candidates.filter(dish => Number.isFinite(dish.kcal));
+  const fits = (dish: Dish) =>
+    (remaining === null || dish.kcal! <= remaining) && (moneyRemaining === null || dish.price <= moneyRemaining);
+  const fitting = known.filter(fits);
   // Set menus are the day's largest items: the one that fills what is left best comes first, the cheaper on a tie.
-  if (course === 'menu') fitting.sort((a, b) => remaining - a.kcal! - (remaining - b.kcal!) || a.price - b.price);
-  // Going over the limit, the smallest overshoot comes first.
-  const over = known.filter(dish => dish.kcal! > remaining).sort((a, b) => a.kcal! - b.kcal!);
+  if (course === 'menu' && remaining !== null)
+    fitting.sort((a, b) => remaining - a.kcal! - (remaining - b.kcal!) || a.price - b.price);
+  // Going over a limit, the smallest overshoot comes first: in calories, then in price.
+  const over = known
+    .filter(dish => !fits(dish))
+    .sort((a, b) => (remaining === null ? 0 : a.kcal! - b.kcal!) || (moneyRemaining === null ? 0 : a.price - b.price));
   const shown = course && draft.overLimit.includes(course) ? [...fitting, ...over] : fitting;
-  return { options: shown.map(dishOption), remaining, overLimitCount: over.length };
+  return { options: shown.map(dishOption), remaining, money: moneyRemaining, overLimitCount: over.length };
 }
 
 /**
@@ -143,7 +172,7 @@ export function customOption(draft: CustomDraft, preferences: Preferences): Menu
     kind: 'custom',
     dishes,
     kcal,
-    price: dishes.reduce((sum, dish) => sum + dish.price, 0),
+    price: totalPrice(dishes),
     title: menus.length === 1 ? `${menus[0]!.menuName} kiegészítőkkel` : 'Saját menü',
     photo: dishes.find(dish => dish.photo)?.photo ?? null,
     custom,
@@ -166,10 +195,11 @@ export function editCustom(option: MenuOption): CustomDraft {
   return { ...emptyTray(), rows: inTrayOrder(rows), overLimit: option.custom?.overLimit ? [...trayCourses] : [] };
 }
 
-/** No filter and no calorie limit: what the day offers at all. */
+/** No filter and no limit: what the day offers at all. */
 const unfiltered = (preferences: Preferences): Preferences => ({
   ...preferences,
   limitCalories: false,
+  limitSpending: false,
   filterCodes: false,
   diet: 'all',
   filterAllergens: false,
@@ -178,7 +208,9 @@ const unfiltered = (preferences: Preferences): Preferences => ({
 
 /**
  * How many dishes a new row of each kind could offer among `candidates`: `allowed` under the settings, and `available`
- * without their filters and calorie limit, so a kind the settings leave empty can say why.
+ * without their filters and calorie limit, so a kind the settings leave empty can say why. The weekly spending limit
+ * leaves no kind out here: what it leaves for the day changes with every pick, and the row itself can show dishes beyond
+ * it.
  */
 export function rowChoiceCounts(
   candidates: Dish[],
@@ -186,7 +218,10 @@ export function rowChoiceCounts(
 ): { allowed: Record<TrayCourse, number>; available: Record<TrayCourse, number> } {
   const count = (settings: Preferences) =>
     Object.fromEntries(
-      trayCourses.map(course => [course, courseDeck(candidates, withCourse(emptyTray(), course), 0, settings).options.length]),
+      trayCourses.map(course => [
+        course,
+        courseDeck(candidates, withCourse(emptyTray(), course), 0, settings, null).options.length,
+      ]),
     ) as Record<TrayCourse, number>;
   return { allowed: count(preferences), available: count(unfiltered(preferences)) };
 }

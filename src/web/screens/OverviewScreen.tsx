@@ -1,7 +1,7 @@
 import { ChevronRight, ClipboardList, Copy } from 'lucide-react';
 import type { PlannerView } from '../../core/planner.ts';
 import { days, menuCourseNames, type OrderSummary } from '../../core/planning.ts';
-import type { Day, MenuOption } from '../../core/types.ts';
+import type { Day, MenuOption, Preferences } from '../../core/types.ts';
 import { menuCode } from '../components/CustomMenuCard.tsx';
 import { OrderReminder } from '../components/FilterNotes.tsx';
 import { shortDayLabel, weekOptionLabel } from '../../core/weeks.ts';
@@ -63,10 +63,12 @@ function SetMenuItems({ option }: { option: MenuOption }) {
 /** Step 3: the week's decisions and what will reach the cart. */
 export function OverviewScreen({
   view,
+  preferences,
   onNotice,
   onViewDay,
 }: {
   view: PlannerView;
+  preferences: Preferences;
   onNotice(message: string): void;
   onViewDay(day: Day): void;
 }) {
@@ -180,6 +182,20 @@ export function OverviewScreen({
           {kcal === null ? 'ismeretlen kcal' : calories(kcal)} · {money(total)}
         </strong>
       </div>
+      {preferences.limitSpending && <SpendingNote total={total} limit={preferences.weeklyBudget} />}
     </main>
+  );
+}
+
+/** The order's total against the weekly spending limit. Going over is only pointed out: the cart still takes the order. */
+function SpendingNote({ total, limit }: { total: number; limit: number }) {
+  return total > limit ? (
+    <p className="over-limit-note review-spending">
+      {money(total - limit)}-tal a heti költségkereted ({money(limit)}) felett vagy.
+    </p>
+  ) : (
+    <p className="review-spending">
+      Heti költségkeret: {money(limit)} · még {money(limit - total)}
+    </p>
   );
 }

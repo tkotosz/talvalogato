@@ -166,7 +166,12 @@ export function App() {
           onOpenSettings={() => setDialog('preferences')}
         />
       ) : order ? (
-        <OverviewScreen view={view} onNotice={setNotice} onViewDay={value => dispatch({ type: 'openDay', day: value })} />
+        <OverviewScreen
+          view={view}
+          preferences={preferences}
+          onNotice={setNotice}
+          onViewDay={value => dispatch({ type: 'openDay', day: value })}
+        />
       ) : showPicker ? (
         <MealsScreen
           key={week + ':' + day + ':' + view.editing}

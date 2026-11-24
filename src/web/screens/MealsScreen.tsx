@@ -1,12 +1,12 @@
-import { ChevronRight, Flame, Truck } from 'lucide-react';
-import { emptyTray, trayCourseNames } from '../../core/custom.ts';
+import { ChevronRight, Flame, Truck, Wallet } from 'lucide-react';
+import { emptyTray, pickedDishes, totalPrice, trayCourseNames } from '../../core/custom.ts';
 import type { PlannerAction } from '../../core/planner.ts';
-import { calorieLimit, days, selectionIssue } from '../../core/planning.ts';
+import { calorieLimit, days, moneyLeft, selectionIssue } from '../../core/planning.ts';
 import type { CustomDraft, Day, Dish, Plan, Preferences, WeekKey } from '../../core/types.ts';
 import { CustomMenuCard } from '../components/CustomMenuCard.tsx';
 import { MealCard } from '../components/MealCard.tsx';
 import { WeekProgress } from '../components/WeekProgress.tsx';
-import { calories } from '../format.ts';
+import { calories, money } from '../format.ts';
 import { CustomDay } from './CustomDay.tsx';
 
 /** Step 2: one day at a time, on the day's tray. A finished day shows its decision. */
@@ -38,6 +38,9 @@ export function MealsScreen({
   const picked = plan.slots[day];
   const budget = preferences.limitCalories ? calorieLimit(preferences) : null;
   const issue = done && picked && selectionIssue(picked, day, eligible, catalog, preferences);
+  const dayMoney = moneyLeft(plan, day, eligible, preferences);
+  // The open tray counts in place of the day's saved pick, so the line follows every change on it.
+  const dayPrice = custom ? totalPrice(pickedDishes(custom)) : (picked?.price ?? 0);
   // The breadcrumb, while the tray has opened a row or an idea.
   const crumbs: { label: string; onClick?: () => void }[] = [];
   if (custom?.generator) {
@@ -51,6 +54,9 @@ export function MealsScreen({
   return (
     <main className="picker" aria-label={`Napi válogatás · ${days[day - 1]}`}>
       <WeekProgress plan={{ ...plan, day }} eligible={eligible} onSelect={value => dispatch({ type: 'openDay', day: value })} />
+      {dayMoney !== null && (
+        <WeekSpending spent={preferences.weeklyBudget - dayMoney + dayPrice} limit={preferences.weeklyBudget} />
+      )}
       {!done && crumbs.length > 0 && (
         <nav className="day-steps" aria-label="A napi válogatás lépései">
           <ol>
@@ -108,11 +114,26 @@ export function MealsScreen({
           draft={custom ?? emptyTray()}
           catalog={catalog}
           preferences={preferences}
+          money={dayMoney}
           teletalWeek={teletalWeek}
           dispatch={dispatch}
           onOpenSettings={onOpenSettings}
         />
       )}
     </main>
+  );
+}
+
+/** What the week's orderable days cost so far, against the weekly spending limit. */
+function WeekSpending({ spent, limit }: { spent: number; limit: number }) {
+  const over = spent > limit;
+  return (
+    <p className={over ? 'week-spending over' : 'week-spending'} aria-live="polite">
+      <Wallet size={17} aria-hidden="true" />
+      <span>
+        Eddig {money(spent)} ·{' '}
+        {over ? `${money(spent - limit)}-tal a heti keret felett` : `még ${money(limit - spent)} a heti keretből`}
+      </span>
+    </p>
   );
 }

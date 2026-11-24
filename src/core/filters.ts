@@ -137,7 +137,10 @@ export function dislikeIssue(
   return word ? `Kerülendő összetevő: ${word}` : null;
 }
 
-/** Why the settings leave `dish` out, or null when they allow it. The calorie limit is checked where the day's budget is known. */
+/**
+ * Why the settings leave `dish` out, or null when they allow it. The calorie limit and the weekly spending limit are
+ * checked where what is left of them is known.
+ */
 export function dishIssue(dish: Dish, preferences: Preferences): string | null {
   if (preferences.filterCodes && preferences.excludedCodes.includes(dish.code)) return 'Kizárt Teletál-kód';
   return dietIssue(dish, preferences) ?? allergenIssue(dish, preferences) ?? dislikeIssue(dish, preferences);
@@ -147,6 +150,7 @@ export function dishIssue(dish: Dish, preferences: Preferences): string | null {
 export function activeFilters(preferences: Preferences): string[] {
   const filters: string[] = [];
   if (preferences.limitCalories) filters.push('napi kalóriakeret');
+  if (preferences.limitSpending) filters.push('heti költségkeret');
   if (preferences.filterCodes && preferences.excludedCodes.length) filters.push('kizárt Teletál-kódok');
   if (preferences.diet !== 'all') filters.push(preferences.diet === 'vegan' ? 'vegán étrend' : 'vegetáriánus étrend');
   if (preferences.filterAllergens && preferences.excludedAllergens.length)

@@ -1,13 +1,17 @@
 import { useState } from 'react';
-import { Flame } from 'lucide-react';
-import { calorieLimit, restorePreferences, validCalorieBudget } from '../../core/planning.ts';
+import { Flame, Wallet } from 'lucide-react';
+import { calorieLimit, restorePreferences, validCalorieBudget, validWeeklyBudget } from '../../core/planning.ts';
 import type { Preferences, WeekKey } from '../../core/types.ts';
-import { calories } from '../format.ts';
+import { calories, money } from '../format.ts';
 import { CodeFilter } from './CodeFilter.tsx';
 import { DietChoice, DietFilters } from './DietFilters.tsx';
 
 /** Preferences while being edited: a number field can be empty. */
-type Draft = Omit<Preferences, 'calories' | 'tolerance'> & { calories: number | ''; tolerance: number | '' };
+type Draft = Omit<Preferences, 'calories' | 'tolerance' | 'weeklyBudget'> & {
+  calories: number | '';
+  tolerance: number | '';
+  weeklyBudget: number | '';
+};
 
 const numberValue = (input: HTMLInputElement) => (input.value === '' ? '' : input.valueAsNumber);
 
@@ -27,7 +31,8 @@ export function PreferencesForm({
   const [draft, setDraft] = useState<Draft>(preferences);
   const change = <Key extends keyof Draft>(key: Key, value: Draft[Key]) => setDraft(current => ({ ...current, [key]: value }));
   const validBudget = validCalorieBudget(draft);
-  const canSave = !draft.limitCalories || validBudget;
+  const validSpending = validWeeklyBudget(draft);
+  const canSave = (!draft.limitCalories || validBudget) && (!draft.limitSpending || validSpending);
   return (
     <form
       className="preferences-form"
@@ -86,6 +91,44 @@ export function PreferencesForm({
           ) : (
             <p className="form-error" role="status">
               Adj meg egy pozitív egész kalóriacélt és 0–100% ráhagyást.
+            </p>
+          )}
+        </>
+      )}
+      <label className="preference-toggle">
+        <input type="checkbox" checked={draft.limitSpending} onChange={event => change('limitSpending', event.target.checked)} />
+        Heti költségkeret
+      </label>
+      {draft.limitSpending && (
+        <>
+          <div className="number-fields">
+            <label htmlFor="weekly-budget">
+              Egy hétre legfeljebb
+              <span className="field-wrap">
+                <input
+                  id="weekly-budget"
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  step="1"
+                  required
+                  value={draft.weeklyBudget}
+                  onChange={event => change('weeklyBudget', numberValue(event.target))}
+                />
+                <span>Ft</span>
+              </span>
+            </label>
+          </div>
+          {validSpending ? (
+            <div className="budget-note">
+              <Wallet size={19} aria-hidden="true" />
+              <strong>
+                Hetente legfeljebb {money(draft.weeklyBudget as number)}. A kereten felüli ételeket kérésre megmutatjuk.
+              </strong>
+            </div>
+          ) : (
+            <p className="form-error" role="status">
+              Adj meg egy pozitív egész összeget forintban.
             </p>
           )}
         </>

@@ -157,7 +157,7 @@ export interface CustomDraft {
   /** The rows in menu order: breakfast first, then set menus, then the other courses. */
   rows: TrayRow[];
   stage: CustomStage;
-  /** Row kinds whose decks and lists show dishes beyond the calorie limit. */
+  /** Row kinds whose decks and lists show dishes beyond the calorie limit or the weekly spending limit. */
   overLimit: TrayCourse[];
   /** Set while an idea for the empty rows waits to be kept or replaced. */
   generator?: Generator;
@@ -189,6 +189,9 @@ export interface Preferences {
   limitCalories: boolean;
   calories: number;
   tolerance: number;
+  /** Keep the week's picks within `weeklyBudget`, in forints. */
+  limitSpending: boolean;
+  weeklyBudget: number;
   filterCodes: boolean;
   excludedCodes: string[];
   /** The days last chosen on the week screen, preselected for a week without a plan. */
