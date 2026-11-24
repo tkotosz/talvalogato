@@ -39,6 +39,8 @@ To work with local data, write it with `npm run demo-menu -- --out <folder>` or 
 
 Pull requests to `main` check formatting and lint, run the type check and the unit tests, build the Pages bundle, and run CodeQL and dependency review. A successful CI run for a push to `main` deploys that commit to the Pages `preview` branch. The **Deploy** workflow can also be run manually on `main` to refresh the preview.
 
+To try a pull request, the repository owner comments `/preview` on it once CI has passed on its latest commit. The **PR preview** workflow builds that commit and publishes it to `https://pr-<number>.talvalogato.pages.dev`, then links it in a comment on the pull request. Commenting `/preview` again publishes a newer commit, `/preview delete` removes the preview, and closing the pull request removes it too. Only pull requests to `main` from branches in this repository get a preview.
+
 Publishing a GitHub Release runs CI on the tag's commit and deploys it to the Pages production branch, `main`.
 
 ```sh
