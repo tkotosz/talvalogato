@@ -52,11 +52,12 @@ export function GeneratedDeck({
     // Nothing was filled: everything on the tray was there before the idea.
     const kept = pickedDishes(draft);
     const left = dayMoney === null ? null : dayMoney - totalPrice(kept);
+    const used = totalCalories(kept) ?? 0;
     const problem = generationProblem(
       dayCandidates(catalog, day),
       filled.map(index => draft.rows[index]!.course),
       preferences,
-      totalCalories(kept) ?? 0,
+      used,
       left,
     );
     return (
@@ -69,8 +70,8 @@ export function GeneratedDeck({
             <>
               <h2>Nincs a keretbe férő menü</h2>
               <p>
-                A legkönnyebb ételek is túllépnék a napi keretedet ({calories(limit)}) a menü többi része mellett. Válassz magad,
-                vagy emeld a keretet a beállításokban.
+                A napi kalóriakeretedből {calories(Math.max(0, (limit ?? 0) - used))} maradt a menü többi része mellett, és ebből
+                nem jön ki ötlet. Válassz magad, vagy emeld a keretet a beállításokban.
               </p>
             </>
           ) : problem === 'money' ? (
