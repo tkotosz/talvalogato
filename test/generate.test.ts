@@ -408,4 +408,16 @@ test('an idea that fills no row next to dishes already on the tray has nothing t
   assert.equal(ideaFilled(draft(state)), false);
   assert.notEqual(customOption(draft(state), spending(1500)), null);
   assert.equal(run(state, { type: 'acceptGenerated', day: 3 }), state);
+
+  // The same with the calorie limit: the 880 kcal main leaves 20 kcal, and the lightest soup has 150.
+  const pickMain: PlannerAction[] = [
+    { type: 'openStage', day: 3, stage: 1 },
+    { type: 'pickCourse', day: 3, dish: mains[3]! },
+  ];
+  const tight = { ...limited, calories: 900, tolerance: 0 };
+  const calorieState = generatedDay(tight, 7, ...pickMain);
+  assert.deepEqual(codes(calorieState), [null, 'I4']);
+  assert.equal(ideaFilled(draft(calorieState)), false);
+  assert.notEqual(customOption(draft(calorieState), tight), null);
+  assert.equal(run(calorieState, { type: 'acceptGenerated', day: 3 }), calorieState);
 });
